@@ -1,18 +1,71 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { MascotImagesProvider } from '@/components/mascot-images';
+import { PageTransition } from '@/components/page-transition';
+import { BrandColors } from '@/constants/brand';
+import { useFonts } from 'expo-font';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { AppSessionProvider, useAppSession } from '@/components/app-session';
+
 
 SplashScreen.preventAutoHideAsync();
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const [fontsLoaded, fontError] = useFonts({
+    'Montserrat-Regular': require('../../assets/fonts/Montserrat_400Regular.ttf'),
+    'Montserrat-SemiBold': require('../../assets/fonts/Montserrat_600SemiBold.ttf'),
+    'Montserrat-Bold': require('../../assets/fonts/Montserrat_700Bold.ttf'),
+    'Montserrat-ExtraBold': require('../../assets/fonts/Montserrat_800ExtraBold.ttf'),
+  });
+
+  if (!fontsLoaded && !fontError) return null;
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
+      <MascotImagesProvider>
+        <AppSessionProvider>
+          <AnimatedSplashOverlay />
+          <AppNavigator />
+        </AppSessionProvider>
+      </MascotImagesProvider>
     </ThemeProvider>
   );
 }
+
+function AppNavigator() {
+  const session = useAppSession();
+  return (
+    <Stack screenOptions={{ headerShown: false, animation: 'none' }}
+      screenLayout={({ children, route }) => (
+        <PageTransition backgroundColor={['sign-up', 'set-up', 'connect-camera'].includes(route.name) ? BrandColors.blue : BrandColors.white}>
+          {children}
+        </PageTransition>
+      )}>
+      <Stack.Protected guard={!session.signedIn}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="policies" />
+        <Stack.Protected guard={session.accepted}>
+          <Stack.Screen name="sign-in" />
+          <Stack.Screen name="sign-up" />
+          <Stack.Screen name="set-up" />
+          <Stack.Screen name="forgot-password" />
+        </Stack.Protected>
+      </Stack.Protected>
+      <Stack.Protected guard={session.signedIn && session.accepted}>
+        <Stack.Screen name="connect-camera" />
+        <Stack.Screen name="profile" />
+        <Stack.Protected guard={!!session.camera}>
+          <Stack.Screen name="home" />
+        </Stack.Protected>
+      </Stack.Protected>
+      <Stack.Protected guard={false}>
+        <Stack.Screen name="explore" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
+
+
+
