@@ -1,47 +1,34 @@
 # Camera setup handoff
 
-The flow is landing → policies → sign-in or sign-up/setup → `/connect-camera`.
-Camera setup contains search and manual-entry UI only. There are no sample devices,
-device tabs, bottom navigation, video previews or monitoring controls.
+For the current frontend menu integration, see [frontend-handoff.md](frontend-handoff.md).
 
-Network discovery is currently unavailable. The backend/native connection team
-can replace the search notice in `src/app/connect-camera.tsx` with actual discovery
-results and pass a selected device into the connection action.
+The flow is landing -> policies -> sign-in or sign-up/setup -> `/connect-camera`.
+Camera setup contains search and manual-entry UI. Its gear shortcut opens Settings.
 
-`saveDetails()` currently validates a name and HTTP/HTTPS/RTSP address, saves
-`{ name, address, status: 'pending' }` in the in-memory session and opens `/home`.
-This previews navigation without claiming a successful connection. When the
-connection service is ready, await its success before saving `status: 'connected'`
-and opening Home; keep errors on the setup form. Never treat address validation
-alone as proof that a camera has connected.
+Network discovery is currently unavailable. `saveDetails()` validates a name and
+HTTP/HTTPS/RTSP address, saves `{ name, address, status: 'pending' }` in the
+in-memory session and opens `/home`. This previews navigation without claiming
+that a camera has successfully connected. Home can read `useAppSession().camera`.
 
-The Home owner should replace `src/app/home.tsx`, which contains only a destination
-placeholder, and read camera information with `useAppSession().camera`. The small
-mascot opens `/profile`. Signing out clears the profile and camera setup details.
+Both teammates are currently building frontend. The Home owner can replace
+`src/app/home.tsx` and connect Profile and Settings with the existing routes.
+No backend work is required to connect those menu buttons.
 
-## Profile mascot asset
+When backend/camera integration starts, await connection success before saving
+`status: 'connected'`. Keep connection errors on the setup form. Address
+validation alone does not establish a connection.
 
-`assets/images/peeka-profile-4k.png` is a 3840×2160 transparent PNG, upscaled directly
-from the supplied `ui  (2).png` with bicubic interpolation. No features were redrawn
-or colors remapped. Upscaling preserves existing source detail; it cannot recover
-detail absent from that source. Display framing removes transparent margins in
-the button without modifying the asset.
+## Profile and Settings
 
-The camera setup button now uses `peeka-profile-light-horns-4k.png`, a sibling
-version with the horn fill changed to the requested `#94B0D5`. Its remaining
-artwork is preserved. The button displays the mascot at a smaller scale for padding.
+`/profile` shows Guardian's Profile and links to `/profile-child` and
+`/profile-account`. The profile pages and Settings share the existing session.
+Profile supports separate guardian and child photos, local gallery selection,
+square cropping, removal and editing profile details. `ProfileAvatar` displays
+the selected guardian photo or the default mascot. Photos and changes last for
+the current session; persistence and uploads are not implemented.
 
-`ProfileAvatar` now shares the selected photo between the header and Profile page.
-It shows this mascot when no photo is set or a photo fails to load. Profile supports
-image-only gallery selection, square cropping and removal through Expo ImagePicker.
-Selection is local to the current in-memory session; no image upload is implemented.
-During camera setup (including a pending camera), Profile shows only its page
-heading, Terms & Privacy and Sign out. Photo editing and profile details become
-available when the connection service sets the camera status to `connected`.
-The temporary portrait was removed after the user approved the appearance.
-New sessions use the mascot by default; selected user photos override it.
-
-An imagegen enhancement was inspected but rejected because it shifted details.
-Its prompt requested only 4K edge enhancement with the original silhouette, horns,
-eye, smile, cheeks, spots and palette unchanged; the final asset uses the original
-instead of that generated variant.
+Settings automatically shows account/preferences without camera details and
+the complete menu after a camera is added. Its sign-out confirmation clears the
+session and returns to the landing page. Terms and Privacy remain in About
+LittleEye. The development query `?preview=connected` still supports layout
+review, but the in-app preview button has been removed.

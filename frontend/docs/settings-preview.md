@@ -21,9 +21,8 @@ This development-only display preview labels the camera **Online (preview)**,
 preserves the sample state when opening Device Information and Network, and
 does not modify the account, camera session or live connection.
 
-In Expo Go, open Settings from camera setup and tap **Preview connected-camera
-Settings** below the camera card. Tap **Exit connected-camera preview** to return.
-These controls appear only in development builds.
+The in-app connected-camera preview button has been removed. The development
+URL above still supports layout review without changing the session.
 
 For Expo Go, use the server's Expo URL with `/--/settings` appended, for example
 `exp://192.168.1.5:8081/--/settings`.

@@ -105,11 +105,6 @@ export default function SettingsScreen() {
           </View></View><View style={s.chevron} />
         </Pressable>
         {!camera && <Text style={s.noCameraNote}>Manage your account and preferences here. Camera settings will appear after you add a camera.</Text>}
-        {__DEV__ && (!session.camera || isPreview) && <Pressable accessibilityRole="button"
-          onPress={() => router.setParams({ preview: isPreview ? '' : 'connected' })}
-          style={({ pressed }) => [s.previewButton, pressed && s.pressed]}>
-          <Text style={s.previewButtonText}>{isPreview ? 'Exit connected-camera preview' : 'Preview connected-camera Settings'}</Text>
-        </Pressable>}
         <View style={s.groups}>{visibleGroups.map(group => <View key={group.title} style={s.group}>
           <Text accessibilityRole="header" style={s.groupTitle}>{group.title}</Text>
           {group.items.map(item => <Pressable key={item.title} accessibilityRole="button" onPress={() => openPage(item.page)}
@@ -136,8 +131,6 @@ export default function SettingsScreen() {
 }
 
 const s = StyleSheet.create({
-  previewButton: { marginTop: 20, padding: 14, minHeight: 44, borderRadius: 22, backgroundColor: '#E8F1FC', borderWidth: 1, borderColor: '#BED1EF', alignItems: 'center' },
-  previewButtonText: { fontFamily: F.semiBold, fontSize: 12, color: C.blue, textAlign: 'center' },
   screen: { flex: 1, backgroundColor: C.white },
   header: { backgroundColor: '#2C527F', paddingBottom: 84, overflow: 'hidden' },
   headerContent: { width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 28 },
