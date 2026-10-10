@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="240" viewBox="0 0 390 240">
+  <defs>
+    <linearGradient id="rightOpacity" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.45"/>
+    </linearGradient>
+    <mask id="lighterRight" maskUnits="userSpaceOnUse" x="0" y="0" width="390" height="240">
+      <rect width="390" height="240" fill="url(#rightOpacity)"/>
+    </mask>
+    <clipPath id="whiteArea">
+      <path d="M0 0C65 125 142 127 236 147C310 160 360 176 390 198V240H0Z"/>
+    </clipPath>
+    <linearGradient id="wideWave" gradientUnits="userSpaceOnUse" x1="85" y1="145" x2="180" y2="265">
+      <stop offset="0" stop-color="#94B0D5" stop-opacity="0.12"/>
+      <stop offset="0.45" stop-color="#94B0D5" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#94B0D5" stop-opacity="0.65"/>
+    </linearGradient>
+    <linearGradient id="crossWave" gradientUnits="userSpaceOnUse" x1="350" y1="178" x2="70" y2="260">
+      <stop offset="0" stop-color="#94B0D5" stop-opacity="0.5"/>
+      <stop offset="0.55" stop-color="#94B0D5" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#94B0D5" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+
+  <g clip-path="url(#whiteArea)" mask="url(#lighterRight)">
+    <path fill="url(#wideWave)" d="M-20 148C54 129 95 187 168 202C244 218 306 168 410 174V260H-20Z"/>
+    <path fill="url(#crossWave)" d="M-20 199C43 183 98 224 172 230C260 237 309 187 410 204V260H-20Z"/>
+  </g>
+</svg>

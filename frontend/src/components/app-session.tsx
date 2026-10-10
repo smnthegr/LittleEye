@@ -11,6 +11,9 @@ type Session = {
   accepted: boolean;
   signedIn: boolean;
   profile: Profile | null;
+  updateProfile: (profile: Profile) => void;
+  childPhoto: string | null;
+  setChildPhoto: (uri: string | null) => void;
   profilePhoto: string | null;
   setProfilePhoto: (uri: string | null) => void;
   camera: CameraDetails | null;
@@ -27,13 +30,14 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [childPhoto, setChildPhoto] = useState<string | null>(null);
   const [camera, setCamera] = useState<CameraDetails | null>(null);
   return <SessionContext.Provider value={{ accepted, signedIn, profile, camera, profilePhoto,
-    setProfilePhoto,
+    setProfilePhoto, updateProfile: setProfile, childPhoto, setChildPhoto,
     saveCamera: setCamera,
     acceptPolicies: () => setAccepted(true),
-    enterPreview: (value) => { setProfile(value ?? null); setCamera(null); setProfilePhoto(null); setSignedIn(true); },
-    signOut: () => { setProfile(null); setCamera(null); setProfilePhoto(null); setSignedIn(false); },
+    enterPreview: (value) => { setProfile(value ?? null); setCamera(null); setProfilePhoto(null); setChildPhoto(null); setSignedIn(true); },
+    signOut: () => { setProfile(null); setCamera(null); setProfilePhoto(null); setChildPhoto(null); setSignedIn(false); },
   }}>{children}</SessionContext.Provider>;
 }
 

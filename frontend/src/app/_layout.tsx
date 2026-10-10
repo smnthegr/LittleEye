@@ -55,10 +55,18 @@ function AppNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={session.signedIn && session.accepted}>
         <Stack.Screen name="connect-camera" />
-        <Stack.Screen name="profile" />
         <Stack.Protected guard={!!session.camera}>
           <Stack.Screen name="home" />
         </Stack.Protected>
+      </Stack.Protected>
+      {/* Keep Settings after the entry screens so sign-in falls back to camera setup.
+          Direct development links remain available while Home is being built. */}
+      <Stack.Protected guard={__DEV__ || (session.signedIn && session.accepted)}>
+        <Stack.Screen name="settings" />
+        <Stack.Screen name="settings-pages" />
+        <Stack.Screen name="profile" />
+        <Stack.Screen name="profile-child" />
+        <Stack.Screen name="profile-account" />
       </Stack.Protected>
       <Stack.Protected guard={false}>
         <Stack.Screen name="explore" />

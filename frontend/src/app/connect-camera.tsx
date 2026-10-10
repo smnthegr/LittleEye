@@ -1,8 +1,10 @@
+import { BackButton } from '@/components/back-button';
+import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { useCallback, useState } from 'react';
 import { Redirect, router, useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
-import { BackHandler, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { BackHandler, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
 import { validCameraAddress } from '@/constants/camera';
@@ -10,7 +12,7 @@ import { useAppSession } from '@/components/app-session';
 import { CameraIcon } from '@/components/camera-icon';
 import { GlowButton } from '@/components/glow-button';
 import { PageTransition } from '@/components/page-transition';
-import { ProfileAvatar } from '@/components/profile-avatar';
+import { SettingsIcon } from '@/components/settings-icon';
 
 export default function ConnectCameraScreen() {
   const insets = useSafeAreaInsets();
@@ -40,15 +42,15 @@ export default function ConnectCameraScreen() {
   if (continueHome && session.camera) return <Redirect href="/home" />;
   return <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
     <StatusBar style="light" />
-    <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[s.page, { paddingBottom: insets.bottom + 32 }]}>
+    <EdgeScrollView topColor={C.blue} bottomColor={C.white} keyboardShouldPersistTaps="handled" contentContainerStyle={[s.page, { paddingBottom: insets.bottom + 32 }]}>
       <View style={[s.hero, { paddingTop: insets.top + 24 }]}>
         <View pointerEvents="none" style={s.wave}>
           <Image source={require('../../assets/images/camera-setup-blob.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
         </View>
         <View style={s.header}>
           <View style={s.headerText}><Text style={s.logo}>Little<Text style={{ color: C.lightBlue }}>Eye</Text></Text><Text style={s.headerLabel}>Camera setup</Text></View>
-          <GlowButton accessibilityRole="button" accessibilityLabel="Open profile" onPress={() => router.push('/profile')} style={s.profileButton}>
-            <ProfileAvatar />
+          <GlowButton accessibilityRole="button" accessibilityLabel="Open settings" onPress={() => { Keyboard.dismiss(); router.push('/settings'); }} style={s.settingsButton}>
+            <SettingsIcon />
           </GlowButton>
         </View>
         <Text accessibilityRole="header" style={s.heroTitle}>Let’s bring your{'\n'}camera home.</Text>
@@ -56,7 +58,7 @@ export default function ConnectCameraScreen() {
       <View style={s.content}>
         <PageTransition key={step} backgroundColor="transparent">
           <View style={s.card}>
-            {step !== 'start' && <GlowButton accessibilityRole="button" accessibilityLabel="Back to camera setup" onPress={() => changeStep('start')} style={s.back}><View style={s.backArrow} /></GlowButton>}
+            {step !== 'start' && <BackButton light accessibilityRole="button" accessibilityLabel="Back to camera setup" onPress={() => changeStep('start')} style={s.back} />}
             <View style={s.orbit}><View style={s.orbitInner}><CameraIcon size={52} /></View><View style={s.orbitDot} /></View>
             <Text accessibilityRole="header" style={s.cardTitle}>{step === 'start' ? 'A new view starts here' : step === 'search' ? 'Find your camera' : 'Connect your camera'}</Text>
             <Text style={s.cardBody}>{step === 'start' ? 'Find a camera on your Wi-Fi network, or add it using its stream address.' : step === 'search' ? 'Keep your phone and CCTV camera on the same Wi-Fi network.' : 'Give your camera a name and enter its stream address.'}</Text>
@@ -80,7 +82,7 @@ export default function ConnectCameraScreen() {
         </PageTransition>
         <View style={s.tip}><View style={s.tipDot} /><View style={{ flex: 1 }}><Text style={s.tipTitle}>A few things before you connect</Text><Text style={s.small}>Power on your camera, connect it to Wi-Fi, and make sure you have permission to use it.</Text></View></View>
       </View>
-    </ScrollView>
+    </EdgeScrollView>
   </KeyboardAvoidingView>;
 }
 
@@ -90,7 +92,7 @@ const s = StyleSheet.create({
   hero: { backgroundColor: C.blue, paddingHorizontal: 28, paddingBottom: 64, borderBottomLeftRadius: 72, overflow: 'hidden' },
   wave: { position: 'absolute', width: 440, height: 275, opacity: .14, right: -130, top: 76, transform: [{ rotate: '-12deg' }] },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }, logo: { fontFamily: F.extraBold, fontSize: 36, color: C.white }, headerLabel: { fontFamily: F.regular, fontSize: 12, color: C.white, marginTop: 10 },
-  profileButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(148,176,213,.22)', borderWidth: 1, borderColor: 'rgba(148,176,213,.45)', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 20px 5px rgba(148,176,213,.32), 0 5px 14px rgba(24,42,67,.16)' },
+  settingsButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(148,176,213,.22)', borderWidth: 1, borderColor: 'rgba(148,176,213,.45)', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 20px 5px rgba(148,176,213,.32), 0 5px 14px rgba(24,42,67,.16)' },
   heroTitle: { fontFamily: F.bold, fontSize: 26, lineHeight: 34, color: C.white },
   content: { paddingHorizontal: 24, marginTop: -28 }, card: { backgroundColor: C.white, borderRadius: 30, padding: 22, alignItems: 'center', boxShadow: '0 12px 30px rgba(50,80,123,.24), 0 0 24px 4px rgba(148,176,213,.22)' },
   orbit: { width: 116, height: 116, borderRadius: 70, borderWidth: 1, borderColor: 'rgba(148,176,213,.35)', justifyContent: 'center', alignItems: 'center', marginVertical: 14 }, orbitInner: { width: 84, height: 84, borderRadius: 50, backgroundColor: 'rgba(148,176,213,.22)', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 24px rgba(148,176,213,.3)' }, orbitDot: { position: 'absolute', width: 12, height: 12, borderRadius: 8, backgroundColor: C.lightBlue, right: 4, top: 17, borderWidth: 3, borderColor: C.white },
@@ -99,5 +101,5 @@ const s = StyleSheet.create({
   input: { alignSelf: 'stretch', minHeight: 54, backgroundColor: 'rgba(148,176,213,.22)', borderRadius: 28, paddingHorizontal: 20, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(148,176,213,.5)', fontFamily: F.regular, color: C.blue, fontSize: 12, marginBottom: 16 }, filled: { fontFamily: F.semiBold }, small: { fontFamily: F.regular, fontSize: 11, lineHeight: 18, color: C.blue, opacity: .75 }, error: { alignSelf: 'stretch', color: C.blue, fontFamily: F.semiBold, fontSize: 12, lineHeight: 19, marginTop: 12 },
   searchNotice: { alignSelf: 'stretch', padding: 16, borderRadius: 20, backgroundColor: 'rgba(148,176,213,.14)' }, noticeTitle: { color: C.blue, fontFamily: F.semiBold, fontSize: 12, marginBottom: 8 }, preview: { fontFamily: F.regular, fontSize: 10, lineHeight: 17, color: C.blue, opacity: .7, textAlign: 'center', marginTop: 14 },
   tip: { flexDirection: 'row', gap: 12, padding: 18, borderRadius: 22, marginTop: 24, backgroundColor: 'rgba(148,176,213,.14)' }, tipDot: { width: 8, height: 8, backgroundColor: C.lightBlue, borderRadius: 5, marginTop: 5 }, tipTitle: { fontFamily: F.semiBold, fontSize: 12, color: C.blue, marginBottom: 5 },
-  back: { alignSelf: 'flex-start', width: 36, height: 36, borderRadius: 20, backgroundColor: 'rgba(148,176,213,.18)', justifyContent: 'center', alignItems: 'center' }, backArrow: { width: 11, height: 11, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: C.blue, transform: [{ rotate: '45deg' }], marginLeft: 4 },
+  back: { alignSelf: 'flex-start' },
 });

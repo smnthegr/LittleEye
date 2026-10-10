@@ -1,3 +1,4 @@
+import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { GlowButton } from '@/components/glow-button';
 import { useAppSession } from '@/components/app-session';
 import { useMascotImages } from '@/components/mascot-images';
@@ -6,7 +7,7 @@ import { BrandColors, BrandFonts } from '@/constants/brand';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
-import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function WelcomeScreen() {
@@ -23,7 +24,7 @@ export default function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={[styles.page, { minHeight: height - insets.top }]} bounces={false} contentInsetAdjustmentBehavior="never">
+      <EdgeScrollView contentContainerStyle={[styles.page, { minHeight: height - insets.top }]} contentInsetAdjustmentBehavior="never">
         <View style={styles.content}>
           <Text accessibilityRole="header" style={styles.title} adjustsFontSizeToFit numberOfLines={1}>
             Little<Text style={styles.accent}>Eye</Text>
@@ -51,7 +52,7 @@ export default function WelcomeScreen() {
             }}
           />
         </View>
-      </ScrollView>
+      </EdgeScrollView>
     </SafeAreaView>
   );
 }

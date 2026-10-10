@@ -1,3 +1,6 @@
+import { BackButton } from '@/components/back-button';
+import { EdgeScrollView } from '@/components/edge-scroll-view';
+import { AuthBottomWave } from '@/components/auth-bottom-wave';
 import { GlowButton } from '@/components/glow-button';
 import { useAppSession } from '@/components/app-session';
 import { useMascotImages } from '@/components/mascot-images';
@@ -8,7 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform,
-  Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions,
+  Pressable, type ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions,
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -143,21 +146,18 @@ export default function SetUpScreen() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="light" />
-      <ScrollView ref={scroll} keyboardShouldPersistTaps="handled" bounces={false}
+      <EdgeScrollView topColor={BrandColors.blue} bottomColor={BrandColors.white} ref={scroll} keyboardShouldPersistTaps="handled"
         contentInsetAdjustmentBehavior="never"
         contentContainerStyle={[styles.page, { minHeight: Math.max(height, insets.top + 680 + insets.bottom), paddingBottom: insets.bottom + 40 }]}>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <Image source={mascots.signUp} accessible={false} contentFit="contain" transition={0}
             style={{ position: 'absolute', opacity: 0.475, width: 1920 * mascotScale, height: 1080 * mascotScale,
               left: pageWidth - 1190 * mascotScale, top: insets.top + pageWidth * 0.6 - 109 * mascotScale }} />
-          <Image source={require('../../assets/images/sign-up-wave.svg')} accessible={false} contentFit="fill" transition={0}
-            style={{ position: 'absolute', bottom: 0, width: pageWidth, height: pageWidth * 0.62 + insets.bottom }} />
+          <AuthBottomWave width={pageWidth} height={pageWidth * 0.62 + insets.bottom} />
         </View>
-        <GlowButton accessibilityRole="button" accessibilityLabel={step === 0 ? 'Back to Sign Up' : 'Back to previous setup step'}
+        <BackButton accessibilityRole="button" accessibilityLabel={step === 0 ? 'Back to Sign Up' : 'Back to previous setup step'}
           hitSlop={12} onPress={() => step === 0 ? router.back() : changeStep(step - 1)}
-          style={[styles.back, { top: insets.top + 12 }]}>
-          <View style={styles.backArrow} />
-        </GlowButton>
+          style={[styles.back, { top: insets.top + 12 }]} />
         <Animated.View style={[styles.form, { paddingTop: insets.top + 76, opacity: fade }]}>
           {sexOpen && <Pressable accessibilityRole="button" accessibilityLabel="Close sex menu"
             onPress={() => setSexOpen(false)} style={styles.menuDismiss} />}
@@ -242,7 +242,7 @@ export default function SetUpScreen() {
             <Text style={[styles.nextText, step === 2 && styles.finishText]}>{step === 2 ? 'Connect a Camera' : 'Next'}</Text>
           </GlowButton>
         </Animated.View>
-      </ScrollView>
+      </EdgeScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   filledInput: { fontFamily: BrandFonts.semiBold },
   screen: { flex: 1, backgroundColor: BrandColors.blue },
   page: { width: '100%', maxWidth: 480, alignSelf: 'center', backgroundColor: BrandColors.blue, overflow: 'hidden' },
-  back: { position: 'absolute', left: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', zIndex: 1 },
+  back: { position: 'absolute', left: 16, zIndex: 1 },
   backArrow: { width: 12, height: 12, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: BrandColors.white, transform: [{ rotate: '45deg' }], marginLeft: 6 },
   form: { width: '100%', maxWidth: 400, alignSelf: 'center', paddingHorizontal: 36 },
   heading: { fontFamily: BrandFonts.extraBold, fontSize: 36, color: BrandColors.white, textAlign: 'center' },

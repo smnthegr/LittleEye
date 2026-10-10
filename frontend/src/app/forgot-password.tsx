@@ -1,9 +1,10 @@
+import { BackButton } from '@/components/back-button';
+import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { BrandColors, BrandFonts } from '@/constants/brand';
-import { GlowButton } from '@/components/glow-button';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ForgotPasswordScreen() {
@@ -24,10 +25,8 @@ export default function ForgotPasswordScreen() {
     <SafeAreaView style={styles.screen}>
       <StatusBar style="dark" />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.page}>
-          <GlowButton accessibilityRole="button" accessibilityLabel="Back to Sign In" onPress={() => router.back()} style={styles.back} hitSlop={12}>
-            <View style={styles.arrow} />
-          </GlowButton>
+        <EdgeScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.page}>
+          <BackButton light accessibilityRole="button" accessibilityLabel="Back to Sign In" onPress={() => router.back()} style={styles.back} hitSlop={12} />
           <View style={styles.content}>
             <View accessible={false} style={styles.iconCircle}>
               <View style={styles.lockLoop} /><View style={styles.lockBody}><View style={styles.keyhole} /></View>
@@ -68,7 +67,7 @@ export default function ForgotPasswordScreen() {
               <Text style={styles.returnText}>Back to Sign In</Text>
             </Pressable>
           </View>
-        </ScrollView>
+        </EdgeScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -80,7 +79,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BrandColors.white },
   flex: { flex: 1 },
   page: { flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center', padding: 28 },
-  back: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EAF0F8', alignItems: 'center', justifyContent: 'center' },
+  back: {},
   arrow: { width: 12, height: 12, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: BrandColors.blue, transform: [{ rotate: '45deg' }], marginLeft: 6 },
   content: { flex: 1, justifyContent: 'center', paddingTop: 28, paddingBottom: 40 },
   iconCircle: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#EAF0F8', alignSelf: 'center', marginBottom: 24, alignItems: 'center', justifyContent: 'center' },

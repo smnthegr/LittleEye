@@ -1,3 +1,5 @@
+import { BackButton } from '@/components/back-button';
+import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { useMascotImages } from '@/components/mascot-images';
 import { GlowButton } from '@/components/glow-button';
 import { useAppSession } from '@/components/app-session';
@@ -8,7 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
   Alert, KeyboardAvoidingView, Platform, Pressable,
-  ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View,
+  StyleSheet, Text, TextInput, useWindowDimensions, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -38,7 +40,7 @@ export default function SignInScreen() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="light" />
-      <ScrollView
+      <EdgeScrollView topColor={BrandColors.blue} bottomColor={BrandColors.white}
         keyboardShouldPersistTaps="handled"
         contentInsetAdjustmentBehavior="never"
         contentContainerStyle={[styles.page, { paddingBottom: Math.max(insets.bottom, 20) }]}>
@@ -62,14 +64,12 @@ export default function SignInScreen() {
               top: insets.top - pageWidth * (125 / 1091),
             }}
           />
-          <GlowButton
+          <BackButton
             accessibilityRole="button"
             accessibilityLabel="Back to welcome"
             onPress={() => router.back()}
             hitSlop={12}
-            style={[styles.back, { top: insets.top + 12 }]}>
-            <View style={styles.backArrow} />
-          </GlowButton>
+            style={[styles.back, { top: insets.top + 12 }]} />
         </View>
 
         <View style={styles.form}>
@@ -138,7 +138,7 @@ export default function SignInScreen() {
             <Text style={styles.signUp}>Sign Up!</Text>
           </Pressable>
         </View>
-      </ScrollView>
+      </EdgeScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   page: { flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center', backgroundColor: BrandColors.white },
   hero: { backgroundColor: BrandColors.blue, overflow: 'hidden' },
 
-  back: { position: 'absolute', left: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  back: { position: 'absolute', left: 16, zIndex: 1 },
   backArrow: { width: 12, height: 12, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: BrandColors.white, transform: [{ rotate: '45deg' }], marginLeft: 6 },
   form: { paddingHorizontal: 32, paddingTop: 12 },
   heading: { fontSize: 32, fontFamily: BrandFonts.extraBold, color: '#000000', textAlign: 'center', letterSpacing: -1 },

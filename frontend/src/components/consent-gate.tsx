@@ -1,5 +1,6 @@
+import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
@@ -11,7 +12,7 @@ export function PolicyReader({ onRead }: { onRead?: () => void }) {
   function checkFits() {
     if (size.current.viewport > 0 && size.current.content > 0 && size.current.content <= size.current.viewport + 2) onRead?.();
   }
-  return <ScrollView style={s.reader} contentContainerStyle={s.readerContent}
+  return <EdgeScrollView style={s.reader} contentContainerStyle={s.readerContent}
     onLayout={(e) => { size.current.viewport = e.nativeEvent.layout.height; checkFits(); }}
     onContentSizeChange={(_, height) => { size.current.content = height; checkFits(); }}
     scrollEventThrottle={16} onScroll={(e) => {
@@ -26,7 +27,7 @@ export function PolicyReader({ onRead }: { onRead?: () => void }) {
       </View>)}
     </View>)}
     <Text style={s.end}>You’ve reached the end of this notice.</Text>
-  </ScrollView>;
+  </EdgeScrollView>;
 }
 
 export function ConsentGate({ onAccept, onDecline }: { onAccept: () => void; onDecline: () => void }) {
