@@ -1,0 +1,23 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bubbleFill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(24 21) rotate(54) scale(40)">
+      <stop stop-color="#FFFFFF" stop-opacity="0.34"/>
+      <stop offset="0.48" stop-color="#DDF4FF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#A8D9FF" stop-opacity="0.08"/>
+    </radialGradient>
+    <linearGradient id="bubbleEdge" x1="13" y1="9" x2="51" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="0.55" stop-color="#D9F3FF" stop-opacity="0.48"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.82"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="18" y1="12" x2="31" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="26" fill="url(#bubbleFill)" stroke="url(#bubbleEdge)" stroke-width="1.5"/>
+  <circle cx="32" cy="32" r="23.5" stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="0.7"/>
+  <ellipse cx="23.5" cy="16.5" rx="7.5" ry="3.1" transform="rotate(-32 23.5 16.5)" fill="url(#shine)"/>
+  <circle cx="39.5" cy="13.5" r="1.7" fill="#FFFFFF" fill-opacity="0.82"/>
+  <path d="M47.5 22.5C50 26 51 30 50.5 34" stroke="#FFFFFF" stroke-opacity="0.58" stroke-width="1.1" stroke-linecap="round"/>
+</svg>

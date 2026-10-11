@@ -1,0 +1,19 @@
+<svg width="150" height="150" viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bubble" cx="0" cy="0" r="1" gradientTransform="matrix(22 23 -23 22 106 24)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white" stop-opacity=".42"/>
+      <stop offset=".62" stop-color="#94B0D5" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#94B0D5" stop-opacity=".08"/>
+    </radialGradient>
+    <linearGradient id="glint" x1="99" y1="12" x2="112" y2="24" gradientUnits="userSpaceOnUse">
+      <stop stop-color="white" stop-opacity=".9"/>
+      <stop offset="1" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <circle cx="108" cy="26" r="15" fill="url(#bubble)" stroke="white" stroke-opacity=".58" stroke-width="1.5"/>
+  <ellipse cx="103" cy="18" rx="4.2" ry="1.6" transform="rotate(-35 103 18)" fill="url(#glint)"/>
+  <circle cx="128" cy="48" r="12" fill="url(#bubble)" stroke="white" stroke-opacity=".55" stroke-width="1.4"/>
+  <ellipse cx="124" cy="42" rx="3.4" ry="1.4" transform="rotate(-35 124 42)" fill="url(#glint)"/>
+  <circle cx="117" cy="56" r="6" fill="url(#bubble)" stroke="white" stroke-opacity=".5" stroke-width="1"/>
+  <circle cx="136" cy="31" r="4" fill="url(#bubble)" stroke="white" stroke-opacity=".42" stroke-width=".8"/>
+</svg>

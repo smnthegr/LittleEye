@@ -1,0 +1,18 @@
+<svg width="110" height="110" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glass" cx="0" cy="0" r="1" gradientTransform="matrix(32 57 -57 32 36 27)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#32507B"/>
+      <stop offset=".62" stop-color="#32507B"/>
+      <stop offset=".86" stop-color="#5579A5"/>
+      <stop offset="1" stop-color="#94B0D5" stop-opacity=".88"/>
+    </radialGradient>
+    <radialGradient id="rimHaze" cx="55" cy="55" r="55" gradientUnits="userSpaceOnUse">
+      <stop offset=".82" stop-color="#94B0D5" stop-opacity="0"/>
+      <stop offset="1" stop-color="#94B0D5" stop-opacity=".52"/>
+    </radialGradient>
+  </defs>
+  <circle cx="55" cy="55" r="53.5" fill="url(#glass)" stroke="#94B0D5" stroke-opacity=".62" stroke-width="2"/>
+  <circle cx="55" cy="55" r="53.5" fill="url(#rimHaze)"/>
+  <path d="M73 18C80 22 85 27 89 33" stroke="white" stroke-opacity=".62" stroke-width="4" stroke-linecap="round"/>
+  <path d="M90 40C92 44 93 47 94 51" stroke="white" stroke-opacity=".42" stroke-width="4" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 162" fill="none">
+  <defs>
+    <radialGradient id="glow" cx="170" cy="-8" r="184" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF5A4F" stop-opacity=".8"/>
+      <stop offset=".48" stop-color="#FF514B" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#FF514B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="triangle" x1="170" y1="11" x2="170" y2="153" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF3037"/>
+      <stop offset="1" stop-color="#FF3037"/>
+    </linearGradient>
+    <filter id="softGlow" x="26" y="-74" width="288" height="288" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+  <ellipse cx="170" cy="-8" rx="184" ry="170" fill="url(#glow)"/>
+  <path d="M166.2 44a4.4 4.4 0 0 1 7.6 0l44.5 76a4.4 4.4 0 0 1-3.8 6.6h-89a4.4 4.4 0 0 1-3.8-6.6l44.5-76Z" fill="#FF3943" opacity=".3" filter="url(#softGlow)"/>
+  <path d="M166.5 45.8a4 4 0 0 1 7 0l45.2 77.3a4 4 0 0 1-3.5 6h-90.4a4 4 0 0 1-3.5-6l45.2-77.3Z" fill="url(#triangle)"/>
+  <path d="M167.3 64.2a3.1 3.1 0 0 1 5.4 0l31.8 54.3a3.1 3.1 0 0 1-2.7 4.7h-63.6a3.1 3.1 0 0 1-2.7-4.7l31.8-54.3Z" fill="#FF343B" stroke="#FF6967" stroke-opacity=".34" stroke-width="2"/>
+  <path d="M170 73v21" stroke="#FFF" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="170" cy="108" r="5" fill="#FFF"/>
+</svg>

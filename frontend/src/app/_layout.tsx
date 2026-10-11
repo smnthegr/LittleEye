@@ -2,12 +2,14 @@ import { MascotImagesProvider } from '@/components/mascot-images';
 import { PageTransition } from '@/components/page-transition';
 import { BrandColors } from '@/constants/brand';
 import { useFonts } from 'expo-font';
+import { VT323_400Regular } from '@expo-google-fonts/vt323';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AppSessionProvider, useAppSession } from '@/components/app-session';
+import { FallAlertProvider } from '@/components/fall-alert';
 
 
 SplashScreen.preventAutoHideAsync();
@@ -19,6 +21,7 @@ export default function TabLayout() {
     'Montserrat-SemiBold': require('../../assets/fonts/Montserrat_600SemiBold.ttf'),
     'Montserrat-Bold': require('../../assets/fonts/Montserrat_700Bold.ttf'),
     'Montserrat-ExtraBold': require('../../assets/fonts/Montserrat_800ExtraBold.ttf'),
+    VT323_400Regular,
   });
 
   if (!fontsLoaded && !fontError) return null;
@@ -26,8 +29,10 @@ export default function TabLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <MascotImagesProvider>
         <AppSessionProvider>
-          <AnimatedSplashOverlay />
-          <AppNavigator />
+          <FallAlertProvider>
+            <AnimatedSplashOverlay />
+            <AppNavigator />
+          </FallAlertProvider>
         </AppSessionProvider>
       </MascotImagesProvider>
     </ThemeProvider>
@@ -37,9 +42,15 @@ export default function TabLayout() {
 function AppNavigator() {
   const session = useAppSession();
   return (
-    <Stack screenOptions={{ headerShown: false, animation: 'none' }}
+    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}
       screenLayout={({ children, route }) => (
-        <PageTransition backgroundColor={['sign-up', 'set-up', 'connect-camera'].includes(route.name) ? BrandColors.blue : BrandColors.white}>
+        <PageTransition backgroundColor={
+          ['sign-up', 'set-up', 'connect-camera'].includes(route.name)
+            ? BrandColors.blue
+            : route.name === 'first-aid-guidance'
+              ? '#315780'
+              : BrandColors.white
+        }>
           {children}
         </PageTransition>
       )}>
@@ -67,6 +78,12 @@ function AppNavigator() {
         <Stack.Screen name="profile" />
         <Stack.Screen name="profile-child" />
         <Stack.Screen name="profile-account" />
+        <Stack.Screen name="history" />
+        <Stack.Screen name="emergency-hotline" />
+        <Stack.Screen name="emergency-services" />
+        <Stack.Screen name="emergency-contacts" />
+        <Stack.Screen name="call" />
+        <Stack.Screen name="first-aid-guidance" />
       </Stack.Protected>
       <Stack.Protected guard={false}>
         <Stack.Screen name="explore" />

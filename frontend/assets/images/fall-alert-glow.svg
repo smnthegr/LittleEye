@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 205" fill="none">
+  <defs>
+    <radialGradient id="alertBloom" cx="180" cy="0" r="188" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF303B" stop-opacity=".52"/>
+      <stop offset=".34" stop-color="#FF3844" stop-opacity=".34"/>
+      <stop offset=".68" stop-color="#FF514B" stop-opacity=".14"/>
+      <stop offset="1" stop-color="#FF514B" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="iconBloom" cx="180" cy="80" r="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF303B" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#FF4049" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="180" cy="0" rx="188" ry="180" fill="url(#alertBloom)"/>
+  <ellipse cx="180" cy="80" rx="112" ry="112" fill="url(#iconBloom)"/>
+</svg>

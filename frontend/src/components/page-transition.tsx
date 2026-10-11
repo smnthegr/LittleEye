@@ -1,30 +1,27 @@
 import { BrandColors } from '@/constants/brand';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState, type ReactNode } from 'react';
-import { Animated, Easing, StyleSheet, View, type ColorValue } from 'react-native';
+import { type ReactNode } from 'react';
+import { Image } from 'expo-image';
+import { Animated, StyleSheet, View, useWindowDimensions, type ColorValue } from 'react-native';
+import { navBubbleOpacity, navBubbleProgress, navBubbleScale } from '@/components/navigation-transition';
 
 export function PageTransition({ children, backgroundColor = BrandColors.white }: {
   children: ReactNode;
   backgroundColor?: ColorValue;
 }) {
-  const [progress] = useState(() => new Animated.Value(0));
-
-  useFocusEffect(useCallback(() => {
-    progress.setValue(0);
-    const animation = Animated.timing(progress, {
-      toValue: 1, duration: 280,
-      easing: Easing.inOut(Easing.sin), useNativeDriver: true,
-    });
-    animation.start();
-    return () => animation.stop();
-  }, [progress]));
+  const { width } = useWindowDimensions();
 
   return (
     <View style={[styles.frame, { backgroundColor }]}>
-      <Animated.View style={[styles.page, {
-        opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }),
+      {children}
+      <Animated.View pointerEvents="none" style={[styles.navBubble, {
+        left: width * .18 - 34,
+        opacity: navBubbleOpacity,
+        transform: [
+          { translateX: navBubbleProgress.interpolate({ inputRange: [0, 1], outputRange: [0, width * .64 + 10] }) },
+          { scale: navBubbleScale },
+        ],
       }]}>
-        {children}
+        <Image source={require('../../assets/images/nav-transition-bubble.svg')} contentFit="contain" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
       </Animated.View>
     </View>
   );
@@ -32,5 +29,5 @@ export function PageTransition({ children, backgroundColor = BrandColors.white }
 
 const styles = StyleSheet.create({
   frame: { flex: 1 },
-  page: { flex: 1 },
+  navBubble: { position: 'absolute', zIndex: 20, bottom: 54, width: 58, height: 58, borderRadius: 30, backgroundColor: 'transparent', boxShadow: '0 0 17px rgba(148,218,255,.28), 0 3px 10px rgba(50,80,123,.16)' },
 });

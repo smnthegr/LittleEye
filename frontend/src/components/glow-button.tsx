@@ -5,7 +5,9 @@ import {
   type PressableProps,
 } from 'react-native';
 
-export function GlowButton({ children, style, onPressIn, onPressOut, ...props }: PressableProps) {
+type GlowButtonProps = PressableProps & { pressGlow?: boolean; pressRippleScale?: number; pressRippleSize?: number; pressShimmer?: boolean };
+
+export function GlowButton({ children, style, onPressIn, onPressOut, pressGlow = true, pressRippleScale = 2.5, pressRippleSize = 140, pressShimmer = true, ...props }: GlowButtonProps) {
   const [water] = useState(() => new Animated.Value(0));
 
   useEffect(() => () => water.stopAnimation(), [water]);
@@ -27,7 +29,7 @@ export function GlowButton({ children, style, onPressIn, onPressOut, ...props }:
         onPressOut?.(event);
       }}
       style={(state) => [typeof style === 'function' ? style(state) : style,
-        state.pressed && styles.glow,
+        state.pressed && pressGlow && styles.glow,
         state.pressed && styles.pressSize]}>
       {(state) => {
         const base = StyleSheet.flatten(typeof style === 'function' ? style(state) : style);
@@ -35,19 +37,23 @@ export function GlowButton({ children, style, onPressIn, onPressOut, ...props }:
           <>
             <View pointerEvents="none" style={[styles.clip, { borderRadius: base?.borderRadius ?? 30 }]}>
               <Animated.View style={[styles.wave, {
+                width: pressRippleSize,
+                height: pressRippleSize,
+                marginLeft: -pressRippleSize / 2,
+                marginTop: -pressRippleSize / 2,
                 opacity: water.interpolate({ inputRange: [0, 0.15, 0.6, 1], outputRange: [0, 0.6, 0.4, 0] }),
                 transform: [
-                  { scale: water.interpolate({ inputRange: [0, 1], outputRange: [0.2, 2.5] }) },
+                  { scale: water.interpolate({ inputRange: [0, 1], outputRange: [0.2, pressRippleScale] }) },
                   { rotate: water.interpolate({ inputRange: [0, 1], outputRange: ['-12deg', '12deg'] }) },
                 ],
               }]} />
-              <Animated.View style={[styles.wave, styles.shimmer, {
+              {pressShimmer && <Animated.View style={[styles.wave, styles.shimmer, {
                 opacity: water.interpolate({ inputRange: [0, 0.25, 0.65, 1], outputRange: [0, 0.18, 0.1, 0] }),
                 transform: [
                   { scale: water.interpolate({ inputRange: [0, 1], outputRange: [0.1, 2] }) },
                   { rotate: water.interpolate({ inputRange: [0, 1], outputRange: ['15deg', '-15deg'] }) },
                 ],
-              }]} />
+              }]} />}
             </View>
             {typeof children === 'function' ? children(state) : children}
           </>

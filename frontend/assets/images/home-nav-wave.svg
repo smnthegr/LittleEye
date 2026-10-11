@@ -1,0 +1,13 @@
+<svg width="390" height="190" viewBox="0 0 390 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="scoopGlow" cx="0" cy="0" r="1" gradientTransform="matrix(0 100 -150 0 195 90)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#94B0D5" stop-opacity=".25"/>
+      <stop offset="1" stop-color="#94B0D5" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="barGlow" x="-15%" y="-35%" width="130%" height="180%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="-1" stdDeviation="10" flood-color="#94B0D5" flood-opacity=".7"/>
+    </filter>
+  </defs>
+  <circle cx="195" cy="90" r="120" fill="url(#scoopGlow)"/>
+  <path d="M0 40C29 21 61 20 91 33C132 50 149 100 195 100C241 100 258 50 299 33C329 20 361 21 390 40V158C390 176 376 190 358 190H32C14 190 0 176 0 158V40Z" fill="#32507B" filter="url(#barGlow)"/>
+</svg>

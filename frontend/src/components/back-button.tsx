@@ -15,6 +15,6 @@ export function BackButton({ light = false, style, accessibilityLabel = 'Go back
 
 const s = StyleSheet.create({
   button: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  arrow: { width: 12, height: 12, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: BrandColors.white, transform: [{ rotate: '45deg' }], marginLeft: 6 },
+  arrow: { width: 12, height: 12, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: BrandColors.white, transform: [{ rotate: '45deg' }], marginLeft: 5 },
   light: { backgroundColor: 'rgba(148,176,213,0.2)' }, lightArrow: { borderColor: BrandColors.blue },
 });
