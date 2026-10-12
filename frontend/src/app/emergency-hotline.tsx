@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
@@ -7,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
+import { ResponsiveBackground } from '@/components/responsive-background';
 import { GlowButton } from '@/components/glow-button';
 import { useAppSession } from '@/components/app-session';
 import { SettingsProfileButton } from '@/components/settings-profile-button';
@@ -24,10 +26,12 @@ const emergencyHotlines = [
 ];
 
 export default function EmergencyHotlineScreen() {
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
+  const { height } = useWindowDimensions();
+  const { pageWidth, scaleSize } = useResponsiveLayout();
   const { profile, profilePhoto } = useAppSession();
-  const sosScale = Math.min(2, (width - 24) / 204) * .95 * .9;
+  const sosScale = Math.min(2, (pageWidth - scaleSize(24)) / scaleSize(204)) * .95 * .9;
   const currentAddress = profile?.guardian.address.trim() ?? '';
   const [showHotlines, setShowHotlines] = useState(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -67,8 +71,8 @@ export default function EmergencyHotlineScreen() {
 
   return <View style={s.screen}>
     <StatusBar style="dark" />
-    <Image pointerEvents="none" source={require('../../assets/images/emergency-hotline-background.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-    <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + 18, paddingBottom: Math.max(insets.bottom, 16) + 12 }]} showsVerticalScrollIndicator={false}>
+    <ResponsiveBackground source={require('../../assets/images/emergency-hotline-background.svg')} />
+    <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + scaleSize(18), paddingBottom: Math.max(insets.bottom, 16) + scaleSize(12) }]} showsVerticalScrollIndicator={false}>
       <View style={s.headerRow}>
         <BackButton light accessibilityLabel="Back" onPress={goBack} />
         <SettingsProfileButton />
@@ -80,7 +84,7 @@ export default function EmergencyHotlineScreen() {
         <Text style={s.subtitle}>confirm and activate Emergency Assistance.</Text>
       </View>
 
-      <View style={[s.sosArea, { height: 204 * sosScale }]}>
+      <View style={[s.sosArea, { height: scaleSize(204) * sosScale }]}>
         <View style={[s.sosOuterRing, { transform: [{ scale: sosScale }] }]}>
           <View style={s.sosMiddleRing}>
             <Pressable
@@ -149,7 +153,7 @@ export default function EmergencyHotlineScreen() {
                 <Text style={s.hotlineName}>{hotline.name}</Text>
             <Text style={s.hotlineNumber}>{hotline.number}</Text>
               </View>
-              <View style={s.phoneCircle}><SymbolView name={{ ios: 'phone.fill', android: 'call', web: 'call' }} size={19} tintColor={C.white} /></View>
+              <View style={s.phoneCircle}><SymbolView name={{ ios: 'phone.fill', android: 'call', web: 'call' }} size={scaleSize(19)} tintColor={C.white} /></View>
             </GlowButton>)}
           </View>
         </ScrollView>
@@ -159,8 +163,10 @@ export default function EmergencyHotlineScreen() {
 }
 
 function ActionRow({ icon, title, subtitle, onPress }: { icon: keyof typeof rowIcons; title: string; subtitle: string; onPress: () => void }) {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   return <GlowButton accessibilityRole="button" accessibilityLabel={`${title}. ${subtitle}`} onPress={onPress} style={s.actionRow}>
-    <View style={s.actionIcon}><SymbolView name={rowIcons[icon]} size={18} tintColor={C.white} /></View>
+    <View style={s.actionIcon}><SymbolView name={rowIcons[icon]} size={scaleSize(18)} tintColor={C.white} /></View>
     <View style={s.actionCopy}>
       <Text style={s.actionTitle}>{title}</Text>
       <Text style={s.actionSubtitle}>{subtitle}</Text>
@@ -169,7 +175,7 @@ function ActionRow({ icon, title, subtitle, onPress }: { icon: keyof typeof rowI
   </GlowButton>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.white },
   content: { flexGrow: 1, paddingHorizontal: 22 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

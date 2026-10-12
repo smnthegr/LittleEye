@@ -1,3 +1,4 @@
+import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useRef, useState } from 'react';
 import { StyleSheet, View, type GestureResponderEvent } from 'react-native';
 import { BrandColors as C } from '@/constants/brand';
@@ -5,11 +6,13 @@ import { BrandColors as C } from '@/constants/brand';
 export type BrightnessSliderProps = { value: number; onValueChange: (value: number) => void };
 
 export function BrightnessSlider({ value, onValueChange }: BrightnessSliderProps) {
+  const s = useResponsiveStyles(baseStyles);
   const width = useRef(0);
   const [dragging, setDragging] = useState(false);
   function update(event: GestureResponderEvent) {
-    if (width.current <= 20) return;
-    const percent = Math.round((event.nativeEvent.locationX - 10) / (width.current - 20) * 100);
+    const inset = s.thumbArea.left;
+    if (width.current <= inset * 2) return;
+    const percent = Math.round((event.nativeEvent.locationX - inset) / (width.current - inset * 2) * 100);
     onValueChange(Math.max(0, Math.min(100, percent)));
   }
   return <View accessible accessibilityRole="adjustable" accessibilityLabel="Brightness (preview)"
@@ -31,7 +34,7 @@ export function BrightnessSlider({ value, onValueChange }: BrightnessSliderProps
   </View>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   touchArea: { height: 44, justifyContent: 'center' },
   track: { height: 22, borderRadius: 11, backgroundColor: '#F8F9FC', borderWidth: 1, borderColor: '#C5CFDC', overflow: 'hidden', boxShadow: 'inset 0 1px 3px rgba(50,80,123,.08)' },
   fill: { height: '100%', backgroundColor: '#C5DDF5' },

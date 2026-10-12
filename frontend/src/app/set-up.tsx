@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { BackButton } from '@/components/back-button';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { AuthBottomWave } from '@/components/auth-bottom-wave';
@@ -11,7 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform,
-  Pressable, type ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions,
+  Pressable, type ScrollView, StyleSheet, Text, TextInput, View,
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -54,16 +55,18 @@ function validChildHeight(value: string) {
 }
 
 function Field({ placeholder, value, style, ...props }: TextInputProps) {
+  const styles = useResponsiveStyles(baseStyles);
   return <TextInput accessibilityLabel={placeholder} placeholder={placeholder}
     placeholderTextColor={BrandColors.white} {...props} value={value}
     style={[styles.input, style, !!value && styles.filledInput]} />;
 }
 
 export default function SetUpScreen() {
+  const styles = useResponsiveStyles(baseStyles);
   const { enterPreview } = useAppSession();
   const mascots = useMascotImages();
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
+  const { pageWidth, height, availableHeight, scaleSize } = useResponsiveLayout();
   const { identifier } = useLocalSearchParams<{ identifier?: string }>();
   const initialIdentifier = typeof identifier === 'string' ? identifier : '';
   const [step, setStep] = useState(0);
@@ -78,7 +81,6 @@ export default function SetUpScreen() {
   const [fade] = useState(() => new Animated.Value(1));
   const scroll = useRef<ScrollView>(null);
   const pendingContactScroll = useRef<number | null>(null);
-  const pageWidth = Math.min(width - insets.left - insets.right, 480);
   const mascotScale = (pageWidth * 0.82) / 533;
   useEffect(() => () => fade.stopAnimation(), [fade]);
 
@@ -148,7 +150,7 @@ export default function SetUpScreen() {
       <StatusBar style="light" />
       <EdgeScrollView topColor={BrandColors.blue} bottomColor={BrandColors.white} ref={scroll} keyboardShouldPersistTaps="handled"
         contentInsetAdjustmentBehavior="never"
-        contentContainerStyle={[styles.page, { minHeight: Math.max(height, insets.top + 680 + insets.bottom), paddingBottom: insets.bottom + 40 }]}>
+        contentContainerStyle={[styles.page, { minHeight: height, paddingBottom: insets.bottom + scaleSize(40) }]}>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <Image source={mascots.signUp} accessible={false} contentFit="contain" transition={0}
             style={{ position: 'absolute', opacity: 0.475, width: 1920 * mascotScale, height: 1080 * mascotScale,
@@ -157,8 +159,8 @@ export default function SetUpScreen() {
         </View>
         <BackButton accessibilityRole="button" accessibilityLabel={step === 0 ? 'Back to Sign Up' : 'Back to previous setup step'}
           hitSlop={12} onPress={() => step === 0 ? router.back() : changeStep(step - 1)}
-          style={[styles.back, { top: insets.top + 12 }]} />
-        <Animated.View style={[styles.form, { paddingTop: insets.top + 76, opacity: fade }]}>
+          style={[styles.back, { top: insets.top + scaleSize(12) }]} />
+        <Animated.View style={[styles.form, { paddingTop: insets.top + Math.max(scaleSize(60), Math.min(scaleSize(76), availableHeight * 0.095)), opacity: fade }]}>
           {sexOpen && <Pressable accessibilityRole="button" accessibilityLabel="Close sex menu"
             onPress={() => setSexOpen(false)} style={styles.menuDismiss} />}
           <Text accessibilityRole="header" style={styles.heading}>Set Up</Text>
@@ -247,13 +249,13 @@ export default function SetUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   filledInput: { fontFamily: BrandFonts.semiBold },
   screen: { flex: 1, backgroundColor: BrandColors.blue },
   page: { width: '100%', maxWidth: 480, alignSelf: 'center', backgroundColor: BrandColors.blue, overflow: 'hidden' },
   back: { position: 'absolute', left: 16, zIndex: 1 },
   backArrow: { width: 12, height: 12, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: BrandColors.white, transform: [{ rotate: '45deg' }], marginLeft: 6 },
-  form: { width: '100%', maxWidth: 400, alignSelf: 'center', paddingHorizontal: 36 },
+  form: { width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 36 },
   heading: { fontFamily: BrandFonts.extraBold, fontSize: 36, color: BrandColors.white, textAlign: 'center' },
   subtitle: { fontFamily: BrandFonts.regular, fontSize: 15, lineHeight: 22, color: BrandColors.white, textAlign: 'center', marginTop: 8, marginBottom: 24 },
   brand: { fontFamily: BrandFonts.bold, color: BrandColors.lightBlue },

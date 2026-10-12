@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 
 export type ProfileIconName = 'camera' | 'phone' | 'home' | 'lock' | 'mail' | 'calendar' | 'height' | 'sex' | 'edit';
 const paths: Record<ProfileIconName, string> = {
@@ -12,7 +13,9 @@ const paths: Record<ProfileIconName, string> = {
   sex: '<circle cx="9" cy="10" r="5"/><path d="M9 15v7M6 19h6M13 6l7-4M16 2h4v4"/>',
   edit: '<path d="m4 16 12-12 4 4L8 20l-5 1 1-5ZM14 6l4 4"/>',
 };
-export function ProfileIcon({ name, size = 24, color = '#FFFFFF' }: { name: ProfileIconName; size?: number; color?: string }) {
+export function ProfileIcon({ name, size: designSize = 24, color = '#FFFFFF' }: { name: ProfileIconName; size?: number; color?: string }) {
+  const { scaleSize } = useResponsiveLayout();
+  const size = scaleSize(designSize);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[name]}</svg>`;
   return <Image accessible={false} source={{ uri: `data:image/svg+xml;utf8,${encodeURIComponent(svg)}` }} style={{ width: size, height: size }} contentFit="contain" />;
 }

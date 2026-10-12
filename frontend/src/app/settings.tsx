@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useState } from 'react';
 import { BackButton } from '@/components/back-button';
 import { router } from 'expo-router';
@@ -36,6 +37,7 @@ const groups = [
 ] as const;
 
 function SettingIcon({ kind }: { kind: string }) {
+  const s = useResponsiveStyles(baseStyles);
   return <View accessible={false} style={s.icon}>
     {kind === 'camera' ? <CameraIcon size={25} color={C.white} /> :
       kind === 'device' ? <View style={s.phone}><View style={s.phoneDot} /></View> :
@@ -48,6 +50,8 @@ function SettingIcon({ kind }: { kind: string }) {
 }
 
 export default function SettingsScreen() {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const session = useAppSession();
   const { camera, isPreview } = useSettingsCamera();
@@ -73,8 +77,8 @@ export default function SettingsScreen() {
   }
   return <View style={s.screen}>
     <StatusBar style="light" />
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + 28 }}>
-      <View style={[s.header, { paddingTop: insets.top + 20 }]}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + scaleSize(28) }}>
+      <View style={[s.header, { paddingTop: insets.top + scaleSize(20) }]}>
         <View pointerEvents="none" style={s.headerBlob}>
           <Image source={require('../../assets/images/settings-header-wave-blob.svg')}
             accessible={false} contentFit="fill" transition={0} style={StyleSheet.absoluteFill} />
@@ -116,10 +120,10 @@ export default function SettingsScreen() {
       </View>
     </ScrollView>
     <Modal visible={showNotifications} transparent animationType="fade" onRequestClose={() => setShowNotifications(false)}>
-      <View style={[s.modalBackdrop, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}>
+      <View style={[s.modalBackdrop, { paddingTop: insets.top + scaleSize(20), paddingBottom: insets.bottom + scaleSize(20) }]}>
         <View accessibilityViewIsModal style={s.modalCard}>
           <Text accessibilityRole="header" style={s.modalTitle}>Notification Preferences</Text>
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: scaleSize(16) }}>
             {showNotifications && <SettingsDetails section="Notification Preferences" />}
           </ScrollView>
           <Pressable accessibilityRole="button" onPress={() => setShowNotifications(false)}
@@ -130,7 +134,7 @@ export default function SettingsScreen() {
   </View>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.white },
   header: { backgroundColor: '#2C527F', paddingBottom: 84, overflow: 'hidden' },
   headerContent: { width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 28 },

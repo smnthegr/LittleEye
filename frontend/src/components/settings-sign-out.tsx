@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -6,13 +7,15 @@ import { useAppSession } from './app-session';
 import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
 
 export function SettingsSignOut() {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const session = useAppSession();
   const insets = useSafeAreaInsets();
   const [confirm, setConfirm] = useState(false);
   function signOut() { setConfirm(false); session.signOut(); router.replace('/'); }
   return <View style={s.footer}>
     <Modal visible={confirm} transparent animationType="fade" onRequestClose={() => setConfirm(false)}>
-      <View style={[s.backdrop, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
+      <View style={[s.backdrop, { paddingTop: insets.top + scaleSize(24), paddingBottom: insets.bottom + scaleSize(24) }]}>
       <View accessibilityViewIsModal style={s.confirm}>
       <Text accessibilityRole="header" style={s.title}>Sign out?</Text>
       <Text style={s.note}>Are you sure you want to sign out of LittleEye?</Text>
@@ -31,7 +34,7 @@ export function SettingsSignOut() {
   </View>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   footer: { paddingHorizontal: 8, marginTop: 10, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#E4EBF5' },
   button: { minHeight: 50, borderRadius: 25, padding: 14, backgroundColor: C.blue, justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 20px rgba(50,80,123,.2)' }, buttonText: { fontFamily: F.bold, fontSize: 13, color: C.white },
   backdrop: { flex: 1, backgroundColor: 'rgba(20,37,60,.45)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },

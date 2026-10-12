@@ -1,3 +1,4 @@
+import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
@@ -13,6 +14,7 @@ const FallAlertContext = createContext<FallAlertContextValue | null>(null);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 export function FallAlertProvider({ children }: { children: ReactNode }) {
+  const s = useResponsiveStyles(baseStyles);
   const [visible, setVisible] = useState(false);
   const alertPulse = useSharedValue(0.32);
   const alertSound = useAudioPlayer(require('../../assets/audio/fall-alert.wav'));
@@ -86,7 +88,7 @@ export function useFallAlert() {
   return context;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   overlay: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, backgroundColor: 'rgba(0,0,0,.48)' },
   card: { width: '90%', maxWidth: 320, minHeight: 323, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingTop: 0, paddingBottom: 24, borderRadius: 24, backgroundColor: '#315780', overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,.22)' },
   iconArea: { width: '100%', height: 137, alignItems: 'center', justifyContent: 'center', marginBottom: 30 },

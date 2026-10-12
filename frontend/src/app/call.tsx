@@ -1,6 +1,6 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
 import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -9,10 +9,13 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepe
 import { useAudioPlayer } from 'expo-audio';
 
 import { BackButton } from '@/components/back-button';
+import { ResponsiveBackground } from '@/components/responsive-background';
 import { SettingsProfileButton } from '@/components/settings-profile-button';
 import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
 
 export default function CallScreen() {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const innerPulse = useSharedValue(0);
   const middlePulse = useSharedValue(0);
@@ -66,15 +69,15 @@ export default function CallScreen() {
 
   return <View style={s.screen}>
     <StatusBar style="light" />
-    <Image pointerEvents="none" source={require('../../assets/images/call-background.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-    <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + 40, paddingBottom: Math.max(insets.bottom, 16) + 12 }]} showsVerticalScrollIndicator={false}>
+    <ResponsiveBackground source={require('../../assets/images/call-background.svg')} />
+    <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + scaleSize(40), paddingBottom: Math.max(insets.bottom, 16) + scaleSize(12) }]} showsVerticalScrollIndicator={false}>
       <View style={s.headerRow}>
         <BackButton accessibilityLabel="Back" onPress={endCall} />
         <SettingsProfileButton />
       </View>
 
       <View style={s.callDetails}>
-        <Text accessibilityRole="header" numberOfLines={1} style={s.title}>Calling {displayRecipient}...</Text>
+        <Text accessibilityRole="header" adjustsFontSizeToFit numberOfLines={1} style={s.title}>Calling {displayRecipient}...</Text>
         <Text style={s.subtitle}>{isHotline ? 'Connecting you to the national' : 'Connecting you to your emergency'}</Text>
         <Text style={s.subtitle}>{isHotline ? 'emergency hotline.' : 'contact.'}</Text>
       </View>
@@ -87,7 +90,7 @@ export default function CallScreen() {
             <View style={s.innerRing}>
               <Animated.View pointerEvents="none" style={[s.pulseRing, s.innerPulseRing, innerGlowStyle]} />
               <View style={s.phoneCircle}>
-                <SymbolView name={{ ios: 'phone.fill', android: 'call', web: 'call' }} size={64} tintColor={C.white} />
+                <SymbolView name={{ ios: 'phone.fill', android: 'call', web: 'call' }} size={scaleSize(64)} tintColor={C.white} />
               </View>
             </View>
           </View>
@@ -95,14 +98,14 @@ export default function CallScreen() {
       </View>
 
       <Pressable accessibilityRole="button" accessibilityLabel="End call" onPress={endCall} style={({ pressed }) => [s.endCallButton, pressed && s.endCallPressed]}>
-        <SymbolView name={{ ios: 'phone.down.fill', android: 'call_end', web: 'call_end' }} size={21} tintColor={C.white} />
+        <SymbolView name={{ ios: 'phone.down.fill', android: 'call_end', web: 'call_end' }} size={scaleSize(21)} tintColor={C.white} />
         <Text style={s.endCallText}>End Call</Text>
       </Pressable>
     </ScrollView>
   </View>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#315780' },
   content: { flexGrow: 1, paddingHorizontal: 22 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', transform: [{ translateY: -10 }] },

@@ -1,4 +1,4 @@
-<svg width="390" height="190" viewBox="0 0 390 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="390" height="120" viewBox="0 0 390 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <radialGradient id="scoopGlow" cx="0" cy="0" r="1" gradientTransform="matrix(0 100 -150 0 195 90)" gradientUnits="userSpaceOnUse">
       <stop stop-color="#94B0D5" stop-opacity=".25"/>
@@ -9,5 +9,5 @@
     </filter>
   </defs>
   <circle cx="195" cy="90" r="120" fill="url(#scoopGlow)"/>
-  <path d="M0 40C29 21 61 20 91 33C132 50 149 100 195 100C241 100 258 50 299 33C329 20 361 21 390 40V158C390 176 376 190 358 190H32C14 190 0 176 0 158V40Z" fill="#32507B" filter="url(#barGlow)"/>
+  <path d="M0 60C29 41 61 40 91 53C132 70 149 116 195 116C241 116 258 70 299 53C329 40 361 41 390 60V120H0V60Z" fill="#32507B" filter="url(#barGlow)"/>
 </svg>

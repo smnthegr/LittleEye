@@ -1,19 +1,25 @@
-import { useState } from 'react';
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
+import { useCallback, useState } from 'react';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationBar } from 'expo-navigation-bar';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlowButton } from '@/components/glow-button';
+import { EdgeScrollView } from '@/components/edge-scroll-view';
+import { useBottomNavigationMenu } from '@/components/bottom-navigation';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
 import { useFallAlert } from '@/components/fall-alert';
-import { animateNavBubble } from '@/components/navigation-transition';
+import { navigateWithTransition } from '@/components/navigation-transition';
+import { getHomeNavigationLayout } from '@/utils/responsive';
 
 export default function HomeScreen() {
+  const { scaleSize, pageWidth } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [muted, setMuted] = useState(false);
@@ -21,18 +27,19 @@ export default function HomeScreen() {
   const [zoom, setZoom] = useState(1);
   const [previewOffset, setPreviewOffset] = useState({ x: 0, y: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
+  const openMenu = useCallback(() => setMenuOpen(current => !current), []);
   const { showFallAlert } = useFallAlert();
   const [isLandscape, setIsLandscape] = useState(false);
-  const dockHeight = 150 + insets.bottom;
-  const contentWidth = Math.min(width, 480);
-  const contentFrameWidth = contentWidth - 38;
+  useBottomNavigationMenu(openMenu, menuOpen, isLandscape && width > height);
+  const navigationLayout = getHomeNavigationLayout(pageWidth, insets.bottom);
+  const contentFrameWidth = pageWidth - scaleSize(38);
   const compact = height < 720;
   const previewHeight = contentFrameWidth * .63;
-  const contentTopOverlap = 27;
-  const headerHeight = insets.top + 12 + 64 + 35;
+  const contentTopOverlap = scaleSize(27);
+  const headerHeight = insets.top + scaleSize(12 + 64 + 35);
   // The blue wave should reach below the Control Panel pill, not stop at the feed.
-  const controlPanelHeight = 10 + 12 + 11;
-  const backgroundHeight = (headerHeight - contentTopOverlap + previewHeight + controlPanelHeight + 124) / .886;
+  const controlPanelHeight = scaleSize(10 + 12 + 11);
+  const backgroundHeight = (headerHeight - contentTopOverlap + previewHeight + controlPanelHeight + scaleSize(124)) / .886;
 
   function setPreviewZoom(nextZoom: number) {
     const next = Math.max(1, Math.min(5, nextZoom));
@@ -74,7 +81,7 @@ export default function HomeScreen() {
   }
 
   function goToFirstAid() {
-    animateNavBubble(1, () => router.push('/first-aid-guidance'));
+    navigateWithTransition(() => router.push('/first-aid-guidance'));
   }
 
   const landscapeLayout = isLandscape && width > height;
@@ -83,13 +90,13 @@ export default function HomeScreen() {
     <StatusBar style="light" />
     <NavigationBar hidden />
     <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={[StyleSheet.absoluteFill, { transform: previewTransform }]} />
-    <View style={[s.landscapeTopRow, { top: insets.top + 20, left: insets.left + 28, right: insets.right + 28 }]}>
+    <View style={[s.landscapeTopRow, { top: insets.top + scaleSize(20), left: insets.left + scaleSize(28), right: insets.right + scaleSize(28) }]}>
       <View style={s.landscapeLiveBadge}><View style={s.landscapeLiveDot} /><Text style={s.landscapeLiveText}>LIVE</Text></View>
       <Pressable accessibilityRole="button" accessibilityLabel="Exit landscape camera preview" hitSlop={14} onPress={() => { void toggleLandscape(); }} style={s.landscapeExitButton}>
         <View style={s.landscapeExitLineOne} /><View style={s.landscapeExitLineTwo} />
       </Pressable>
     </View>
-    <View style={[s.landscapeTimeRow, { bottom: insets.bottom + 20, left: insets.left + 28, right: insets.right + 28 }]} pointerEvents="none">
+    <View style={[s.landscapeTimeRow, { bottom: insets.bottom + scaleSize(20), left: insets.left + scaleSize(28), right: insets.right + scaleSize(28) }]} pointerEvents="none">
       <View style={s.landscapeTimeBadge}><Text style={s.landscapeTime}>07:16:32</Text></View>
       <View style={s.landscapeTimeBadge}><Text style={s.landscapeTime}>29/12/2026</Text></View>
     </View>
@@ -98,12 +105,14 @@ export default function HomeScreen() {
   return <View style={s.screen}>
     <StatusBar style="light" />
     <NavigationBar hidden />
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: 170 + insets.bottom }}>
+    <EdgeScrollView topColor={C.blue} bottomColor={C.white} showsVerticalScrollIndicator={false}
+      contentInsetAdjustmentBehavior="never" automaticallyAdjustContentInsets={false}
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: navigationLayout.scrollPadding }}>
       <View pointerEvents="none" style={[s.backdropShape, { height: backgroundHeight }]}>
         <Image source={require('../../assets/images/home-background.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
       </View>
-      <View style={{ flex: 1, transform: [{ translateY: 18 }] }}>
-      <View style={[s.header, { paddingTop: insets.top + 12, minHeight: compact ? 111 : 132 }]}>
+      <View style={{ flex: 1, transform: [{ translateY: scaleSize(18) }] }}>
+      <View style={[s.header, { paddingTop: insets.top + scaleSize(12), minHeight: compact ? scaleSize(111) : scaleSize(132) }]}>
         <View style={[s.headerInner, { width: contentFrameWidth }]}>
           <View style={s.titleRow}>
             <View>
@@ -166,68 +175,30 @@ export default function HomeScreen() {
           </View>
           <View style={s.zoomColumn}><Text style={s.zoomCaption}>Zoom In</Text>
             <View style={s.zoomPill}>
-              <GlowButton accessibilityRole="button" accessibilityLabel={`Zoom in (level ${zoom}x)`} onPress={() => setPreviewZoom(zoom + 1)} style={s.zoomButton}><Text style={[s.zoomGlyph, s.zoomPlusGlyph]}>＋</Text></GlowButton>
-              <GlowButton accessibilityRole="button" accessibilityLabel={`Zoom out (level ${zoom}x)`} onPress={() => setPreviewZoom(zoom - 1)} style={s.zoomButton}><Text style={[s.zoomGlyph, s.zoomMinusGlyph]}>−</Text></GlowButton>
+              <GlowButton accessibilityRole="button" accessibilityLabel={`Zoom in (level ${zoom}x)`} onPress={() => setPreviewZoom(zoom + 1)} style={s.zoomButton}>
+                <View pointerEvents="none" accessible={false} style={s.zoomIcon}><View style={s.zoomLine} /><View style={[s.zoomLine, s.zoomVertical]} /></View>
+              </GlowButton>
+              <GlowButton accessibilityRole="button" accessibilityLabel={`Zoom out (level ${zoom}x)`} onPress={() => setPreviewZoom(zoom - 1)} style={s.zoomButton}>
+                <View pointerEvents="none" accessible={false} style={s.zoomIcon}><View style={s.zoomLine} /></View>
+              </GlowButton>
             </View>
             <Text style={s.zoomCaption}>Zoom Out</Text>
           </View>
         </View>
 
-        <View style={[s.bottomDock, { marginTop: compact ? 4 : 12 }]}>
-          <View pointerEvents="none" style={[s.dockPlate, { bottom: -insets.bottom - 8 }]} />
-          <View pointerEvents="none" style={s.dockWaveLeft} />
-          <View pointerEvents="none" style={s.dockWaveRight} />
-          <View pointerEvents="none" style={s.dockNotch} />
-          <View pointerEvents="none" style={[s.bubble, s.bubbleOne]} /><View pointerEvents="none" style={[s.bubble, s.bubbleTwo]} />
-          <View pointerEvents="none" style={[s.bubble, s.bubbleThree]} /><View pointerEvents="none" style={[s.bubble, s.bubbleFour]} />
-          <GlowButton accessibilityRole="button" accessibilityLabel="Home" onPress={() => router.replace('/home')} style={s.dockSide}>
-            <Text style={s.homeGlyph}>⌂</Text><Text style={s.dockLabel}>Home</Text>
-          </GlowButton>
-          <GlowButton accessibilityRole="button" accessibilityLabel="Open settings" onPress={() => router.push('/settings')} style={s.dockMain}>
-            <View style={s.gridIcon}>{Array.from({ length: 4 }, (_, i) => <View key={i} style={s.gridTile} />)}</View>
-          </GlowButton>
-          <GlowButton accessibilityRole="button" accessibilityLabel="First aid" onPress={() => router.push('/settings')} style={s.dockSide}>
-            <Text style={s.aidGlyph}>✚</Text><Text style={s.dockLabel}>First-Aid</Text>
-          </GlowButton>
-        </View>
       </View>
       </View>
-    </ScrollView>
-    <View style={[s.fixedDock, { height: dockHeight, paddingBottom: 55 }]}>
-      <Image source={require('../../assets/images/home-nav-wave.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-      <View pointerEvents="none" style={[s.bubble, s.bubbleOne]} /><View pointerEvents="none" style={[s.bubble, s.bubbleTwo]} />
-      <View pointerEvents="none" style={[s.bubble, s.bubbleThree]} /><View pointerEvents="none" style={[s.bubble, s.bubbleFour]} />
-      <GlowButton accessibilityRole="button" accessibilityLabel="Home" pressGlow={false} onPress={() => {
-        animateNavBubble(0, () => router.replace('/home'));
-      }} style={[s.fixedSide, s.fixedHome]}>
-        <View style={s.homeCircle}>
-          <Image pointerEvents="none" source={require('../../assets/images/home-tab-glass.png')} contentFit="contain" transition={0} accessible={false} style={s.homeCircleGlass} />
-          <Image source={require('../../assets/images/home-tab-icon.svg')} contentFit="contain" transition={0} accessible={false} style={s.homeTabImage} />
-        </View><Text style={s.fixedLabel}>Home</Text>
-      </GlowButton>
-      <View style={[s.fixedMainPosition, { top: dockHeight * (100 / 190) - 116 }]}>
-        <Image pointerEvents="none" source={require('../../assets/images/home-button-bubbles.svg')} contentFit="contain" transition={0} accessible={false} style={s.floatBubbles} />
-        <GlowButton accessibilityRole="button" accessibilityLabel="Open menu" pressRippleScale={0.75} pressRippleSize={108} pressShimmer={false} onPress={() => setMenuOpen(true)} style={s.fixedMain}>
-          <View pointerEvents="none" style={s.menuGlassMask}>
-            <Image source={require('../../assets/images/home-menu-glass.png')} contentFit="contain" transition={0} accessible={false} style={s.menuGlassImage} />
-          </View>
-          <View style={[s.gridIcon, s.fixedGridIcon]}>{Array.from({ length: 4 }, (_, i) => <View key={i} style={s.gridTile} />)}</View>
-        </GlowButton>
-      </View>
-      <GlowButton accessibilityRole="button" accessibilityLabel="First aid" pressGlow={false} pressRippleScale={0.75} pressRippleSize={108} pressShimmer={false} onPress={goToFirstAid} style={[s.fixedSide, s.fixedAid]}>
-        <View style={s.aidBox}><View style={s.aidHandle} /><View style={s.aidCrossCircle}><View style={s.aidPlusVertical} /><View style={s.aidPlusHorizontal} /></View></View><Text style={[s.fixedLabel, s.inactiveLabel]}>First-Aid</Text>
-      </GlowButton>
-    </View>
+    </EdgeScrollView>
     <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
       <View style={s.menuModal}>
         <Pressable accessibilityRole="button" accessibilityLabel="Close menu" onPress={() => setMenuOpen(false)} style={StyleSheet.absoluteFill} />
-        <View style={[s.menuSheet, { paddingBottom: Math.max(insets.bottom, 18) + 36 }]}>
+        <View style={[s.menuSheet, { paddingBottom: Math.max(insets.bottom, 18) + scaleSize(36) }]}>
           <Image pointerEvents="none" source={require('../../assets/images/menu-mascot.png')} contentFit="contain" transition={0} accessible={false} style={s.menuMascot} />
           <View style={s.menuHandle} />
           <View style={s.menuOptions}>
             <MenuOption icon="profile" label="Profile" onPress={() => { setMenuOpen(false); router.push('/profile'); }} />
             <MenuOption icon="hotline" label="Emergency Hotline" onPress={() => { setMenuOpen(false); router.push('/emergency-hotline'); }} />
-            <MenuOption icon="firstAid" label="First-aid Guidance" onPress={() => { setMenuOpen(false); router.push('/first-aid-guidance'); }} />
+            <MenuOption icon="firstAid" label="First-aid Guidance" onPress={() => { setMenuOpen(false); goToFirstAid(); }} />
             <MenuOption icon="history" label="History" onPress={() => { setMenuOpen(false); router.push('/history'); }} />
             <MenuOption icon="settings" label="Settings" onPress={() => { setMenuOpen(false); router.push('/settings'); }} />
           </View>
@@ -246,34 +217,26 @@ const menuIcons = {
 } satisfies Record<string, SymbolViewProps['name']>;
 
 function MenuOption({ icon, label, onPress }: { icon: keyof typeof menuIcons; label: string; onPress: () => void }) {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   return <GlowButton accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={s.menuOption}>
-    <View style={s.menuOptionIcon}><SymbolView name={menuIcons[icon]} size={20} tintColor={C.white} /></View>
+    <View style={s.menuOptionIcon}><SymbolView name={menuIcons[icon]} size={scaleSize(20)} tintColor={C.white} /></View>
     <Text style={s.menuOptionLabel}>{label}</Text>
-    <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={14} tintColor="#A9BBD0" />
+    <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={scaleSize(14)} tintColor="#A9BBD0" />
   </GlowButton>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.white },
   landscapeScreen: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: '#000', overflow: 'hidden' },
   menuModal: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,.32)' },
-  menuSheet: { width: '100%', paddingTop: 30, paddingHorizontal: 30, backgroundColor: C.white, borderTopLeftRadius: 64, borderTopRightRadius: 64, overflow: 'hidden' },
+  menuSheet: { width: '100%', maxWidth: 480, alignSelf: 'center', paddingTop: 30, paddingHorizontal: 30, backgroundColor: C.white, borderTopLeftRadius: 64, borderTopRightRadius: 64, overflow: 'hidden' },
   menuMascot: { position: 'absolute', width: 700, height: 394, top: 8, right: -296 },
   menuHandle: { alignSelf: 'center', width: 37, height: 3, borderRadius: 2, backgroundColor: '#A5B8D1', marginBottom: 23, transform: [{ translateY: -10 }] },
   menuOptions: { gap: 15, paddingBottom: 4 },
   menuOption: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, borderRadius: 18, backgroundColor: 'rgba(255,255,255,.55)', borderWidth: 1, borderColor: 'rgba(148,176,213,.62)', boxShadow: '0 5px 14px rgba(98,142,204,.18)' },
   menuOptionIcon: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: C.blue },
   menuOptionLabel: { flex: 1, color: '#172333', fontFamily: F.regular, fontSize: 13 },
-  fixedDock: { position: 'absolute', bottom: -21, left: 0, right: 0, zIndex: 10, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 30 },
-  fixedMainPosition: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 3 },
-  floatBubbles: { position: 'absolute', top: -28, left: '50%', marginLeft: -75, width: 150, height: 150 },
-  fixedSide: { zIndex: 2, width: 82, height: 82, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'flex-end', gap: 5 },
-  fixedHome: { transform: [{ translateX: -6 }] }, fixedAid: { transform: [{ translateX: 6 }] },
-  homeCircle: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' }, homeCircleGlass: { position: 'absolute', top: -6, right: -6, bottom: -6, left: -6 }, homeTabImage: { width: 42, height: 42, alignSelf: 'center' },
-  aidBox: { width: 58, height: 49, borderRadius: 8, backgroundColor: '#B9C9DA', alignItems: 'center', justifyContent: 'center' }, aidHandle: { position: 'absolute', top: -8, width: 18, height: 9, borderWidth: 2, borderColor: '#B9C9DA', borderTopLeftRadius: 4, borderTopRightRadius: 4 }, aidCrossCircle: { width: 29, height: 29, borderRadius: 15, backgroundColor: C.blue, alignItems: 'center', justifyContent: 'center' }, aidPlusVertical: { position: 'absolute', width: 7, height: 19, borderRadius: 2, backgroundColor: '#B9C9DA' }, aidPlusHorizontal: { position: 'absolute', width: 19, height: 7, borderRadius: 2, backgroundColor: '#B9C9DA' },
-  fixedLabel: { color: C.white, fontFamily: F.bold, fontSize: 13 }, inactiveLabel: { fontFamily: F.regular },
-  fixedMain: { width: 108, height: 108, borderRadius: 56, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }, menuGlassMask: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, borderRadius: 54, overflow: 'hidden' }, menuGlassImage: { position: 'absolute', width: 144, height: 144, top: -18, left: -18 }, fixedGridIcon: { transform: [{ translateX: -1 }] },
-  bottomDock: { display: 'none' },
   header: { zIndex: 1, backgroundColor: 'transparent', overflow: 'visible', paddingBottom: 35 },
   backdropShape: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 0 },
   headerInner: { alignSelf: 'center' }, titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -312,13 +275,8 @@ const s = StyleSheet.create({
   dpadOuter: { position: 'absolute', left: '50%', top: '50%', marginLeft: -105, marginTop: -105, width: 210, height: 210, borderRadius: 105, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   dpadGlass: { position: 'absolute', width: 346, height: 346, top: -68, left: -68 },
   direction: { position: 'absolute', width: 70, height: 70, borderRadius: 36, backgroundColor: 'rgba(255,255,255,.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,.9)', boxShadow: '0 4px 9px rgba(50,80,123,.12), inset 0 2px 5px rgba(255,255,255,.9)' }, up: { top: 0 }, down: { bottom: 0 }, left: { left: 0 }, right: { right: 0 }, directionGlyph: { width: 50, height: 50 }, arrowUp: { marginTop: -6, transform: [{ rotate: '90deg' }] }, arrowLeft: { marginLeft: -6 }, arrowRight: { marginLeft: 6, transform: [{ rotate: '180deg' }] }, arrowDown: { marginTop: 6, transform: [{ rotate: '270deg' }] }, dpadCenter: { width: 54, height: 54, borderRadius: 27, backgroundColor: C.lightBlue, borderWidth: 1, borderColor: 'rgba(255,255,255,.65)', boxShadow: '0 5px 10px rgba(50,80,123,.25), inset 0 2px 5px rgba(255,255,255,.45)' },
-  zoomColumn: { position: 'absolute', right: 0, top: '50%', transform: [{ translateY: -77 }], width: 60, alignItems: 'center', gap: 4 }, zoomCaption: { color: C.blue, fontFamily: F.semiBold, fontSize: 9 }, zoomPill: { width: 60, alignItems: 'center', gap: 10, paddingVertical: 8, borderRadius: 30, backgroundColor: 'rgba(148,176,213,.38)', boxShadow: '0 8px 20px rgba(50,80,123,.28), 0 0 14px rgba(148,176,213,.28), inset 0 2px 5px rgba(255,255,255,.65)' }, zoomButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: C.blue, alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 9px rgba(50,80,123,.2)' }, zoomGlyph: { color: C.white, fontFamily: F.regular, fontSize: 35, lineHeight: 41 }, zoomPlusGlyph: { transform: [{ translateY: 3 }] }, zoomMinusGlyph: { fontSize: 38, lineHeight: 43 },
-  dockPlate: { position: 'absolute', left: -24, right: -24, top: 48, backgroundColor: C.blue, borderTopLeftRadius: 38, borderTopRightRadius: 38 },
-  dockWaveLeft: { position: 'absolute', left: -50, top: 30, width: '73%', height: 76, backgroundColor: C.blue, borderTopLeftRadius: 80, borderTopRightRadius: 120, transform: [{ rotate: '-3deg' }] },
-  dockWaveRight: { position: 'absolute', right: -50, top: 30, width: '73%', height: 76, backgroundColor: C.blue, borderTopLeftRadius: 120, borderTopRightRadius: 80, transform: [{ rotate: '3deg' }] },
-  dockNotch: { position: 'absolute', top: -12, left: '50%', marginLeft: -54, width: 108, height: 83, borderBottomLeftRadius: 58, borderBottomRightRadius: 58, backgroundColor: C.white },
-  bubble: { position: 'absolute', borderRadius: 50, backgroundColor: 'rgba(148,176,213,.32)', borderWidth: 1, borderColor: 'rgba(255,255,255,.64)', boxShadow: '0 2px 8px rgba(50,80,123,.14), inset 1px 1px 3px rgba(255,255,255,.7)' },
-  bubbleOne: { width: 25, height: 25, left: '40%', top: 0 }, bubbleTwo: { width: 18, height: 18, left: '46%', top: 17 }, bubbleThree: { width: 30, height: 30, left: '52%', top: 8 }, bubbleFour: { width: 12, height: 12, left: '49%', top: 39, backgroundColor: 'rgba(255,255,255,.56)' },
-  dockSide: { zIndex: 1, width: 58, height: 58, borderRadius: 29, backgroundColor: C.blue, alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 15px rgba(148,176,213,.55)' }, homeGlyph: { color: C.white, fontSize: 28, lineHeight: 31 }, aidGlyph: { color: C.white, fontSize: 24, lineHeight: 29 }, dockLabel: { color: C.white, fontFamily: F.semiBold, fontSize: 7 },
-  dockMain: { zIndex: 2, width: 66, height: 66, borderRadius: 34, backgroundColor: C.blue, alignItems: 'center', justifyContent: 'center', marginBottom: 28, borderWidth: 2, borderColor: 'rgba(255,255,255,.68)', overflow: 'hidden', boxShadow: '0 0 21px rgba(50,80,123,.42), inset 0 3px 8px rgba(255,255,255,.45)' }, gridIcon: { width: 44, height: 44, flexDirection: 'row', flexWrap: 'wrap', gap: 5, alignContent: 'center', justifyContent: 'center' }, gridTile: { width: 19, height: 19, borderRadius: 4, backgroundColor: C.white },
+  zoomColumn: { position: 'absolute', right: 0, top: '50%', transform: [{ translateY: -77 }], width: 60, alignItems: 'center', gap: 4 }, zoomCaption: { color: C.blue, fontFamily: F.semiBold, fontSize: 9 }, zoomPill: { width: 60, alignItems: 'center', gap: 10, paddingVertical: 8, borderRadius: 30, backgroundColor: 'rgba(148,176,213,.38)', boxShadow: '0 8px 20px rgba(50,80,123,.28), 0 0 14px rgba(148,176,213,.28), inset 0 2px 5px rgba(255,255,255,.65)' }, zoomButton: { width: 50, height: 50, borderRadius: 25, backgroundColor: C.blue, alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 9px rgba(50,80,123,.2)' },
+  zoomIcon: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  zoomLine: { position: 'absolute', width: 24, height: 3, borderRadius: 1.5, backgroundColor: C.white },
+  zoomVertical: { width: 3, height: 24 },
 });

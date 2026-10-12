@@ -1,66 +1,184 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { Image } from 'expo-image';
+import { useEffect } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Path } from 'react-native-svg';
+import Animated, {
+  cancelAnimation,
+  Easing,
+  interpolate,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { GlowButton } from '@/components/glow-button';
-import { animateNavBubble, navBubbleProgress } from '@/components/navigation-transition';
+import { NavigationBackdrop, NavigationIcon, NavigationMenuArtwork, NavigationMenuGlow } from '@/components/navigation-art';
+import { navigateWithTransition } from '@/components/navigation-transition';
 import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
+import { getHomeNavigationLayout } from '@/utils/responsive';
+import {
+  AID_CONTOUR_DISTANCE,
+  CONTOUR_LENGTH,
+  CONTOUR_MARKER_LENGTH,
+  HOME_CONTOUR_DISTANCE,
+  NAVIGATION_CONTOUR_PATH,
+} from '@/utils/navigation-contour';
 
-type Props = { onOpenMenu: () => void };
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-export function HomeNavigationBar({ onOpenMenu }: Props) {
-  const insets = useSafeAreaInsets();
-  const dockHeight = 150 + insets.bottom;
+type Props = {
+  onOpenMenu: () => void;
+  activeTab?: 'home' | 'first-aid';
+  menuOpen?: boolean;
+  visible?: boolean;
+  onHomePress?: () => void;
+  onFirstAidPress?: () => void;
+};
 
-  function returnHome() {
-    navBubbleProgress.setValue(1);
-    animateNavBubble(0, () => {
-      if (router.canGoBack()) router.back();
-      else router.replace('/home');
-    });
-  }
+export function HomeNavigationBar({
+  onOpenMenu,
+  activeTab = 'first-aid',
+  menuOpen = false,
+  visible = true,
+  onHomePress,
+  onFirstAidPress,
+}: Props) {
+  const { pageWidth, insets } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
+  const layout = getHomeNavigationLayout(pageWidth, insets.bottom);
+  const reducedMotion = useReducedMotion();
+  const selectedIndex = activeTab === 'home' ? 0 : 1;
+  const selection = useSharedValue(selectedIndex);
+  const glowPulse = useSharedValue(0);
 
-  return <View style={[s.fixedDock, { height: dockHeight, paddingBottom: 55 }]}>
-    <Image source={require('../../assets/images/home-nav-wave.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-    <View pointerEvents="none" style={[s.bubble, s.bubbleOne]} /><View pointerEvents="none" style={[s.bubble, s.bubbleTwo]} />
-    <View pointerEvents="none" style={[s.bubble, s.bubbleThree]} /><View pointerEvents="none" style={[s.bubble, s.bubbleFour]} />
-    <GlowButton accessibilityRole="button" accessibilityLabel="Home" pressGlow={false} pressRippleScale={0.75} pressRippleSize={108} pressShimmer={false} onPress={returnHome} style={[s.fixedSide, s.fixedHome]}>
-      <View style={s.homeCircle}>
-        <Image source={require('../../assets/images/home-tab-icon-user.png')} contentFit="contain" transition={0} accessible={false} style={[s.homeTabImage, s.homeIconDown]} />
-      </View><Text style={s.homeLabel}>Home</Text>
-    </GlowButton>
-    <View style={[s.fixedMainPosition, { top: dockHeight * (100 / 190) - 116 }]}>
-      <Image pointerEvents="none" source={require('../../assets/images/home-button-bubbles.svg')} contentFit="contain" transition={0} accessible={false} style={s.floatBubbles} />
-      <GlowButton accessibilityRole="button" accessibilityLabel="Open menu" pressRippleScale={0.75} pressRippleSize={108} pressShimmer={false} onPress={onOpenMenu} style={s.fixedMain}>
-        <View pointerEvents="none" style={s.menuGlassMask}>
-          <Image source={require('../../assets/images/home-menu-glass.png')} contentFit="contain" transition={0} accessible={false} style={s.menuGlassImage} />
-        </View>
-        <View style={[s.gridIcon, s.fixedGridIcon]}>{Array.from({ length: 4 }, (_, i) => <View key={i} style={s.gridTile} />)}</View>
-      </GlowButton>
+  useEffect(() => {
+    cancelAnimation(selection);
+    selection.set(reducedMotion ? selectedIndex : withSpring(selectedIndex, {
+      duration: 300,
+      dampingRatio: 1,
+      clamp: { min: 0, max: 1 },
+    }));
+    return () => cancelAnimation(selection);
+  }, [reducedMotion, selectedIndex, selection]);
+
+  useEffect(() => {
+    cancelAnimation(glowPulse);
+    glowPulse.set(0);
+    if (visible && !reducedMotion) {
+      glowPulse.set(withRepeat(withTiming(1, {
+        duration: 3000,
+        easing: Easing.inOut(Easing.sin),
+      }), -1, true));
+    }
+    return () => cancelAnimation(glowPulse);
+  }, [glowPulse, reducedMotion, visible]);
+
+  // This changes the SVG dash's distance along the actual path on the UI thread.
+  // Neither the navbar shape nor the fixed center control moves.
+  const markerProps = useAnimatedProps(() => ({
+    strokeDashoffset: CONTOUR_MARKER_LENGTH / 2 - interpolate(
+      selection.get(), [0, 1], [HOME_CONTOUR_DISTANCE, AID_CONTOUR_DISTANCE],
+    ),
+  }));
+  const homeStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(selection.get(), [0, 1], [1, 0.55]),
+    transform: [{ scale: interpolate(selection.get(), [0, 1], [1.03, 1]) }],
+  }));
+  const aidStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(selection.get(), [0, 1], [0.55, 1]),
+    transform: [{ scale: interpolate(selection.get(), [0, 1], [1, 1.03]) }],
+  }));
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(glowPulse.get(), [0, 1], [0.42, 0.62]),
+    transform: [{ scale: interpolate(glowPulse.get(), [0, 1], [1, 1.035]) }],
+  }));
+
+  return <View pointerEvents="box-none" style={[s.fixedDock, { height: layout.height, paddingBottom: layout.sideBottom }]}>
+    <View pointerEvents="none" accessible={false} style={[s.wave, { height: layout.artworkHeight }]}>
+      <NavigationBackdrop width={pageWidth} height={layout.artworkHeight}>
+        <AnimatedPath animatedProps={markerProps} d={NAVIGATION_CONTOUR_PATH} fill="none"
+          stroke="#BEDFFF" strokeOpacity={0.2} strokeWidth={12} strokeLinecap="round"
+          strokeDasharray={[CONTOUR_MARKER_LENGTH, CONTOUR_LENGTH]} />
+        <AnimatedPath animatedProps={markerProps} d={NAVIGATION_CONTOUR_PATH} fill="none"
+          stroke="#D9EEFF" strokeOpacity={0.42} strokeWidth={5} strokeLinecap="round"
+          strokeDasharray={[CONTOUR_MARKER_LENGTH, CONTOUR_LENGTH]} />
+        <AnimatedPath animatedProps={markerProps} d={NAVIGATION_CONTOUR_PATH} fill="none"
+          stroke="#F2FAFF" strokeOpacity={0.95} strokeWidth={2.2} strokeLinecap="round"
+          strokeDasharray={[CONTOUR_MARKER_LENGTH, CONTOUR_LENGTH]} />
+      </NavigationBackdrop>
     </View>
-    <GlowButton accessibilityRole="button" accessibilityLabel="First aid" pressGlow={false} pressRippleScale={0.75} pressRippleSize={108} pressShimmer={false} onPress={() => router.push('/first-aid-guidance')} style={[s.fixedSide, s.fixedAid]}>
-      <View style={[s.aidCircle, s.aidIconDown]}>
-        <Image pointerEvents="none" source={require('../../assets/images/home-tab-glass.png')} contentFit="contain" transition={0} accessible={false} style={s.homeCircleGlass} />
-        <View style={s.aidBox}><View style={s.aidHandle} /><View style={s.aidPlusVertical} /><View style={s.aidPlusHorizontal} /></View>
-      </View>
-      <Text style={[s.fixedLabel, s.aidLabelDown]}>First-Aid</Text>
-    </GlowButton>
+    <View pointerEvents="none" style={[s.footerFill, { top: layout.artworkHeight - 1 }]} />
+
+    <Pressable accessibilityRole="button" accessibilityLabel="Home"
+      accessibilityState={{ selected: activeTab === 'home' }}
+      onPress={() => {
+        if (activeTab !== 'home') {
+          if (onHomePress) onHomePress();
+          else navigateWithTransition(() => router.dismissTo('/home'));
+        }
+      }} style={({ pressed }) => [s.sideButton, baseStyles.touchTarget, pressed && s.pressedButton]}>
+      <Animated.View pointerEvents="none" style={[s.sideContent, homeStyle]}>
+        <View style={s.iconSlot}><NavigationIcon name="home" size={layout.iconSize} /></View>
+        <Text style={[s.label, { lineHeight: layout.labelHeight }]}>Home</Text>
+      </Animated.View>
+    </Pressable>
+
+    <View pointerEvents="box-none" style={[s.mainPosition, { bottom: layout.mainBottom, height: layout.menuSize }]}>
+      <Animated.View pointerEvents="none" accessible={false} style={[
+        s.menuGlow,
+        {
+          width: layout.menuGlowWidth,
+          height: layout.menuGlowHeight,
+          marginLeft: -layout.menuGlowWidth / 2,
+          top: (layout.menuSize - layout.menuGlowHeight) / 2,
+        },
+        glowStyle,
+      ]}>
+        <NavigationMenuGlow width={layout.menuGlowWidth} height={layout.menuGlowHeight} />
+      </Animated.View>
+      <Pressable accessibilityRole="button" accessibilityLabel={menuOpen ? 'Close menu' : 'Open menu'}
+        accessibilityState={{ expanded: menuOpen }} onPress={onOpenMenu}
+        style={({ pressed }) => [s.mainButton, {
+          width: layout.menuSize, height: layout.menuSize, borderRadius: layout.menuSize / 2,
+        }, pressed && s.pressedButton]}>
+        <View pointerEvents="none"><NavigationMenuArtwork size={layout.menuSize} /></View>
+      </Pressable>
+    </View>
+
+    <Pressable accessibilityRole="button" accessibilityLabel="First aid"
+      accessibilityState={{ selected: activeTab === 'first-aid' }}
+      onPress={() => {
+        if (activeTab !== 'first-aid') {
+          if (onFirstAidPress) onFirstAidPress();
+          else navigateWithTransition(() => router.navigate('/first-aid-guidance'));
+        }
+      }} style={({ pressed }) => [s.sideButton, baseStyles.touchTarget, pressed && s.pressedButton]}>
+      <Animated.View pointerEvents="none" style={[s.sideContent, aidStyle]}>
+        <View style={s.iconSlot}><NavigationIcon name="first-aid" size={layout.iconSize} /></View>
+        <Text style={[s.label, { lineHeight: layout.labelHeight }]}>First-Aid</Text>
+      </Animated.View>
+    </Pressable>
   </View>;
 }
 
-const s = StyleSheet.create({
-  fixedDock: { position: 'absolute', bottom: -21, left: 0, right: 0, zIndex: 10, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 30 },
-  fixedMainPosition: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 3 },
-  floatBubbles: { position: 'absolute', top: -28, left: '50%', marginLeft: -75, width: 150, height: 150 },
-  fixedSide: { zIndex: 2, width: 82, height: 82, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'flex-end', gap: 5 },
-  fixedHome: { transform: [{ translateX: -6 }] }, fixedAid: { transform: [{ translateX: 6 }], gap: 8 },
-  homeCircle: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' }, homeCircleGlass: { position: 'absolute', top: -6, right: -6, bottom: -6, left: -6 }, homeTabImage: { width: 50, height: 50, alignSelf: 'center', opacity: 0.56 }, homeIconDown: { transform: [{ translateY: 3 }] },
-  aidCircle: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' }, aidIconDown: { transform: [{ translateY: 3 }] },
-  aidBox: { width: 38, height: 32, borderRadius: 7, backgroundColor: C.blue, alignItems: 'center', justifyContent: 'center' }, aidHandle: { position: 'absolute', top: -6, width: 15, height: 7, borderWidth: 2, borderColor: C.blue, borderTopLeftRadius: 4, borderTopRightRadius: 4 }, aidPlusVertical: { position: 'absolute', width: 5, height: 17, borderRadius: 2, backgroundColor: C.white }, aidPlusHorizontal: { position: 'absolute', width: 17, height: 5, borderRadius: 2, backgroundColor: C.white },
-  fixedLabel: { color: C.white, fontFamily: F.bold, fontSize: 13 }, homeLabel: { color: C.white, fontFamily: F.regular, fontSize: 13 }, aidLabelDown: { transform: [{ translateY: 2 }] },
-  fixedMain: { width: 108, height: 108, borderRadius: 56, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' }, menuGlassMask: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, borderRadius: 54, overflow: 'hidden' }, menuGlassImage: { position: 'absolute', width: 144, height: 144, top: -18, left: -18 }, fixedGridIcon: { transform: [{ translateX: -1 }] },
-  gridIcon: { width: 44, height: 44, flexDirection: 'row', flexWrap: 'wrap', gap: 5, alignContent: 'center', justifyContent: 'center' }, gridTile: { width: 19, height: 19, borderRadius: 4, backgroundColor: C.white },
-  bubble: { position: 'absolute', borderRadius: 50, backgroundColor: 'rgba(148,176,213,.32)', borderWidth: 1, borderColor: 'rgba(255,255,255,.64)', boxShadow: '0 2px 8px rgba(50,80,123,.14), inset 1px 1px 3px rgba(255,255,255,.7)' },
-  bubbleOne: { width: 25, height: 25, left: '40%', top: 0 }, bubbleTwo: { width: 18, height: 18, left: '46%', top: 17 }, bubbleThree: { width: 30, height: 30, left: '52%', top: 8 }, bubbleFour: { width: 12, height: 12, left: '49%', top: 39, backgroundColor: 'rgba(255,255,255,.56)' },
+const baseStyles = StyleSheet.create({
+  fixedDock: {
+    position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
+    flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 30,
+  },
+  wave: { position: 'absolute', top: 0, left: 0, right: 0 },
+  footerFill: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.blue },
+  sideButton: { zIndex: 2, width: 82, alignItems: 'center', justifyContent: 'flex-end' },
+  touchTarget: { minWidth: 44, minHeight: 44 },
+  sideContent: { alignItems: 'center', gap: 6 },
+  iconSlot: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  label: { color: C.white, fontFamily: F.semiBold, fontSize: 13 },
+  mainPosition: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 3 },
+  menuGlow: { position: 'absolute', left: '50%' },
+  mainButton: { alignItems: 'center', justifyContent: 'center' },
+  pressedButton: { opacity: 0.78 },
 });

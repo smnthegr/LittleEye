@@ -1,3 +1,4 @@
+import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { BackButton } from '@/components/back-button';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { BrandColors, BrandFonts } from '@/constants/brand';
@@ -8,6 +9,7 @@ import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput,
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ForgotPasswordScreen() {
+  const styles = useResponsiveStyles(baseStyles);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -22,7 +24,7 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <StatusBar style="dark" />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <EdgeScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.page}>
@@ -73,7 +75,7 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   filledInput: { fontFamily: BrandFonts.semiBold },
   textPressed: { opacity: 0.55 },
   screen: { flex: 1, backgroundColor: BrandColors.white },

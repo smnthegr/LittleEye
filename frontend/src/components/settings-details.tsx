@@ -1,3 +1,4 @@
+import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useAppSession } from './app-session';
@@ -13,10 +14,13 @@ const helpTopics = [
 ] as const;
 
 function Info({ label, value }: { label: string; value: string }) {
+  const s = useResponsiveStyles(baseStyles);
   return <View style={s.info}><Text style={s.label}>{label}</Text><Text style={s.value}>{value}</Text></View>;
 }
-function Note({ children }: { children: string }) { return <Text style={s.note}>{children}</Text>; }
+function Note({ children }: { children: string }) {
+  const s = useResponsiveStyles(baseStyles); return <Text style={s.note}>{children}</Text>; }
 function Action({ title, onPress, disabled = false }: { title: string; onPress?: () => void; disabled?: boolean }) {
+  const s = useResponsiveStyles(baseStyles);
   return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
     style={({ pressed }) => [s.action, disabled && s.disabled, pressed && { opacity: .6 }]}><Text style={s.actionText}>{title}</Text></Pressable>;
 }
@@ -25,6 +29,7 @@ function Toggle({ label, description, pref, preferences, onChange }: {
   label: string; description: string; pref: keyof Preferences; preferences: Preferences;
   onChange: (pref: keyof Preferences, value: boolean) => void;
 }) {
+  const s = useResponsiveStyles(baseStyles);
   return <View style={s.toggleRow}><View style={s.toggleText}><Text style={s.value}>{label}</Text><Text style={s.description}>{description}</Text></View>
     <Switch accessibilityLabel={`${label} (preview)`} value={preferences[pref]}
       trackColor={{ false: '#9CB3D2', true: C.blue }} ios_backgroundColor="#9CB3D2" thumbColor={C.white}
@@ -32,6 +37,7 @@ function Toggle({ label, description, pref, preferences, onChange }: {
 }
 
 export function SettingsDetails({ section }: { section: string }) {
+  const s = useResponsiveStyles(baseStyles);
   const session = useAppSession();
   const [quality, setQuality] = useState('Auto');
   const [brightness, setBrightness] = useState(50);
@@ -85,7 +91,7 @@ export function SettingsDetails({ section }: { section: string }) {
   return null;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   info: { paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: '#E4EBF5' },
   label: { fontFamily: F.semiBold, color: C.blue, fontSize: 11, marginTop: 10, marginBottom: 6 },
   value: { fontFamily: F.semiBold, color: C.blue, fontSize: 13, lineHeight: 21 },

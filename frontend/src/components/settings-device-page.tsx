@@ -1,3 +1,4 @@
+import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useState } from 'react';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -8,6 +9,7 @@ import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
 import { useSettingsCamera } from '@/hooks/use-settings-camera';
 
 export function SettingsDevicePage() {
+  const s = useResponsiveStyles(baseStyles);
   const { saveCamera } = useAppSession();
   const { camera, isPreview } = useSettingsCamera();
   const [draft, setDraft] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export function SettingsDevicePage() {
   </SettingsPage>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   cameraCard: { borderRadius: 32, padding: 16, backgroundColor: C.white, boxShadow: '0 10px 24px rgba(111,160,235,.42)' },
   cameraRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6 }, cameraText: { flex: 1 },
   cameraFrame: { width: 88, height: 92 }, glow: { position: 'absolute', width: 66, height: 66, left: 11, top: 13, borderRadius: 33, backgroundColor: 'rgba(111,160,235,.22)', boxShadow: '0 0 20px 8px rgba(111,160,235,.58)' },

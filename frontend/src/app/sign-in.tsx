@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { BackButton } from '@/components/back-button';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { useMascotImages } from '@/components/mascot-images';
@@ -10,16 +11,16 @@ import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
   Alert, KeyboardAvoidingView, Platform, Pressable,
-  StyleSheet, Text, TextInput, useWindowDimensions, View,
+  StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SignInScreen() {
+  const styles = useResponsiveStyles(baseStyles);
   const { enterPreview } = useAppSession();
   const mascotImages = useMascotImages();
-  const { width } = useWindowDimensions();
+  const { pageWidth, scaleSize } = useResponsiveLayout();
   const insets = useSafeAreaInsets();
-  const pageWidth = Math.min(width - insets.left - insets.right, 480);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -50,7 +51,7 @@ export default function SignInScreen() {
             accessible={false}
             contentFit="fill"
             transition={0}
-            style={{ position: 'absolute', bottom: 0, width: pageWidth, height: pageWidth * 0.78 }}
+            style={{ position: 'absolute', bottom: scaleSize(0), width: pageWidth, height: pageWidth * 0.78 }}
           />
           <Image
             source={mascotImages.signIn}
@@ -69,7 +70,7 @@ export default function SignInScreen() {
             accessibilityLabel="Back to welcome"
             onPress={() => router.back()}
             hitSlop={12}
-            style={[styles.back, { top: insets.top + 12 }]} />
+            style={[styles.back, { top: insets.top + scaleSize(12) }]} />
         </View>
 
         <View style={styles.form}>
@@ -143,7 +144,7 @@ export default function SignInScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   filledInput: { fontFamily: BrandFonts.semiBold },
   screen: { flex: 1, backgroundColor: BrandColors.white },
   page: { flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center', backgroundColor: BrandColors.white },
@@ -165,7 +166,7 @@ const styles = StyleSheet.create({
   divider: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 34 },
   line: { flex: 1, height: 1, backgroundColor: '#555555' },
   dividerText: { fontFamily: BrandFonts.regular, fontSize: 14, color: '#111111' },
-  google: { width: 68, height: 48, borderRadius: 18, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', backgroundColor: BrandColors.white, marginTop: 16, shadowColor: BrandColors.blue, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 4 },
+  google: { width: 68, minHeight: 48, borderRadius: 18, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', backgroundColor: BrandColors.white, marginTop: 16, shadowColor: BrandColors.blue, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 4 },
   googleIcon: { width: 24, height: 24 },
   footer: { marginTop: 14, paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' },
   footerText: { fontFamily: BrandFonts.semiBold, fontSize: 14, color: '#111111' },

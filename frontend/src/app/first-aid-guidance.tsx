@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
+import { useCallback, useState } from 'react';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -8,14 +9,16 @@ import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
+import { ResponsiveBackground } from '@/components/responsive-background';
 import { GlowButton } from '@/components/glow-button';
-import { HomeNavigationBar } from '@/components/home-navigation-bar';
+import { useBottomNavigationMenu } from '@/components/bottom-navigation';
 import { SettingsProfileButton } from '@/components/settings-profile-button';
 import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
+import { getHomeNavigationLayout } from '@/utils/responsive';
 
 const severityLevels = [
   { label: 'Mild', color: '#F5C06F' },
-  { label: 'Medium', color: '#FF791F' },
+  { label: 'Moderate', color: '#FF791F' },
   { label: 'Severe', color: '#FF3946' },
 ];
 
@@ -25,7 +28,7 @@ const guidanceBySeverity: Record<string, { title: string; detail: string }[]> = 
     { title: 'Keep them still', detail: 'Avoid unnecessary movement, especially if a head, neck, or back injury is possible.' },
     { title: 'Watch for changes', detail: 'Stay with the child and get medical help if their condition worsens.' },
   ],
-  Medium: [
+  Moderate: [
     { title: 'Check the child', detail: 'Stay calm and check if the child is conscious and breathing normally.' },
     { title: 'Keep them still', detail: 'Do not move the child unnecessarily, especially if a head, neck, or back injury is suspected.' },
     { title: 'Get medical help', detail: 'Call emergency services if symptoms worsen or you are concerned about an injury.' },
@@ -46,9 +49,14 @@ const menuIcons = {
 } satisfies Record<string, SymbolViewProps['name']>;
 
 export default function FirstAidGuidanceScreen() {
+  const { scaleSize, pageWidth } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
+  const navigationLayout = getHomeNavigationLayout(pageWidth, insets.bottom);
   const [selectedSeverity, setSelectedSeverity] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const openMenu = useCallback(() => setMenuOpen(current => !current), []);
+  useBottomNavigationMenu(openMenu, menuOpen);
   const [demoPlaying, setDemoPlaying] = useState(false);
 
   function goBack() {
@@ -64,10 +72,11 @@ export default function FirstAidGuidanceScreen() {
   return <View style={s.screen}>
     <StatusBar style="light" />
     <NavigationBar hidden />
-    <Image pointerEvents="none" source={selectedSeverity ? require('../../assets/images/first-aid-severity-background.svg') : require('../../assets/images/first-aid-guidance-background.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
+    <ResponsiveBackground source={selectedSeverity ? require('../../assets/images/first-aid-severity-background.svg') : require('../../assets/images/first-aid-guidance-background.svg')} />
     {!selectedSeverity && <Image pointerEvents="none" source={require('../../assets/images/first-aid-guidance-mascot.png')} contentFit="contain" transition={0} accessible={false} style={s.mascot} />}
 
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.content, { paddingTop: insets.top + 8, paddingBottom: 170 + insets.bottom }]}>
+    <ScrollView showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never"
+      contentContainerStyle={[s.content, { paddingTop: insets.top + scaleSize(8), paddingBottom: navigationLayout.scrollPadding }]}>
       <View style={s.headerRow}>
         <BackButton accessibilityLabel={selectedSeverity ? 'Back to severity selection' : 'Back'} onPress={handleBack} />
         <SettingsProfileButton />
@@ -96,7 +105,7 @@ export default function FirstAidGuidanceScreen() {
           >
             <View style={[s.severityDot, { backgroundColor: level.color }]} />
             <Text style={s.severityLabel}>{level.label}</Text>
-            <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={17} tintColor={C.white} />
+            <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={scaleSize(17)} tintColor={C.white} />
           </Pressable>)}
         </View>
       </> : <View style={s.selectedContent}>
@@ -119,12 +128,11 @@ export default function FirstAidGuidanceScreen() {
       </View>}
     </ScrollView>
 
-    <HomeNavigationBar onOpenMenu={() => setMenuOpen(true)} />
 
     <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)}>
       <View style={s.menuOverlay}>
         <Pressable accessibilityRole="button" accessibilityLabel="Close menu" onPress={() => setMenuOpen(false)} style={StyleSheet.absoluteFill} />
-        <View style={[s.menuSheet, { paddingBottom: Math.max(insets.bottom, 18) + 36 }]}>
+        <View style={[s.menuSheet, { paddingBottom: Math.max(insets.bottom, 18) + scaleSize(36) }]}>
           <Image pointerEvents="none" source={require('../../assets/images/menu-mascot.png')} contentFit="contain" transition={0} accessible={false} style={s.menuMascot} />
           <View style={s.menuHandle} />
           <View style={s.menuOptions}>
@@ -141,14 +149,16 @@ export default function FirstAidGuidanceScreen() {
 }
 
 function MenuOption({ icon, label, onPress }: { icon: keyof typeof menuIcons; label: string; onPress: () => void }) {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   return <GlowButton accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={s.menuOption}>
-    <View style={s.menuOptionIcon}><SymbolView name={menuIcons[icon]} size={20} tintColor={C.white} /></View>
+    <View style={s.menuOptionIcon}><SymbolView name={menuIcons[icon]} size={scaleSize(20)} tintColor={C.white} /></View>
     <Text style={s.menuOptionLabel}>{label}</Text>
-    <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={14} tintColor="#A9BBD0" />
+    <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={scaleSize(14)} tintColor="#A9BBD0" />
   </GlowButton>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#315780' },
   content: { flexGrow: 1, paddingHorizontal: 28 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: -1, transform: [{ translateY: 1 }] },
@@ -197,7 +207,7 @@ const s = StyleSheet.create({
   aidCrossVertical: { position: 'absolute', width: 4, height: 14, borderRadius: 2, backgroundColor: '#F35E6A' },
   aidCrossHorizontal: { position: 'absolute', width: 14, height: 4, borderRadius: 2, backgroundColor: '#F35E6A' },
   menuOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,.32)' },
-  menuSheet: { width: '100%', paddingTop: 30, paddingHorizontal: 30, backgroundColor: C.white, borderTopLeftRadius: 64, borderTopRightRadius: 64, overflow: 'hidden' },
+  menuSheet: { width: '100%', maxWidth: 480, alignSelf: 'center', paddingTop: 30, paddingHorizontal: 30, backgroundColor: C.white, borderTopLeftRadius: 64, borderTopRightRadius: 64, overflow: 'hidden' },
   menuMascot: { position: 'absolute', width: 700, height: 394, top: 8, right: -296 },
   menuHandle: { alignSelf: 'center', width: 37, height: 3, borderRadius: 2, backgroundColor: '#A5B8D1', marginBottom: 23, transform: [{ translateY: -10 }] },
   menuOptions: { gap: 15, paddingBottom: 4 },

@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useMemo, useState } from 'react';
 import { Alert, Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
@@ -7,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
+import { ResponsiveBackground } from '@/components/responsive-background';
 import { GlowButton } from '@/components/glow-button';
 import { useAppSession } from '@/components/app-session';
 import { SettingsProfileButton } from '@/components/settings-profile-button';
@@ -19,6 +21,8 @@ const contactIcon = {
 } satisfies SymbolViewProps['name'];
 
 export default function EmergencyContactsScreen() {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const { profile, profilePhoto, updateProfile } = useAppSession();
@@ -126,8 +130,8 @@ export default function EmergencyContactsScreen() {
 
   return <View style={s.screen}>
     <StatusBar style="light" />
-    <Image pointerEvents="none" source={require('../../assets/images/emergency-contacts-background.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-    <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + 10, paddingBottom: Math.max(insets.bottom, 16) + 14 }]} showsVerticalScrollIndicator={false}>
+    <ResponsiveBackground source={require('../../assets/images/emergency-contacts-background.svg')} />
+    <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + scaleSize(10), paddingBottom: Math.max(insets.bottom, 16) + scaleSize(14) }]} showsVerticalScrollIndicator={false}>
       <View style={s.headerRow}>
         <BackButton accessibilityLabel="Back" onPress={goBack} />
         <SettingsProfileButton />
@@ -146,7 +150,7 @@ export default function EmergencyContactsScreen() {
               <View style={s.contactNameRow}>
                 <Text numberOfLines={1} style={s.contactName}>{contact.fullName}</Text>
                 <Pressable accessibilityRole="button" accessibilityLabel={`Edit ${contact.fullName}`} onPress={() => openEditContact(index)} hitSlop={8} style={s.editIconButton}>
-                  <SymbolView name={{ ios: 'pencil', android: 'edit', web: 'edit' }} size={14} tintColor={C.white} />
+                  <SymbolView name={{ ios: 'pencil', android: 'edit', web: 'edit' }} size={scaleSize(14)} tintColor={C.white} />
                 </Pressable>
               </View>
               {!!contact.phone && <Text numberOfLines={1} style={s.contactPhone}>{contact.phone}</Text>}
@@ -155,7 +159,7 @@ export default function EmergencyContactsScreen() {
               <Text style={s.contactRole}>{contact.label}</Text>
             </View>
             <GlowButton accessibilityRole="button" accessibilityLabel={`Call ${contact.fullName}`} onPress={() => callContact(contact.fullName, contact.phone)} style={s.callButton} pressRippleSize={40}>
-              <SymbolView name={{ ios: 'phone', android: 'call', web: 'call' }} size={22} tintColor={C.white} />
+              <SymbolView name={{ ios: 'phone', android: 'call', web: 'call' }} size={scaleSize(22)} tintColor={C.white} />
             </GlowButton>
           </View>
         </View>)}
@@ -163,7 +167,7 @@ export default function EmergencyContactsScreen() {
       </View>
 
       <GlowButton accessibilityRole="button" accessibilityLabel="Add Contact. Maximum of 3 contacts only" onPress={openAddContact} style={s.addContact}>
-        <View style={s.addIconBox}><SymbolView name={contactIcon} size={34} tintColor={C.white} /></View>
+        <View style={s.addIconBox}><SymbolView name={contactIcon} size={scaleSize(34)} tintColor={C.white} /></View>
         <View style={s.addCopy}>
           <Text style={s.addTitle}>Add Contact</Text>
           <Text style={s.addSubtitle}>Maximum of 3 contacts only</Text>
@@ -193,7 +197,7 @@ export default function EmergencyContactsScreen() {
             <Text style={s.saveContactText}>{editingContactIndex === null ? 'Save Contact' : 'Save Changes'}</Text>
           </GlowButton>
           {editingContactIndex !== null && <Pressable accessibilityRole="button" accessibilityLabel="Delete contact" onPress={removeEditingContact} style={s.deleteContactButton}>
-            <SymbolView name={{ ios: 'trash', android: 'delete', web: 'delete' }} size={16} tintColor="#B13E4B" />
+            <SymbolView name={{ ios: 'trash', android: 'delete', web: 'delete' }} size={scaleSize(16)} tintColor="#B13E4B" />
             <Text style={s.deleteContactText}>Delete Contact</Text>
           </Pressable>}
         </ScrollView>
@@ -202,7 +206,7 @@ export default function EmergencyContactsScreen() {
   </View>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.blue },
   content: { flexGrow: 1, paddingHorizontal: 22 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

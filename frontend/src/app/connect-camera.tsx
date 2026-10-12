@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { BackButton } from '@/components/back-button';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { useCallback, useState } from 'react';
@@ -15,6 +16,8 @@ import { PageTransition } from '@/components/page-transition';
 import { SettingsIcon } from '@/components/settings-icon';
 
 export default function ConnectCameraScreen() {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const session = useAppSession();
   const [step, setStep] = useState<'start' | 'search' | 'manual'>('start');
@@ -42,8 +45,8 @@ export default function ConnectCameraScreen() {
   if (continueHome && session.camera) return <Redirect href="/home" />;
   return <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
     <StatusBar style="light" />
-    <EdgeScrollView topColor={C.blue} bottomColor={C.white} keyboardShouldPersistTaps="handled" contentContainerStyle={[s.page, { paddingBottom: insets.bottom + 32 }]}>
-      <View style={[s.hero, { paddingTop: insets.top + 24 }]}>
+    <EdgeScrollView topColor={C.blue} bottomColor={C.white} keyboardShouldPersistTaps="handled" contentContainerStyle={[s.page, { paddingBottom: insets.bottom + scaleSize(32) }]}>
+      <View style={[s.hero, { paddingTop: insets.top + scaleSize(24) }]}>
         <View pointerEvents="none" style={s.wave}>
           <Image source={require('../../assets/images/camera-setup-blob.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
         </View>
@@ -86,7 +89,7 @@ export default function ConnectCameraScreen() {
   </KeyboardAvoidingView>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   headerText: { transform: [{ translateY: 10 }] },
   screen: { flex: 1, backgroundColor: C.white }, page: { flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center' },
   hero: { backgroundColor: C.blue, paddingHorizontal: 28, paddingBottom: 64, borderBottomLeftRadius: 72, overflow: 'hidden' },

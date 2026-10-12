@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import type { ReactNode } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -10,6 +11,8 @@ import { SettingsProfileButton } from './settings-profile-button';
 export function SettingsPage({ title, children, white = false, fallback = 'settings' }: {
   title?: string; children: ReactNode; white?: boolean; fallback?: 'settings' | 'about';
 }) {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const { preview } = useLocalSearchParams<{ preview?: string }>();
   const previewParams = __DEV__ && preview === 'connected' ? { preview: 'connected' } : {};
@@ -21,8 +24,8 @@ export function SettingsPage({ title, children, white = false, fallback = 'setti
   return <View style={s.screen}>
     <StatusBar style={white ? 'dark' : 'light'} />
     <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
-      <View style={[s.header, white && s.whiteHeader, { paddingTop: insets.top + 20 }]}>
+      contentContainerStyle={{ paddingBottom: insets.bottom + scaleSize(32) }}>
+      <View style={[s.header, white && s.whiteHeader, { paddingTop: insets.top + scaleSize(20) }]}>
         {!white && <><View pointerEvents="none" style={s.blob} /><View pointerEvents="none" style={s.wave} /></>}
         <View style={s.headerInner}>
           <View style={s.topRow}>
@@ -37,7 +40,7 @@ export function SettingsPage({ title, children, white = false, fallback = 'setti
   </View>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.white },
   header: { backgroundColor: '#2C527F', paddingBottom: 68, overflow: 'hidden' }, whiteHeader: { backgroundColor: C.white, paddingBottom: 12 },
   headerInner: { width: '100%', maxWidth: 440, paddingHorizontal: 28, alignSelf: 'center' },

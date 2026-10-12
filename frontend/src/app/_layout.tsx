@@ -1,15 +1,19 @@
 import { MascotImagesProvider } from '@/components/mascot-images';
 import { PageTransition } from '@/components/page-transition';
+import { ResponsiveScreen } from '@/components/responsive-screen';
 import { BrandColors } from '@/constants/brand';
 import { useFonts } from 'expo-font';
 import { VT323_400Regular } from '@expo-google-fonts/vt323';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AppSessionProvider, useAppSession } from '@/components/app-session';
 import { FallAlertProvider } from '@/components/fall-alert';
+import { BottomNavigationHost, BottomNavigationProvider } from '@/components/bottom-navigation';
+import { NAVIGATION_TRANSITION_MS } from '@/components/navigation-transition';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 
 SplashScreen.preventAutoHideAsync();
@@ -31,7 +35,9 @@ export default function TabLayout() {
         <AppSessionProvider>
           <FallAlertProvider>
             <AnimatedSplashOverlay />
-            <AppNavigator />
+            <BottomNavigationProvider>
+              <AppNavigator />
+            </BottomNavigationProvider>
           </FallAlertProvider>
         </AppSessionProvider>
       </MascotImagesProvider>
@@ -41,19 +47,21 @@ export default function TabLayout() {
 
 function AppNavigator() {
   const session = useAppSession();
+  const reducedMotion = useReducedMotion();
   return (
-    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}
-      screenLayout={({ children, route }) => (
-        <PageTransition backgroundColor={
-          ['sign-up', 'set-up', 'connect-camera'].includes(route.name)
+    <View style={{ flex: 1 }}>
+    <Stack screenOptions={{ headerShown: false, animation: reducedMotion ? 'none' : 'fade', animationDuration: NAVIGATION_TRANSITION_MS }}
+      screenLayout={({ children, route }) => {
+        const backgroundColor =
+          ['home', 'sign-in', 'sign-up', 'set-up', 'connect-camera'].includes(route.name)
             ? BrandColors.blue
             : route.name === 'first-aid-guidance'
               ? '#315780'
-              : BrandColors.white
-        }>
-          {children}
-        </PageTransition>
-      )}>
+              : BrandColors.white;
+        return <ResponsiveScreen backgroundColor={backgroundColor} allowLandscape={['home', 'history'].includes(route.name)}>
+          <PageTransition backgroundColor={backgroundColor} animateOnMount={false}>{children}</PageTransition>
+        </ResponsiveScreen>;
+      }}>
       <Stack.Protected guard={!session.signedIn}>
         <Stack.Screen name="index" />
         <Stack.Screen name="policies" />
@@ -89,6 +97,8 @@ function AppNavigator() {
         <Stack.Screen name="explore" />
       </Stack.Protected>
     </Stack>
+    <BottomNavigationHost />
+    </View>
   );
 }
 

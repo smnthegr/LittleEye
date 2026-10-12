@@ -1,3 +1,4 @@
+import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SettingsPage } from './settings-page';
@@ -14,6 +15,7 @@ const links: { title: string; subtitle?: string; icon: string; page: SettingsSec
 ];
 
 export function SettingsAboutPage() {
+  const s = useResponsiveStyles(baseStyles);
   const { isPreview } = useSettingsCamera();
   return <SettingsPage white>
     <View style={s.hero}><Text accessibilityRole="header" style={s.logo}>Little<Text style={s.eye}>Eye</Text></Text>
@@ -32,7 +34,7 @@ export function SettingsAboutPage() {
   </SettingsPage>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   hero: { alignItems: 'center', paddingTop: 58, paddingBottom: 72 }, logo: { fontFamily: F.extraBold, fontSize: 39, color: C.blue, textShadowColor: 'rgba(50,80,123,.2)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 4 }, eye: { color: C.lightBlue },
   tagline: { fontFamily: F.semiBold, fontSize: 14, lineHeight: 22, color: C.blue, textAlign: 'center', marginTop: 10 },
   links: { paddingHorizontal: 4, gap: 24 }, row: { minHeight: 58, borderRadius: 30, borderWidth: 1, borderColor: '#BED1EF', backgroundColor: C.white, flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 14, paddingVertical: 7, boxShadow: '0 12px 24px rgba(83,116,183,.2)' },

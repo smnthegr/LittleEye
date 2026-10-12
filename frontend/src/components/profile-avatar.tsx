@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Image } from 'expo-image';
 import { View } from 'react-native';
 import { useAppSession } from './app-session';
+import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 
 export function ProfileAvatar({ size = 46 }: { size?: number }) {
+  const { scaleSize } = useResponsiveLayout();
   const { profilePhoto } = useAppSession();
   const photo = typeof profilePhoto === 'string' && profilePhoto ? profilePhoto : null;
-  return <AvatarImage key={photo ?? 'mascot'} photo={photo} size={size} />;
+  return <AvatarImage key={photo ?? 'mascot'} photo={photo} size={scaleSize(size)} />;
 }
 
 function AvatarImage({ photo, size }: { photo: string | null; size: number }) {

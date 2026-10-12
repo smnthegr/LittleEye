@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -8,6 +9,7 @@ import { Policies, PolicyDetails } from '@/constants/policies';
 import { GlowButton } from './glow-button';
 
 export function PolicyReader({ onRead }: { onRead?: () => void }) {
+  const s = useResponsiveStyles(baseStyles);
   const size = useRef({ viewport: 0, content: 0 });
   function checkFits() {
     if (size.current.viewport > 0 && size.current.content > 0 && size.current.content <= size.current.viewport + 2) onRead?.();
@@ -31,10 +33,12 @@ export function PolicyReader({ onRead }: { onRead?: () => void }) {
 }
 
 export function ConsentGate({ onAccept, onDecline }: { onAccept: () => void; onDecline: () => void }) {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const [ready, setReady] = useState(false);
   const [agreed, setAgreed] = useState(false);
-  return <View style={[s.screen, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 16 }]}>
+  return <View style={[s.screen, { paddingTop: insets.top + scaleSize(20), paddingBottom: insets.bottom + scaleSize(16) }]}>
     <StatusBar style="dark" />
     <View pointerEvents="none" style={s.halo} />
     <View style={s.page}>
@@ -57,7 +61,7 @@ export function ConsentGate({ onAccept, onDecline }: { onAccept: () => void; onD
   </View>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.white, paddingHorizontal: 24 },
   page: { flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center' },
   halo: { position: 'absolute', width: 270, height: 270, borderRadius: 200, right: -120, top: -90, backgroundColor: 'rgba(148,176,213,.18)', boxShadow: '0 0 70px 35px rgba(148,176,213,.12)' },

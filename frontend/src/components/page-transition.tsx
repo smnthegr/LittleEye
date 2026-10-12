@@ -1,33 +1,41 @@
 import { BrandColors } from '@/constants/brand';
-import { type ReactNode } from 'react';
-import { Image } from 'expo-image';
-import { Animated, StyleSheet, View, useWindowDimensions, type ColorValue } from 'react-native';
-import { navBubbleOpacity, navBubbleProgress, navBubbleScale } from '@/components/navigation-transition';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Animated, Easing, Platform, StyleSheet, type ColorValue } from 'react-native';
 
-export function PageTransition({ children, backgroundColor = BrandColors.white }: {
+export function PageTransition({ children, backgroundColor = BrandColors.white, animateOnMount = true }: {
   children: ReactNode;
   backgroundColor?: ColorValue;
+  animateOnMount?: boolean;
 }) {
-  const { width } = useWindowDimensions();
+  const reducedMotion = useReducedMotion();
+  const [entrance] = useState(() => new Animated.Value(animateOnMount && !reducedMotion ? 0 : 1));
+
+  useEffect(() => {
+    if (!animateOnMount || reducedMotion) {
+      entrance.stopAnimation();
+      entrance.setValue(1);
+      return;
+    }
+    const animation = Animated.timing(entrance, {
+      toValue: 1, duration: 180, easing: Easing.out(Easing.cubic),
+      useNativeDriver: Platform.OS !== 'web', isInteraction: false,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [animateOnMount, entrance, reducedMotion]);
 
   return (
-    <View style={[styles.frame, { backgroundColor }]}>
+    <Animated.View style={[styles.frame, {
+      backgroundColor,
+      opacity: entrance,
+      transform: [{ translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
+    }]}>
       {children}
-      <Animated.View pointerEvents="none" style={[styles.navBubble, {
-        left: width * .18 - 34,
-        opacity: navBubbleOpacity,
-        transform: [
-          { translateX: navBubbleProgress.interpolate({ inputRange: [0, 1], outputRange: [0, width * .64 + 10] }) },
-          { scale: navBubbleScale },
-        ],
-      }]}>
-        <Image source={require('../../assets/images/nav-transition-bubble.svg')} contentFit="contain" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-      </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   frame: { flex: 1 },
-  navBubble: { position: 'absolute', zIndex: 20, bottom: 54, width: 58, height: 58, borderRadius: 30, backgroundColor: 'transparent', boxShadow: '0 0 17px rgba(148,218,255,.28), 0 3px 10px rgba(50,80,123,.16)' },
 });

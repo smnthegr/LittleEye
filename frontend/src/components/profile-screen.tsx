@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useState } from 'react';
 import { Redirect, router } from 'expo-router';
 import { Image } from 'expo-image';
@@ -18,12 +19,15 @@ const emptyProfile: Profile = { guardian: { fullName: '', phone: '', email: '', 
 const fieldLabels: Record<Field, string> = { 'guardian-name': 'Guardian name', 'child-name': 'Child name', phone: 'Contact number', email: 'Email address', address: 'Address', birthdate: 'Birthdate', height: 'Height', sex: 'Sex', password: 'Change Password' };
 
 function InfoRow({ title, value, icon, onPress, chevron = false }: { title: string; value?: string; icon: ProfileIconName; onPress?: () => void; chevron?: boolean }) {
+  const s = useResponsiveStyles(baseStyles);
   const contents = <>{chevron && <ProfileIcon name={icon} size={22} />}<View style={s.rowText}><Text style={s.rowTitle}>{title}</Text>{value !== undefined && <Text style={s.rowValue}>{value || 'Not provided'}</Text>}</View>
     {chevron ? <View style={s.chevron} /> : <View style={s.iconCircle}><ProfileIcon name={icon} size={21} /></View>}</>;
   return onPress ? <GlowButton accessibilityRole="button" accessibilityLabel={`${title}${value ? `: ${value}` : ''}`} onPress={onPress} style={s.row}>{contents}</GlowButton> : <View style={s.row}>{contents}</View>;
 }
 
 export function ProfileScreen({ mode = 'guardian' }: { mode?: Mode }) {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const session = useAppSession();
   const { camera, isPreview } = useSettingsCamera();
   const insets = useSafeAreaInsets();
@@ -88,20 +92,20 @@ export function ProfileScreen({ mode = 'guardian' }: { mode?: Mode }) {
   if (!camera) return <Redirect href="/settings" />;
   return <View style={s.screen}>
     <StatusBar style="dark" />
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.page, { width: pageWidth, minHeight: '100%', paddingBottom: insets.bottom + 28 }]}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.page, { width: pageWidth, minHeight: '100%', paddingBottom: insets.bottom + scaleSize(28) }]}>
       <View pointerEvents="none" style={[s.safeAreaFill, { height: insets.top }]} />
       <View pointerEvents="none" style={[s.headerArt, { top: insets.top, height: pageWidth * 350 / 440 }]}>
         <Image source={require('../../assets/images/profile-header-wave.svg')} contentFit="fill" style={StyleSheet.absoluteFill} />
       </View>
       <View pointerEvents="none" style={s.bottomBlob} />
-      <View style={[s.top, { paddingTop: insets.top + 20 }]}><BackButton light onPress={back} />
+      <View style={[s.top, { paddingTop: insets.top + scaleSize(20) }]}><BackButton light onPress={back} />
         <Text accessibilityRole="header" style={s.heading}>{account ? 'Account & Privacy' : child ? 'Child’s Profile' : 'Guardian’s Profile'}</Text>
       </View>
       {account ? <View style={s.laptopFrame}><View pointerEvents="none" style={s.laptopGlow} /><Image accessible={false} source={require('../../assets/images/profile-laptop-mascot-4k.png')} contentFit="contain" style={s.laptop} /></View> : <View style={s.avatarSection}>
         <GlowButton accessibilityRole="button" accessibilityLabel={`Change ${child ? 'child' : 'guardian'} photo`} disabled={picking} onPress={choosePhoto} style={s.avatarRing}>
           <View pointerEvents="none" style={s.avatarClip}>
             {photo && !photoFailed ? <Image source={{ uri: photo }} contentFit="cover" style={StyleSheet.absoluteFill} onError={() => setPhotoFailed(true)} /> :
-              <Image accessible={false} source={require('../../assets/images/profile-guardian-child-mascots-4k.png')} contentFit="contain" style={[s.mascotPair, { left: child ? -221 : -14 }]} />}
+              <Image accessible={false} source={require('../../assets/images/profile-guardian-child-mascots-4k.png')} contentFit="contain" style={[s.mascotPair, { left: child ? scaleSize(-221) : scaleSize(-14) }]} />}
           </View>
           <View pointerEvents="none" style={s.cameraBadge}><ProfileIcon name="camera" size={24} /></View>
         </GlowButton>
@@ -158,7 +162,7 @@ export function ProfileScreen({ mode = 'guardian' }: { mode?: Mode }) {
   </View>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.blue }, page: { alignSelf: 'center', backgroundColor: C.blue, overflow: 'hidden' },
   headerArt: { position: 'absolute', left: 0, right: 0 },
   safeAreaFill: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: C.white },

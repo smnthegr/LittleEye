@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -5,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
+import { ResponsiveBackground } from '@/components/responsive-background';
 import { GlowButton } from '@/components/glow-button';
 import { SettingsProfileButton } from '@/components/settings-profile-button';
 import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
@@ -16,6 +18,8 @@ const serviceNumbers = [
 ];
 
 export default function EmergencyServicesScreen() {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
 
   function callService(number: string) {
@@ -29,8 +33,8 @@ export default function EmergencyServicesScreen() {
 
   return <View style={s.screen}>
     <StatusBar style="light" />
-    <Image pointerEvents="none" source={require('../../assets/images/emergency-services-background.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-    <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + 8, paddingBottom: Math.max(insets.bottom, 16) + 18 }]} showsVerticalScrollIndicator={false}>
+    <ResponsiveBackground source={require('../../assets/images/emergency-services-background.svg')} />
+    <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + scaleSize(8), paddingBottom: Math.max(insets.bottom, 16) + scaleSize(18) }]} showsVerticalScrollIndicator={false}>
       <View style={s.headerRow}>
         <BackButton accessibilityLabel="Back" onPress={goBack} />
         <SettingsProfileButton />
@@ -38,8 +42,7 @@ export default function EmergencyServicesScreen() {
 
       <View style={s.heading}>
         <Text accessibilityRole="header" style={s.title}>Emergency Services</Text>
-        <Text style={s.subtitle}>If there is an emergency, long press the SOS button</Text>
-        <Text style={s.subtitle}>for 3 seconds to confirm alert.</Text>
+        <Text style={s.subtitle}>If there is an emergency, long press the SOS button{'\n'}for 3 seconds to confirm alert.</Text>
       </View>
 
       <View style={s.servicesList}>
@@ -68,7 +71,7 @@ export default function EmergencyServicesScreen() {
   </View>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#FCFBFC' },
   content: { flexGrow: 1, paddingHorizontal: 34 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: -12, transform: [{ translateY: 1 }] },

@@ -1,3 +1,4 @@
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
@@ -29,6 +30,8 @@ const playbackEntries: HistoryEntry[] = [
 const eventEntries: HistoryEntry[] = [];
 
 export default function HistoryScreen() {
+  const { scaleSize } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<HistoryTab>('Playback');
@@ -97,7 +100,7 @@ export default function HistoryScreen() {
     {landscapeLayout && selectedRecording ? <View style={s.landscapeScreen}>
       <StatusBar style="light" />
       <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-      <View style={[s.landscapeTopRow, { top: insets.top + 20, left: insets.left + 28, right: insets.right + 28 }]}>
+      <View style={[s.landscapeTopRow, { top: insets.top + scaleSize(20), left: insets.left + scaleSize(28), right: insets.right + scaleSize(28) }]}>
         <View style={s.landscapeLiveBadge}>
           <View style={s.landscapeLiveDot} />
           <Text style={s.landscapeLiveText}>Recorded</Text>
@@ -116,11 +119,11 @@ export default function HistoryScreen() {
       <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={() => setIsPlaying(value => !value)} style={s.playerToggle}>
         {isPlaying ? <View style={s.pauseGlyph}><View style={s.pauseBar} /><View style={s.pauseBar} /></View> : <View style={s.playerPlayGlyph} />}
       </GlowButton>
-      <View style={[s.landscapeTimeRow, { bottom: insets.bottom + 62, left: insets.left + 28, right: insets.right + 28 }]} pointerEvents="none">
+      <View style={[s.landscapeTimeRow, { bottom: insets.bottom + scaleSize(62), left: insets.left + scaleSize(28), right: insets.right + scaleSize(28) }]} pointerEvents="none">
         <View style={s.landscapeTimeBadge}><Text style={s.landscapeTime}>07:15:32</Text></View>
         <View style={s.landscapeTimeBadge}><Text style={s.landscapeTime}>29/12/2026</Text></View>
       </View>
-      <View style={[s.landscapePlaybackBar, { bottom: insets.bottom + 16, left: insets.left + 28, right: insets.right + 28 }]}>
+      <View style={[s.landscapePlaybackBar, { bottom: insets.bottom + scaleSize(16), left: insets.left + scaleSize(28), right: insets.right + scaleSize(28) }]}>
         <Text style={s.playbackTimestamp}>{playbackTime}</Text>
         <View style={s.landscapeTrackWrap}>
         {isSeeking && <View pointerEvents="none" style={[s.seekTimeBubble, s.landscapeSeekTimeBubble, { left: `${Math.max(8, Math.min(92, playbackProgress * 100))}%` }]}><Text style={s.seekTimeText}>{playbackTime}</Text></View>}
@@ -145,10 +148,10 @@ export default function HistoryScreen() {
       </View>
     </View> : <View style={s.screen}>
     <StatusBar style="light" />
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 24 }}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + scaleSize(24) }}>
       <View style={s.page}>
         <Image pointerEvents="none" source={require('../../assets/images/history-background.svg')} contentFit="fill" transition={0} accessible={false} style={s.pageBackground} />
-        <View style={[s.header, { paddingTop: insets.top + 8 }]}>
+        <View style={[s.header, { paddingTop: insets.top + scaleSize(8) }]}>
           <View style={s.headerInner}>
             <View style={s.topRow}>
               <BackButton accessibilityLabel={selectedRecording ? 'Back to History' : 'Back to Home'} onPress={goBack} />
@@ -261,7 +264,7 @@ export default function HistoryScreen() {
   </>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.white },
   landscapeScreen: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'transparent', overflow: 'hidden' },
   page: { flexGrow: 1, position: 'relative', backgroundColor: C.white },

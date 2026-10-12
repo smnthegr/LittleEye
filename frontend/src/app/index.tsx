@@ -1,3 +1,4 @@
+import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { GlowButton } from '@/components/glow-button';
 import { useAppSession } from '@/components/app-session';
@@ -11,6 +12,7 @@ import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function WelcomeScreen() {
+  const styles = useResponsiveStyles(baseStyles);
   const { accepted } = useAppSession();
   const mascotImages = useMascotImages();
   const { width, height } = useWindowDimensions();
@@ -22,7 +24,7 @@ export default function WelcomeScreen() {
   const mascotLeft = (size - 2085 * mascotScale) / 2 - 624 * mascotScale;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.screen} edges={['top']}>
       <StatusBar style="dark" />
       <EdgeScrollView contentContainerStyle={[styles.page, { minHeight: height - insets.top }]} contentInsetAdjustmentBehavior="never">
         <View style={styles.content}>
@@ -57,7 +59,7 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BrandColors.white },
   page: { flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center', justifyContent: 'space-between' },
   content: { paddingHorizontal: 36, paddingTop: '30%', paddingBottom: 48 },

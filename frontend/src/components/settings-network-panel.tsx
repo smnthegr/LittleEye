@@ -1,3 +1,4 @@
+import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
@@ -7,6 +8,7 @@ import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
 import { useSettingsCamera } from '@/hooks/use-settings-camera';
 
 export function SettingsNetworkPanel() {
+  const s = useResponsiveStyles(baseStyles);
   const session = useAppSession();
   const { camera, isPreview } = useSettingsCamera();
   const [showReconnectNotice, setShowReconnectNotice] = useState(false);
@@ -57,7 +59,7 @@ export function SettingsNetworkPanel() {
   </View>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   summary: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12 },
   wifiFrame: { width: 50, height: 50, borderRadius: 15, backgroundColor: C.blue, alignItems: 'center', justifyContent: 'center' }, connectedIcon: { backgroundColor: '#208653' }, wifi: { width: 28, height: 28 },
   summaryText: { flex: 1 }, title: { fontFamily: F.bold, color: C.blue, fontSize: 13, lineHeight: 21 },
