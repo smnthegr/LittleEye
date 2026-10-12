@@ -19,6 +19,7 @@ export default function HomeScreen() {
   const [muted, setMuted] = useState(false);
   const [recording, setRecording] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [previewOffset, setPreviewOffset] = useState({ x: 0, y: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
   const { showFallAlert } = useFallAlert();
   const [isLandscape, setIsLandscape] = useState(false);
@@ -32,6 +33,26 @@ export default function HomeScreen() {
   // The blue wave should reach below the Control Panel pill, not stop at the feed.
   const controlPanelHeight = 10 + 12 + 11;
   const backgroundHeight = (headerHeight - contentTopOverlap + previewHeight + controlPanelHeight + 124) / .886;
+
+  function setPreviewZoom(nextZoom: number) {
+    const next = Math.max(1, Math.min(5, nextZoom));
+    setZoom(next);
+    const maxOffset = (next - 1) * 36;
+    setPreviewOffset(current => ({
+      x: Math.max(-maxOffset, Math.min(maxOffset, current.x)),
+      y: Math.max(-maxOffset, Math.min(maxOffset, current.y)),
+    }));
+  }
+
+  function movePreview(dx: number, dy: number) {
+    const maxOffset = (zoom - 1) * 36;
+    setPreviewOffset(current => ({
+      x: Math.max(-maxOffset, Math.min(maxOffset, current.x + dx)),
+      y: Math.max(-maxOffset, Math.min(maxOffset, current.y + dy)),
+    }));
+  }
+
+  const previewTransform = [{ scale: zoom }, { translateX: previewOffset.x }, { translateY: previewOffset.y }];
 
   async function toggleLandscape() {
     if (isLandscape) {
@@ -61,7 +82,7 @@ export default function HomeScreen() {
   if (landscapeLayout) return <View style={s.landscapeScreen}>
     <StatusBar style="light" />
     <NavigationBar hidden />
-    <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
+    <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={[StyleSheet.absoluteFill, { transform: previewTransform }]} />
     <View style={[s.landscapeTopRow, { top: insets.top + 20, left: insets.left + 28, right: insets.right + 28 }]}>
       <View style={s.landscapeLiveBadge}><View style={s.landscapeLiveDot} /><Text style={s.landscapeLiveText}>LIVE</Text></View>
       <Pressable accessibilityRole="button" accessibilityLabel="Exit landscape camera preview" hitSlop={14} onPress={() => { void toggleLandscape(); }} style={s.landscapeExitButton}>
@@ -98,7 +119,7 @@ export default function HomeScreen() {
 
       <View style={[s.content, { width: contentFrameWidth, marginTop: -contentTopOverlap }]}>
         <View accessibilityLabel="Camera preview" style={[s.feed, { height: previewHeight }]}>
-          <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
+          <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={[StyleSheet.absoluteFill, { transform: previewTransform }]} />
           <View pointerEvents="none" style={s.feedShade} />
           <View style={s.feedTop}><View style={s.live}><View style={s.liveDot} /><Text style={s.liveText}>LIVE</Text></View>
             <View style={s.feedActions}>
@@ -137,16 +158,16 @@ export default function HomeScreen() {
           </View>
           <View style={s.dpadOuter}>
             <Image pointerEvents="none" source={require('../../assets/images/home-dpad-glass.png')} contentFit="contain" transition={0} accessible={false} style={s.dpadGlass} />
-            <GlowButton accessibilityRole="button" accessibilityLabel="Tilt camera up" style={[s.direction, s.up]}><Image source={require('../../assets/images/direction-arrow.svg')} contentFit="contain" transition={0} accessible={false} style={[s.directionGlyph, s.arrowUp]} /></GlowButton>
-            <GlowButton accessibilityRole="button" accessibilityLabel="Turn camera left" style={[s.direction, s.left]}><Image source={require('../../assets/images/direction-arrow.svg')} contentFit="contain" transition={0} accessible={false} style={[s.directionGlyph, s.arrowLeft]} /></GlowButton>
-            <View style={s.dpadCenter} />
-            <GlowButton accessibilityRole="button" accessibilityLabel="Turn camera right" style={[s.direction, s.right]}><Image source={require('../../assets/images/direction-arrow.svg')} contentFit="contain" transition={0} accessible={false} style={[s.directionGlyph, s.arrowRight]} /></GlowButton>
-            <GlowButton accessibilityRole="button" accessibilityLabel="Tilt camera down" style={[s.direction, s.down]}><Image source={require('../../assets/images/direction-arrow.svg')} contentFit="contain" transition={0} accessible={false} style={[s.directionGlyph, s.arrowDown]} /></GlowButton>
+            <GlowButton accessibilityRole="button" accessibilityLabel="Move camera preview up" onPress={() => movePreview(0, -12)} style={[s.direction, s.up]}><Image source={require('../../assets/images/direction-arrow.svg')} contentFit="contain" transition={0} accessible={false} style={[s.directionGlyph, s.arrowUp]} /></GlowButton>
+            <GlowButton accessibilityRole="button" accessibilityLabel="Move camera preview left" onPress={() => movePreview(-12, 0)} style={[s.direction, s.left]}><Image source={require('../../assets/images/direction-arrow.svg')} contentFit="contain" transition={0} accessible={false} style={[s.directionGlyph, s.arrowLeft]} /></GlowButton>
+            <GlowButton accessibilityRole="button" accessibilityLabel="Reset camera preview position and zoom" onPress={() => { setPreviewOffset({ x: 0, y: 0 }); setZoom(1); }} style={s.dpadCenter} />
+            <GlowButton accessibilityRole="button" accessibilityLabel="Move camera preview right" onPress={() => movePreview(12, 0)} style={[s.direction, s.right]}><Image source={require('../../assets/images/direction-arrow.svg')} contentFit="contain" transition={0} accessible={false} style={[s.directionGlyph, s.arrowRight]} /></GlowButton>
+            <GlowButton accessibilityRole="button" accessibilityLabel="Move camera preview down" onPress={() => movePreview(0, 12)} style={[s.direction, s.down]}><Image source={require('../../assets/images/direction-arrow.svg')} contentFit="contain" transition={0} accessible={false} style={[s.directionGlyph, s.arrowDown]} /></GlowButton>
           </View>
           <View style={s.zoomColumn}><Text style={s.zoomCaption}>Zoom In</Text>
             <View style={s.zoomPill}>
-              <GlowButton accessibilityRole="button" accessibilityLabel={`Zoom in (level ${zoom}x)`} onPress={() => setZoom(v => Math.min(5, v + 1))} style={s.zoomButton}><Text style={[s.zoomGlyph, s.zoomPlusGlyph]}>＋</Text></GlowButton>
-              <GlowButton accessibilityRole="button" accessibilityLabel={`Zoom out (level ${zoom}x)`} onPress={() => setZoom(v => Math.max(1, v - 1))} style={s.zoomButton}><Text style={[s.zoomGlyph, s.zoomMinusGlyph]}>−</Text></GlowButton>
+              <GlowButton accessibilityRole="button" accessibilityLabel={`Zoom in (level ${zoom}x)`} onPress={() => setPreviewZoom(zoom + 1)} style={s.zoomButton}><Text style={[s.zoomGlyph, s.zoomPlusGlyph]}>＋</Text></GlowButton>
+              <GlowButton accessibilityRole="button" accessibilityLabel={`Zoom out (level ${zoom}x)`} onPress={() => setPreviewZoom(zoom - 1)} style={s.zoomButton}><Text style={[s.zoomGlyph, s.zoomMinusGlyph]}>−</Text></GlowButton>
             </View>
             <Text style={s.zoomCaption}>Zoom Out</Text>
           </View>

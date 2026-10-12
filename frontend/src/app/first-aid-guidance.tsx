@@ -19,6 +19,24 @@ const severityLevels = [
   { label: 'Severe', color: '#FF3946' },
 ];
 
+const guidanceBySeverity: Record<string, { title: string; detail: string }[]> = {
+  Mild: [
+    { title: 'Check the child', detail: 'Stay calm and check if the child is conscious and breathing normally.' },
+    { title: 'Keep them still', detail: 'Avoid unnecessary movement, especially if a head, neck, or back injury is possible.' },
+    { title: 'Watch for changes', detail: 'Stay with the child and get medical help if their condition worsens.' },
+  ],
+  Medium: [
+    { title: 'Check the child', detail: 'Stay calm and check if the child is conscious and breathing normally.' },
+    { title: 'Keep them still', detail: 'Do not move the child unnecessarily, especially if a head, neck, or back injury is suspected.' },
+    { title: 'Get medical help', detail: 'Call emergency services if symptoms worsen or you are concerned about an injury.' },
+  ],
+  Severe: [
+    { title: 'Call emergency services', detail: 'Call 911 if the child is unresponsive, not breathing normally, or seriously injured.' },
+    { title: 'Check breathing', detail: 'If they are unresponsive and not breathing normally, follow the dispatcher’s instructions.' },
+    { title: 'Keep them still', detail: 'Do not move them if a head, neck, or spine injury is possible, unless the area is unsafe.' },
+  ],
+};
+
 const menuIcons = {
   profile: { ios: 'person.fill', android: 'person', web: 'person' },
   hotline: { ios: 'phone.fill', android: 'call', web: 'call' },
@@ -31,51 +49,74 @@ export default function FirstAidGuidanceScreen() {
   const insets = useSafeAreaInsets();
   const [selectedSeverity, setSelectedSeverity] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [demoPlaying, setDemoPlaying] = useState(false);
 
   function goBack() {
     if (router.canGoBack()) router.back();
     else router.replace('/home');
   }
 
+  function handleBack() {
+    if (selectedSeverity) setSelectedSeverity(null);
+    else goBack();
+  }
+
   return <View style={s.screen}>
     <StatusBar style="light" />
     <NavigationBar hidden />
-    <Image pointerEvents="none" source={require('../../assets/images/first-aid-guidance-background.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-    <Image pointerEvents="none" source={require('../../assets/images/first-aid-guidance-mascot.png')} contentFit="contain" transition={0} accessible={false} style={s.mascot} />
+    <Image pointerEvents="none" source={selectedSeverity ? require('../../assets/images/first-aid-severity-background.svg') : require('../../assets/images/first-aid-guidance-background.svg')} contentFit="fill" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
+    {!selectedSeverity && <Image pointerEvents="none" source={require('../../assets/images/first-aid-guidance-mascot.png')} contentFit="contain" transition={0} accessible={false} style={s.mascot} />}
 
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.content, { paddingTop: insets.top + 8, paddingBottom: 170 + insets.bottom }]}>
       <View style={s.headerRow}>
-        <BackButton accessibilityLabel="Back" onPress={goBack} />
+        <BackButton accessibilityLabel={selectedSeverity ? 'Back to severity selection' : 'Back'} onPress={handleBack} />
         <SettingsProfileButton />
       </View>
 
-      <View style={s.heading}>
-        <Text accessibilityRole="header" style={s.title}>First-Aid Guidance</Text>
-        <Text style={s.subtitle}>Quick guidance on what to do when a</Text>
-        <Text style={s.subtitle}>child falls</Text>
+      <View style={[s.heading, selectedSeverity && s.selectedHeading]}>
+        <Text accessibilityRole="header" style={[s.title, selectedSeverity && s.selectedTitle]}>First-Aid Guidance</Text>
+        {selectedSeverity ? <Text style={[s.subtitle, s.selectedSeverityLabel, { color: severityLevels.find(level => level.label === selectedSeverity)?.color }]}>{selectedSeverity}</Text> : <>
+          <Text style={s.subtitle}>Quick guidance on what to do when a</Text>
+          <Text style={s.subtitle}>child falls</Text>
+        </>}
       </View>
 
-      <View style={s.severityPanel}>
-        <Text style={s.severityTitle}>Select Severity Level</Text>
-      </View>
+      {!selectedSeverity ? <>
+        <View style={s.severityPanel}>
+          <Text style={s.severityTitle}>Select Severity Level</Text>
+        </View>
 
-      <View style={s.severityList}>
-        {severityLevels.map(level => {
-          const selected = selectedSeverity === level.label;
-          return <Pressable
+        <View style={s.severityList}>
+          {severityLevels.map(level => <Pressable
             key={level.label}
             accessibilityRole="button"
             accessibilityLabel={`${level.label} fall severity`}
-            accessibilityState={{ selected }}
             onPress={() => setSelectedSeverity(level.label)}
-            style={({ pressed }) => [s.severityButton, selected && s.severitySelected, pressed && s.severityPressed]}
+            style={({ pressed }) => [s.severityButton, pressed && s.severityPressed]}
           >
             <View style={[s.severityDot, { backgroundColor: level.color }]} />
             <Text style={s.severityLabel}>{level.label}</Text>
             <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={17} tintColor={C.white} />
-          </Pressable>;
-        })}
-      </View>
+          </Pressable>)}
+        </View>
+      </> : <View style={s.selectedContent}>
+        <View style={s.demoVideo}>
+          <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
+          <View pointerEvents="none" style={s.videoDim} />
+          <Pressable accessibilityRole="button" accessibilityLabel={demoPlaying ? 'Pause first aid demonstration' : 'Play first aid demonstration'} accessibilityState={{ selected: demoPlaying }} onPress={() => setDemoPlaying(value => !value)} style={s.videoPlayButton}>
+            {demoPlaying ? <View style={s.videoPauseGlyph}><View style={s.videoPauseBar} /><View style={s.videoPauseBar} /></View> : <View style={s.videoPlayGlyph} />}
+          </Pressable>
+        </View>
+        <View style={s.guidanceSteps}>
+          {guidanceBySeverity[selectedSeverity].map((step, index) => <View key={`${selectedSeverity}-${index}`} style={s.guidanceCard}>
+            <View style={s.stepNumber}><Text style={s.stepNumberText}>{index + 1}</Text></View>
+            <View style={s.stepCopy}>
+              <Text style={s.stepTitle}>{step.title}</Text>
+              <Text style={s.stepDetail}>{step.detail}</Text>
+            </View>
+          </View>)}
+        </View>
+      </View>}
     </ScrollView>
 
     <HomeNavigationBar onOpenMenu={() => setMenuOpen(true)} />
@@ -114,6 +155,23 @@ const s = StyleSheet.create({
   heading: { alignItems: 'center', marginTop: 25 },
   title: { color: C.white, fontFamily: F.extraBold, fontSize: 20, lineHeight: 28 },
   subtitle: { marginTop: 6, color: C.white, fontFamily: F.regular, fontSize: 10, lineHeight: 15, textAlign: 'center' },
+  selectedHeading: { marginTop: 19 },
+  selectedTitle: { fontSize: 17, lineHeight: 22 },
+  selectedSeverityLabel: { marginTop: 5, fontFamily: F.semiBold, fontSize: 14, lineHeight: 18 },
+  selectedContent: { marginTop: 43, marginHorizontal: -13, gap: 20 },
+  demoVideo: { height: 210, position: 'relative', overflow: 'hidden', borderRadius: 15, borderWidth: 1.5, borderColor: 'rgba(255,255,255,.82)', backgroundColor: '#182C42', boxShadow: '0 0 16px rgba(106,215,244,.42), 0 6px 12px rgba(8,34,61,.22)' },
+  videoDim: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(8,20,33,.22)' },
+  videoPlayButton: { position: 'absolute', top: '50%', left: '50%', width: 42, height: 42, marginLeft: -21, marginTop: -21, alignItems: 'center', justifyContent: 'center', borderRadius: 21, backgroundColor: 'rgba(13,28,44,.38)' },
+  videoPlayGlyph: { width: 0, height: 0, marginLeft: 3, borderTopWidth: 9, borderBottomWidth: 9, borderLeftWidth: 14, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: 'rgba(255,255,255,.9)' },
+  videoPauseGlyph: { flexDirection: 'row', gap: 4 },
+  videoPauseBar: { width: 4, height: 15, borderRadius: 1, backgroundColor: 'rgba(255,255,255,.95)' },
+  guidanceSteps: { gap: 8 },
+  guidanceCard: { minHeight: 75, flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 10, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(148,176,213,.74)', backgroundColor: C.white, boxShadow: '0 5px 11px rgba(0,0,0,.24)' },
+  stepNumber: { width: 31, height: 31, alignItems: 'center', justifyContent: 'center', borderRadius: 8, backgroundColor: C.blue },
+  stepNumberText: { color: C.white, fontFamily: F.bold, fontSize: 20, lineHeight: 24 },
+  stepCopy: { flex: 1, gap: 1, paddingTop: 1 },
+  stepTitle: { color: C.blue, fontFamily: F.bold, fontSize: 11, lineHeight: 14 },
+  stepDetail: { color: '#627995', fontFamily: F.regular, fontSize: 10, lineHeight: 13 },
   severityPanel: { width: '76%', height: 38, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginTop: 44, borderRadius: 22, borderWidth: 1.5, borderColor: 'rgba(213,228,246,.75)', backgroundColor: 'rgba(255,255,255,.08)' },
   severityTitle: { color: C.white, fontFamily: F.bold, fontSize: 20, lineHeight: 24 },
   severityList: { width: '68%', alignSelf: 'center', alignItems: 'center', gap: 15, marginTop: 34 },
