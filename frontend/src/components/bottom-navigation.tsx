@@ -17,6 +17,8 @@ import { navigateWithTransition } from '@/components/navigation-transition';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { getHomeNavigationLayout } from '@/utils/responsive';
+import { useAppSession } from '@/components/app-session';
+import { getHomeDestination } from '@/utils/session-navigation';
 
 type NavigationPath = '/home' | '/first-aid-guidance';
 type MenuState = { openMenu: () => void; menuOpen: boolean; hideNavigation: boolean };
@@ -107,15 +109,16 @@ export function useBottomNavigationMenu(openMenu: () => void, menuOpen: boolean,
 
 /** Keep the dock stationary while the native stack slides the page above it. */
 export function BottomNavigationHost() {
+  const session = useAppSession();
   const store = useMenuStore();
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const pathname = navigationPath(usePathname());
-  const { pageWidth, insets } = useResponsiveLayout();
+  const { pageWidth, insets, fontScale } = useResponsiveLayout();
   const reducedMotion = useReducedMotion();
   const menu = pathname ? snapshot.entries.get(pathname) : undefined;
-  const visible = pathname !== undefined && !(pathname === '/home' && menu?.hideNavigation);
+  const visible = pathname !== undefined && !menu?.hideNavigation;
   const [visibility] = useState(() => new Animated.Value(visible ? 1 : 0));
-  const layout = getHomeNavigationLayout(pageWidth, insets.bottom);
+  const layout = getHomeNavigationLayout(pageWidth, insets.bottom, fontScale);
   const activePathname = pathname ?? snapshot.lastPath;
 
   useEffect(() => {
@@ -155,7 +158,7 @@ export function BottomNavigationHost() {
         menuOpen={menu?.menuOpen ?? false}
         visible={visible}
         onOpenMenu={() => menu?.openMenu()}
-        onHomePress={() => navigateWithTransition(() => router.dismissTo('/home'))}
+        onHomePress={() => navigateWithTransition(() => router.dismissTo(getHomeDestination(session)))}
         onFirstAidPress={() => navigateWithTransition(() => router.navigate('/first-aid-guidance'))}
       />
     </Animated.View>

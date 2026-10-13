@@ -1,16 +1,17 @@
 import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
+import { useLiveTimestamp } from '@/hooks/use-live-timestamp';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BackButton } from '@/components/back-button';
+import { FixedPageHeader } from '@/components/fixed-page-header';
 import { GlowButton } from '@/components/glow-button';
-import { SettingsProfileButton } from '@/components/settings-profile-button';
-import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
+import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
+import { getPageHeaderLayout } from '@/utils/responsive';
 
 type HistoryTab = 'Playback' | 'Events';
 
@@ -30,12 +31,15 @@ const playbackEntries: HistoryEntry[] = [
 const eventEntries: HistoryEntry[] = [];
 
 export default function HistoryScreen() {
-  const { scaleSize } = useResponsiveLayout();
+  const { pageWidth, scaleSize } = useResponsiveLayout();
   const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<HistoryTab>('Playback');
   const [selectedRecording, setSelectedRecording] = useState<HistoryEntry | null>(null);
+  const liveTimestamp = useLiveTimestamp(selectedRecording?.sample === true);
+  const footageTime = selectedRecording?.sample ? liveTimestamp.time : '07:15:32';
+  const footageDate = selectedRecording?.sample ? liveTimestamp.date : selectedRecording?.date;
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0.32);
@@ -100,12 +104,12 @@ export default function HistoryScreen() {
     {landscapeLayout && selectedRecording ? <View style={s.landscapeScreen}>
       <StatusBar style="light" />
       <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-      <View style={[s.landscapeTopRow, { top: insets.top + scaleSize(20), left: insets.left + scaleSize(28), right: insets.right + scaleSize(28) }]}>
+      <View style={[s.landscapeTopRow, { top: insets.top + scaleSize(20), left: scaleSize(24), right: scaleSize(24) }]}>
         <View style={s.landscapeLiveBadge}>
           <View style={s.landscapeLiveDot} />
           <Text style={s.landscapeLiveText}>Recorded</Text>
         </View>
-        <Pressable
+        <GlowButton
           accessibilityRole="button"
           accessibilityLabel="Exit landscape footage"
           hitSlop={14}
@@ -114,16 +118,16 @@ export default function HistoryScreen() {
         >
           <View style={s.landscapeExitLineOne} />
           <View style={s.landscapeExitLineTwo} />
-        </Pressable>
+        </GlowButton>
       </View>
       <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={() => setIsPlaying(value => !value)} style={s.playerToggle}>
         {isPlaying ? <View style={s.pauseGlyph}><View style={s.pauseBar} /><View style={s.pauseBar} /></View> : <View style={s.playerPlayGlyph} />}
       </GlowButton>
-      <View style={[s.landscapeTimeRow, { bottom: insets.bottom + scaleSize(62), left: insets.left + scaleSize(28), right: insets.right + scaleSize(28) }]} pointerEvents="none">
-        <View style={s.landscapeTimeBadge}><Text style={s.landscapeTime}>07:15:32</Text></View>
-        <View style={s.landscapeTimeBadge}><Text style={s.landscapeTime}>29/12/2026</Text></View>
+      <View style={[s.landscapeTimeRow, { bottom: insets.bottom + scaleSize(62), left: scaleSize(24), right: scaleSize(24) }]} pointerEvents="none">
+        <View style={s.landscapeTimeBadge}><Text style={s.landscapeTime}>{footageTime}</Text></View>
+        <View style={s.landscapeTimeBadge}><Text style={s.landscapeTime}>{footageDate}</Text></View>
       </View>
-      <View style={[s.landscapePlaybackBar, { bottom: insets.bottom + scaleSize(16), left: insets.left + scaleSize(28), right: insets.right + scaleSize(28) }]}>
+      <View style={[s.landscapePlaybackBar, { bottom: insets.bottom + scaleSize(16), left: scaleSize(24), right: scaleSize(24) }]}>
         <Text style={s.playbackTimestamp}>{playbackTime}</Text>
         <View style={s.landscapeTrackWrap}>
         {isSeeking && <View pointerEvents="none" style={[s.seekTimeBubble, s.landscapeSeekTimeBubble, { left: `${Math.max(8, Math.min(92, playbackProgress * 100))}%` }]}><Text style={s.seekTimeText}>{playbackTime}</Text></View>}
@@ -148,15 +152,12 @@ export default function HistoryScreen() {
       </View>
     </View> : <View style={s.screen}>
     <StatusBar style="light" />
+    <FixedPageHeader onBack={goBack} />
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + scaleSize(24) }}>
-      <View style={s.page}>
+      <View style={[s.page, { width: pageWidth }]}>
         <Image pointerEvents="none" source={require('../../assets/images/history-background.svg')} contentFit="fill" transition={0} accessible={false} style={s.pageBackground} />
-        <View style={[s.header, { paddingTop: insets.top + scaleSize(8) }]}>
+        <View style={[s.header, { paddingTop: getPageHeaderLayout(pageWidth, insets.top).contentTop }]}>
           <View style={s.headerInner}>
-            <View style={s.topRow}>
-              <BackButton accessibilityLabel={selectedRecording ? 'Back to History' : 'Back to Home'} onPress={goBack} />
-              <SettingsProfileButton />
-            </View>
             <View style={s.heading}>
               <Text accessibilityRole="header" style={s.title}>{selectedRecording ? activeTab === 'Events' ? 'Recorded Footage' : 'Playback' : activeTab === 'Events' ? 'Recorded Footage' : 'History'}</Text>
               <Text style={s.subtitle}>{selectedRecording ? activeTab === 'Events' ? 'Fall detected footage' : 'Recorded footage' : activeTab === 'Events' ? 'Access Fall Detection History' : 'Access past recorded footage'}</Text>
@@ -182,7 +183,7 @@ export default function HistoryScreen() {
                   <View style={s.liveDot} />
                   <Text style={s.playerBadgeText}>Recorded</Text>
                 </View>
-                <Pressable
+                <GlowButton
                   accessibilityRole="button"
                   accessibilityLabel={isLandscape ? 'Exit landscape footage' : 'View footage in landscape'}
                   accessibilityState={{ selected: isLandscape }}
@@ -196,14 +197,14 @@ export default function HistoryScreen() {
                     <View style={[s.fullscreenCorner, s.fullscreenBottomLeft]} />
                     <View style={[s.fullscreenCorner, s.fullscreenBottomRight]} />
                   </View>
-                </Pressable>
+                </GlowButton>
               </View>
               <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={() => setIsPlaying(value => !value)} style={s.playerToggle}>
                 {isPlaying ? <View style={s.pauseGlyph}><View style={s.pauseBar} /><View style={s.pauseBar} /></View> : <View style={s.playerPlayGlyph} />}
               </GlowButton>
               <View style={s.playerTimeRow} pointerEvents="none">
-                <View style={s.playerTimeBadge}><Text style={s.playerTime}>07:15:32</Text></View>
-                <View style={s.playerTimeBadge}><Text style={s.playerTime}>29/12/2026</Text></View>
+                <View style={s.playerTimeBadge}><Text style={s.playerTime}>{footageTime}</Text></View>
+                <View style={s.playerTimeBadge}><Text style={s.playerTime}>{footageDate}</Text></View>
               </View>
             </View>
             <View style={s.timeline}>
@@ -267,40 +268,39 @@ export default function HistoryScreen() {
 const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.white },
   landscapeScreen: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'transparent', overflow: 'hidden' },
-  page: { flexGrow: 1, position: 'relative', backgroundColor: C.white },
+  page: { flexGrow: 1, alignSelf: 'center', position: 'relative', backgroundColor: C.white },
   pageBackground: { position: 'absolute', top: 0, left: 0, right: 0, width: '100%', height: 340, zIndex: 0 },
-  header: { position: 'relative', zIndex: 2, paddingBottom: 36, backgroundColor: 'transparent', overflow: 'visible' },
-  headerInner: { width: '100%', maxWidth: 440, paddingHorizontal: 28, alignSelf: 'center', zIndex: 2 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  heading: { alignItems: 'center', marginTop: 8 },
-  title: { color: C.white, fontFamily: F.extraBold, fontSize: 20, lineHeight: 28 },
-  subtitle: { marginTop: 6, color: C.white, fontFamily: F.regular, fontSize: 10 },
+  header: { position: 'relative', zIndex: 2, paddingBottom: 24, backgroundColor: 'transparent', overflow: 'visible' },
+  headerInner: { width: '100%', paddingHorizontal: 24, alignSelf: 'center', zIndex: 2 },
+  heading: { alignItems: 'center' },
+  title: { color: C.white, fontFamily: F.extraBold, fontSize: T.title, lineHeight: 32, textAlign: 'center' },
+  subtitle: { marginTop: 8, color: C.white, fontFamily: F.regular, fontSize: T.body, lineHeight: 20, textAlign: 'center' },
   mascot: { position: 'absolute', width: 300, height: 169, top: -103.5, right: -83, zIndex: 0, transform: [{ rotate: '16deg' }] },
   playbackMascot: { position: 'absolute', width: 760, height: 428, left: '50%', marginLeft: -356, bottom: 0, zIndex: 0, transform: [{ rotate: '0deg' }] },
-  content: { position: 'relative', width: '100%', maxWidth: 440, alignSelf: 'center', flex: 1, paddingHorizontal: 24, paddingTop: 1, paddingBottom: 24, marginTop: 10, zIndex: 3, backgroundColor: C.white, borderTopLeftRadius: 56, borderTopRightRadius: 56 },
+  content: { position: 'relative', width: '100%', alignSelf: 'center', flex: 1, paddingHorizontal: 24, paddingTop: 1, paddingBottom: 24, marginTop: 0, zIndex: 3, backgroundColor: C.white, borderTopLeftRadius: 56, borderTopRightRadius: 56 },
   landscapeContent: { maxWidth: '100%', paddingHorizontal: 16, marginTop: 0, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-  segmentedControl: { zIndex: 1, width: 260, height: 50, alignSelf: 'center', flexDirection: 'row', gap: 5, padding: 2, borderRadius: 26, backgroundColor: '#7297C1', borderWidth: 1, borderColor: 'rgba(211,229,249,.72)', boxShadow: '0 6px 12px rgba(50,80,123,.3)' },
+  segmentedControl: { zIndex: 1, width: '100%', maxWidth: 320, minHeight: 50, alignSelf: 'center', flexDirection: 'row', gap: 5, padding: 2, borderRadius: 26, backgroundColor: '#7297C1', borderWidth: 1, borderColor: 'rgba(211,229,249,.72)', boxShadow: '0 6px 12px rgba(50,80,123,.3)' },
   tab: { flex: 1, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
   activeTab: { backgroundColor: '#F7FAFE', boxShadow: '0 3px 8px rgba(50,80,123,.28)' },
   inactiveTab: { backgroundColor: 'rgba(50,80,123,.13)', boxShadow: '0 0 10px rgba(148,176,213,.49)' },
-  tabLabel: { color: C.white, fontFamily: F.semiBold, fontSize: 10 },
+  tabLabel: { color: C.white, fontFamily: F.semiBold, fontSize: T.label, lineHeight: 20 },
   activeTabLabel: { color: C.blue },
   entryList: { gap: 9, marginTop: 16 },
   entryCard: { minHeight: 88, flexDirection: 'row', alignItems: 'center', gap: 11, padding: 10, borderRadius: 21, backgroundColor: C.white, borderWidth: 1, borderColor: 'rgba(148,176,213,.2)', boxShadow: '0 0 14px rgba(23,111,216,.46), 0 5px 15px rgba(89,132,189,.13)' },
   thumbnail: { width: 76, height: 68, borderRadius: 15, backgroundColor: '#D9E3F0' },
   entryText: { flex: 1, minWidth: 0, gap: 2 },
-  entryDate: { color: C.blue, fontFamily: F.bold, fontSize: 12, lineHeight: 16 },
-  entryDetail: { color: '#667B98', fontFamily: F.regular, fontSize: 10, lineHeight: 14 },
-  eventLabel: { color: '#F04444', fontFamily: F.bold, fontSize: 10, lineHeight: 13 },
-  eventDate: { color: C.blue, fontFamily: F.regular, fontSize: 9, lineHeight: 12 },
-  playButton: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: C.blue },
+  entryDate: { color: C.blue, fontFamily: F.bold, fontSize: T.label, lineHeight: 20 },
+  entryDetail: { color: '#667B98', fontFamily: F.regular, fontSize: T.caption, lineHeight: 18 },
+  eventLabel: { color: '#F04444', fontFamily: F.bold, fontSize: T.caption, lineHeight: 18 },
+  eventDate: { color: C.blue, fontFamily: F.regular, fontSize: T.body, lineHeight: 20 },
+  playButton: { minWidth: 44, minHeight: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: C.blue },
   playGlyph: { width: 0, height: 0, marginLeft: 2, borderTopWidth: 7, borderBottomWidth: 7, borderLeftWidth: 10, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: C.white },
   playbackView: { gap: 14, marginTop: 16 },
   playerFrame: { height: 238, position: 'relative', justifyContent: 'space-between', overflow: 'hidden', borderRadius: 22, borderWidth: 1, borderColor: 'rgba(148,176,213,.48)', backgroundColor: C.blue, boxShadow: '0 0 16px rgba(23,111,216,.32), 0 7px 18px rgba(50,80,123,.18)' },
   playerTopRow: { position: 'absolute', top: 18, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 2 },
   liveBadge: { minHeight: 28, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, borderRadius: 7, backgroundColor: 'rgba(0,0,0,.21)', borderWidth: 1, borderColor: 'rgba(255,255,255,.22)' },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#E53935' },
-  playerBadgeText: { color: C.white, fontFamily: F.bold, fontSize: 11 },
+  playerBadgeText: { color: C.white, fontFamily: F.bold, fontSize: T.caption, lineHeight: 18 },
   landscapeButton: { width: 50, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8, backgroundColor: 'rgba(0,0,0,.21)', borderWidth: 1, borderColor: 'rgba(255,255,255,.22)' },
   fullscreenBadge: { width: 21, height: 21, position: 'relative' },
   fullscreenCorner: { position: 'absolute', width: 7, height: 7, borderColor: C.white },
@@ -324,8 +324,8 @@ const baseStyles = StyleSheet.create({
   landscapeExitLineTwo: { position: 'absolute', width: 21, height: 2.5, borderRadius: 2, backgroundColor: C.white, transform: [{ rotate: '-45deg' }] },
   landscapeTimeRow: { position: 'absolute', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 },
   landscapeTimeBadge: { minHeight: 28, justifyContent: 'center', paddingHorizontal: 9, paddingVertical: 2, borderRadius: 7, backgroundColor: 'rgba(0,0,0,.21)' },
-  landscapeTime: { color: C.white, fontFamily: 'VT323_400Regular', fontSize: 18, lineHeight: 21, letterSpacing: 1 },
-  playbackTimestamp: { color: C.white, fontFamily: F.semiBold, fontSize: 11, lineHeight: 15, fontVariant: ['tabular-nums'] },
+  landscapeTime: { color: C.white, fontFamily: 'VT323_400Regular', fontSize: 17, lineHeight: 21, letterSpacing: 1 },
+  playbackTimestamp: { color: C.white, fontFamily: F.semiBold, fontSize: T.caption, lineHeight: 18, fontVariant: ['tabular-nums'] },
   landscapePlaybackBar: { position: 'absolute', zIndex: 2, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, backgroundColor: 'rgba(0,0,0,.42)' },
   landscapeTrackWrap: { flex: 1, height: 18, position: 'relative', justifyContent: 'center' },
   landscapeSeekTimeBubble: { top: -22 },
@@ -334,20 +334,20 @@ const baseStyles = StyleSheet.create({
   landscapeTimelineThumb: { position: 'absolute', top: -3, width: 12, height: 12, marginLeft: -6, borderRadius: 6, backgroundColor: C.white, borderWidth: 1.5, borderColor: C.blue },
   timeline: { gap: 4, paddingHorizontal: 2 },
   timelineTimes: { flexDirection: 'row', justifyContent: 'space-between' },
-  timelineTime: { color: '#667B98', fontFamily: F.semiBold, fontSize: 10, fontVariant: ['tabular-nums'] },
+  timelineTime: { color: '#667B98', fontFamily: F.semiBold, fontSize: T.caption, lineHeight: 18, fontVariant: ['tabular-nums'] },
   timelineTrackWrap: { height: 30, position: 'relative', justifyContent: 'flex-end' },
   timelineTrack: { height: 8, position: 'relative', justifyContent: 'center', borderRadius: 4, backgroundColor: 'rgba(148,176,213,.42)', overflow: 'visible' },
-  seekTimeBubble: { position: 'absolute', top: 0, minWidth: 42, height: 20, marginLeft: -21, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5, borderRadius: 10, backgroundColor: C.blue, zIndex: 3 },
-  seekTimeText: { color: C.white, fontFamily: F.semiBold, fontSize: 10, lineHeight: 13, fontVariant: ['tabular-nums'] },
+  seekTimeBubble: { position: 'absolute', top: 0, minWidth: 42, minHeight: 24, marginLeft: -21, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 10, backgroundColor: C.blue, zIndex: 3 },
+  seekTimeText: { color: C.white, fontFamily: F.semiBold, fontSize: T.caption, lineHeight: 18, fontVariant: ['tabular-nums'] },
   timelineProgress: { height: 8, borderRadius: 4, backgroundColor: C.blue },
   timelineThumb: { position: 'absolute', top: -2, width: 12, height: 12, marginLeft: -6, borderRadius: 6, backgroundColor: C.white, borderWidth: 2, borderColor: C.lightBlue },
   recordingInfo: { gap: 4, padding: 16, borderRadius: 18, backgroundColor: C.white, borderWidth: 1, borderColor: 'rgba(148,176,213,.3)', boxShadow: '0 0 14px rgba(23,111,216,.18)' },
-  recordingDate: { color: C.blue, fontFamily: F.bold, fontSize: 15 },
-  recordingDetail: { color: '#667B98', fontFamily: F.regular, fontSize: 12 },
+  recordingDate: { color: C.blue, fontFamily: F.bold, fontSize: T.label, lineHeight: 20 },
+  recordingDetail: { color: '#667B98', fontFamily: F.regular, fontSize: T.body, lineHeight: 20 },
   emptyState: { minHeight: 210, marginTop: 16, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24, borderRadius: 24, backgroundColor: C.white, boxShadow: '0 0 14px rgba(23,111,216,.46), 0 5px 15px rgba(89,132,189,.12)' },
   emptyIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E9F1FA', marginBottom: 5 },
   emptyDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.lightBlue, marginBottom: 3 },
   emptyLine: { width: 18, height: 13, borderWidth: 2, borderColor: C.lightBlue, borderRadius: 4 },
-  emptyTitle: { color: C.blue, fontFamily: F.bold, fontSize: 13 },
-  emptyBody: { color: '#71839B', fontFamily: F.regular, fontSize: 10, textAlign: 'center' },
+  emptyTitle: { color: C.blue, fontFamily: F.bold, fontSize: T.section, lineHeight: 26, textAlign: 'center' },
+  emptyBody: { color: '#71839B', fontFamily: F.regular, fontSize: T.body, lineHeight: 20, textAlign: 'center' },
 });

@@ -1,15 +1,26 @@
-/** The coded navigation silhouette, measured in its original 390 × 120 canvas. */
+/** An attached full-width dock with a generous circular cradle, in a 390 × 120 canvas. */
 export const NAVIGATION_CONTOUR_PATH =
-  'M 0 60 C 29 41 61 40 91 53 C 132 70 149 116 195 116 C 241 116 258 70 299 53 C 329 40 361 41 390 60';
+  'M 0 84 C 0 64.118 21.491 48 48 48 C 63 48 78 48 93.393 48 C 114.619 48 134.265 59.215 145.058 77.492 C 155.491 95.159 174.482 106 195 106 C 215.518 106 234.509 95.159 244.942 77.492 C 255.735 59.215 275.381 48 296.607 48 C 312 48 327 48 342 48 C 368.509 48 390 64.118 390 84';
 
-export const NAVIGATION_SHAPE_PATH = `${NAVIGATION_CONTOUR_PATH} V 120 H 0 V 60 Z`;
+export const NAVIGATION_BODY_BOTTOM = 120;
+export const NAVIGATION_SHAPE_PATH = `${NAVIGATION_CONTOUR_PATH} V 120 H 0 Z`;
 
 const contourSegments = [
-  [[0, 60], [29, 41], [61, 40], [91, 53]],
-  [[91, 53], [132, 70], [149, 116], [195, 116]],
-  [[195, 116], [241, 116], [258, 70], [299, 53]],
-  [[299, 53], [329, 40], [361, 41], [390, 60]],
+  [[0, 84], [0, 64.118], [21.491, 48], [48, 48]],
+  [[48, 48], [63, 48], [78, 48], [93.393, 48]],
+  // Broad 60-unit shoulder arcs roll into the 58-unit cup with matching tangents.
+  // This rounds the two upper lips of the cradle as well as its lower U.
+  [[93.393, 48], [114.619, 48], [134.265, 59.215], [145.058, 77.492]],
+  [[145.058, 77.492], [155.491, 95.159], [174.482, 106], [195, 106]],
+  [[195, 106], [215.518, 106], [234.509, 95.159], [244.942, 77.492]],
+  [[244.942, 77.492], [255.735, 59.215], [275.381, 48], [296.607, 48]],
+  [[296.607, 48], [312, 48], [327, 48], [342, 48]],
+  [[342, 48], [368.509, 48], [390, 64.118], [390, 84]],
 ] as const;
+
+const firstContourPoint = contourSegments[0][0];
+const lastContourPoint = contourSegments[contourSegments.length - 1][3];
+const clampContourX = (x: number) => Math.max(firstContourPoint[0], Math.min(lastContourPoint[0], x));
 
 function cubicCoordinate(a: number, b: number, c: number, d: number, t: number) {
   const remaining = 1 - t;
@@ -18,7 +29,7 @@ function cubicCoordinate(a: number, b: number, c: number, d: number, t: number) 
 
 /** Finds the contour itself rather than approximating its dip with a separate arc. */
 export function getNavigationContourY(x: number): number {
-  const boundedX = Math.max(0, Math.min(390, x));
+  const boundedX = clampContourX(x);
   const segment = contourSegments.find((points) => boundedX <= points[3][0])!;
   if (boundedX === segment[0][0]) return segment[0][1];
   if (boundedX === segment[3][0]) return segment[3][1];
@@ -39,7 +50,7 @@ type ContourPoint = { x: number; y: number; distance: number };
 
 // Sample once, not during animation. Arc length gives the SVG dash a consistent
 // speed through the steep centre dip and the shallower outer shoulders.
-const contourPoints: ContourPoint[] = [{ x: 0, y: 60, distance: 0 }];
+const contourPoints: ContourPoint[] = [{ x: firstContourPoint[0], y: firstContourPoint[1], distance: 0 }];
 for (const segment of contourSegments) {
   for (let sample = 1; sample <= 64; sample++) {
     const t = sample / 64;
@@ -51,10 +62,10 @@ for (const segment of contourSegments) {
 }
 
 export const CONTOUR_LENGTH = contourPoints[contourPoints.length - 1].distance;
-export const CONTOUR_MARKER_LENGTH = 50;
+export const CONTOUR_MARKER_LENGTH = 64;
 
 function getContourDistanceAtX(x: number): number {
-  const boundedX = Math.max(0, Math.min(390, x));
+  const boundedX = clampContourX(x);
   const upperIndex = contourPoints.findIndex((point) => point.x >= boundedX);
   if (upperIndex <= 0) return 0;
   const start = contourPoints[upperIndex - 1];
@@ -65,8 +76,9 @@ function getContourDistanceAtX(x: number): number {
 
 // Both anchors align with the actual side-tab centres; the fixed menu button is
 // intentionally excluded from selection and from the sliding marker's range.
-export const HOME_CONTOUR_DISTANCE = getContourDistanceAtX(71);
-export const AID_CONTOUR_DISTANCE = getContourDistanceAtX(319);
+export const NAVIGATION_SIDE_CENTER_X = 73;
+export const HOME_CONTOUR_DISTANCE = getContourDistanceAtX(NAVIGATION_SIDE_CENTER_X);
+export const AID_CONTOUR_DISTANCE = getContourDistanceAtX(390 - NAVIGATION_SIDE_CENTER_X);
 
 /** Useful for positioning any contour-bound decoration without inventing an arc. */
 export function getNavigationContourPointAtDistance(distance: number): { x: number; y: number } {

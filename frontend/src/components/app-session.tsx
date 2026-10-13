@@ -21,6 +21,7 @@ type Session = {
   acceptPolicies: () => void;
   enterPreview: (profile?: Profile) => void;
   signOut: () => void;
+  deleteAccount: () => void;
 };
 const SessionContext = createContext<Session | null>(null);
 
@@ -32,12 +33,16 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [childPhoto, setChildPhoto] = useState<string | null>(null);
   const [camera, setCamera] = useState<CameraDetails | null>(null);
+  function clearSession() {
+    setProfile(null); setCamera(null); setProfilePhoto(null); setChildPhoto(null); setSignedIn(false);
+  }
   return <SessionContext.Provider value={{ accepted, signedIn, profile, camera, profilePhoto,
     setProfilePhoto, updateProfile: setProfile, childPhoto, setChildPhoto,
     saveCamera: setCamera,
     acceptPolicies: () => setAccepted(true),
     enterPreview: (value) => { setProfile(value ?? null); setCamera(null); setProfilePhoto(null); setChildPhoto(null); setSignedIn(true); },
-    signOut: () => { setProfile(null); setCamera(null); setProfilePhoto(null); setChildPhoto(null); setSignedIn(false); },
+    signOut: clearSession,
+    deleteAccount: () => { clearSession(); setAccepted(false); },
   }}>{children}</SessionContext.Provider>;
 }
 

@@ -1,0 +1,3 @@
+[data-glow-button]:focus:not(:focus-visible) {
+  outline: none;
+}

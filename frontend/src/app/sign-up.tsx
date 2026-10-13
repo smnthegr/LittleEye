@@ -1,4 +1,3 @@
-import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { BackButton } from '@/components/back-button';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { AuthBottomWave } from '@/components/auth-bottom-wave';
@@ -10,16 +9,16 @@ import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
-  Alert, KeyboardAvoidingView, Platform, Pressable,
-  StyleSheet, Text, TextInput, View,
+  Alert, KeyboardAvoidingView, Platform,
+  StyleSheet, Text, TextInput, useWindowDimensions, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function SignUpScreen() {
-  const styles = useResponsiveStyles(baseStyles);
   const mascots = useMascotImages();
-  const { pageWidth, height, availableHeight, scaleSize } = useResponsiveLayout();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
+  const pageWidth = Math.min(width - insets.left - insets.right, 480);
   const mascotScale = (pageWidth * 0.82) / 533;
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -46,7 +45,7 @@ export default function SignUpScreen() {
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="light" />
       <EdgeScrollView topColor={BrandColors.blue} bottomColor={BrandColors.white} keyboardShouldPersistTaps="handled" contentInsetAdjustmentBehavior="never"
-        contentContainerStyle={[styles.page, { minHeight: height, paddingBottom: insets.bottom + scaleSize(100) }]}>
+        contentContainerStyle={[styles.page, { minHeight: Math.max(height, insets.top + 680 + insets.bottom) }]}>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
           <Image source={mascots.signUp} accessible={false} contentFit="contain" transition={0}
             style={{ position: 'absolute', opacity: 0.475, width: 1920 * mascotScale, height: 1080 * mascotScale,
@@ -54,8 +53,8 @@ export default function SignUpScreen() {
           <AuthBottomWave width={pageWidth} height={pageWidth * 0.62 + insets.bottom} />
         </View>
         <BackButton accessibilityRole="button" accessibilityLabel="Back to Sign In" hitSlop={12}
-          onPress={() => router.back()} style={[styles.back, { top: insets.top + scaleSize(12) }]} />
-        <View style={[styles.form, { paddingTop: insets.top + Math.max(scaleSize(60), Math.min(scaleSize(76), availableHeight * 0.095)) }]}>
+          onPress={() => router.back()} style={[styles.back, { top: insets.top + 12 }]} />
+        <View style={[styles.form, { paddingTop: insets.top + 76 }]}>
           <Text accessibilityRole="header" style={styles.heading}>Sign Up</Text>
           <Text style={styles.subtitle}>Get Started with <Text style={styles.brand}>LittleEye</Text></Text>
           <TextInput accessibilityLabel="Email or Phone Number" placeholder="Email or Phone Number"
@@ -83,24 +82,24 @@ export default function SignUpScreen() {
         <View style={styles.divider}>
           <View style={styles.line} /><Text style={styles.dividerText}>Or sign up with</Text><View style={styles.line} />
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel="Sign up with Google"
+        <GlowButton accessibilityRole="button" accessibilityLabel="Sign up with Google"
           onPress={() => Alert.alert('Google Sign Up', 'Google authentication will be connected to the backend later.')}
-          style={({ pressed }) => [styles.google, pressed && styles.pressed]}>
+          style={[styles.google]}>
           <Image source={require('../../assets/images/google-g.png')} accessible={false} contentFit="contain" transition={0} style={styles.googleIcon} />
-        </Pressable>
+        </GlowButton>
       </EdgeScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const baseStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   filledInput: { fontFamily: BrandFonts.semiBold },
   passwordInput: { color: BrandColors.white, ...Platform.select({ web: { WebkitTextFillColor: BrandColors.white }, default: {} }) },
   screen: { flex: 1, backgroundColor: BrandColors.blue },
   page: { width: '100%', maxWidth: 480, alignSelf: 'center', backgroundColor: BrandColors.blue, overflow: 'hidden' },
   back: { position: 'absolute', left: 16, zIndex: 1 },
   backArrow: { width: 12, height: 12, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: BrandColors.white, transform: [{ rotate: '45deg' }], marginLeft: 6 },
-  form: { width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 36 },
+  form: { width: '100%', maxWidth: 400, alignSelf: 'center', paddingHorizontal: 36 },
   heading: { fontFamily: BrandFonts.extraBold, fontSize: 36, color: BrandColors.white, textAlign: 'center' },
   subtitle: { fontFamily: BrandFonts.regular, fontSize: 15, lineHeight: 22, color: BrandColors.white, textAlign: 'center', marginTop: 8, marginBottom: 28 },
   brand: { fontFamily: BrandFonts.bold, color: BrandColors.lightBlue },
@@ -112,7 +111,7 @@ const baseStyles = StyleSheet.create({
   divider: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 30 },
   line: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.7)' },
   dividerText: { fontFamily: BrandFonts.regular, fontSize: 15, color: BrandColors.white },
-  google: { width: 72, minHeight: 50, borderRadius: 18, alignSelf: 'center', backgroundColor: BrandColors.white, alignItems: 'center', justifyContent: 'center', marginTop: 20, boxShadow: '0 8px 20px rgba(50,80,123,0.3)' },
+  google: { width: 72, height: 50, borderRadius: 18, alignSelf: 'center', backgroundColor: BrandColors.white, alignItems: 'center', justifyContent: 'center', marginTop: 20, boxShadow: '0 8px 20px rgba(50,80,123,0.3)' },
   googleIcon: { width: 26, height: 26 },
 });
 

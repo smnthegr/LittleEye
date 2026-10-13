@@ -1,10 +1,11 @@
+import { GlowButton } from '@/components/glow-button';
 import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useAppSession } from './app-session';
 import { BrightnessSlider } from './brightness-slider';
 import { SettingsNetworkPanel } from './settings-network-panel';
-import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
+import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
 
 const helpTopics = [
   ['Camera Setup', 'Connect your CCTV camera to power and its network. In camera setup, enter its name and supported stream address. This frontend preview stores setup details only; live viewing requires the camera integration.'],
@@ -21,8 +22,8 @@ function Note({ children }: { children: string }) {
   const s = useResponsiveStyles(baseStyles); return <Text style={s.note}>{children}</Text>; }
 function Action({ title, onPress, disabled = false }: { title: string; onPress?: () => void; disabled?: boolean }) {
   const s = useResponsiveStyles(baseStyles);
-  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
-    style={({ pressed }) => [s.action, disabled && s.disabled, pressed && { opacity: .6 }]}><Text style={s.actionText}>{title}</Text></Pressable>;
+  return <GlowButton accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
+    style={[s.action, disabled && s.disabled]}><Text style={s.actionText}>{title}</Text></GlowButton>;
 }
 type Preferences = { night: boolean; audio: boolean; fall: boolean; push: boolean; sound: boolean; vibration: boolean; preview: boolean };
 function Toggle({ label, description, pref, preferences, onChange }: {
@@ -48,8 +49,8 @@ export function SettingsDetails({ section }: { section: string }) {
 
   if (section === 'Image & Sound Settings') return <View>
     <Note>{previewNote}</Note><Text style={s.label}>Video quality</Text>
-    {['720p — Standard', '1080p — High Definition', 'Auto'].map(option => <Pressable key={option} accessibilityRole="radio" accessibilityState={{ checked: quality === option }}
-      onPress={() => setQuality(option)} style={[s.choice, quality === option && s.chosen]}><Text style={s.value}>{quality === option ? '●' : '○'}  {option === 'Auto' ? 'Auto — Camera default' : option}</Text></Pressable>)}
+    {['720p — Standard', '1080p — High Definition', 'Auto'].map(option => <GlowButton key={option} accessibilityRole="radio" accessibilityState={{ checked: quality === option }}
+      onPress={() => setQuality(option)} style={[s.choice, quality === option && s.chosen]}><Text style={s.value}>{quality === option ? '●' : '○'}  {option === 'Auto' ? 'Auto — Camera default' : option}</Text></GlowButton>)}
     <View style={s.brightness}>
       <View style={s.brightnessHeader}><Text style={s.value}>Brightness</Text><Text style={s.value}>{brightness}%</Text></View>
       <BrightnessSlider value={brightness} onValueChange={setBrightness} />
@@ -93,16 +94,16 @@ export function SettingsDetails({ section }: { section: string }) {
 
 const baseStyles = StyleSheet.create({
   info: { paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: '#E4EBF5' },
-  label: { fontFamily: F.semiBold, color: C.blue, fontSize: 11, marginTop: 10, marginBottom: 6 },
-  value: { fontFamily: F.semiBold, color: C.blue, fontSize: 13, lineHeight: 21 },
-  note: { fontFamily: F.regular, color: C.blue, fontSize: 12, lineHeight: 21, marginVertical: 10 },
-  input: { minHeight: 48, padding: 12, borderWidth: 1, borderColor: C.lightBlue, borderRadius: 14, color: C.blue, fontFamily: F.regular, fontSize: 13 },
-  action: { minHeight: 46, backgroundColor: C.blue, borderRadius: 23, paddingVertical: 12, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
-  actionText: { fontFamily: F.semiBold, color: C.white, fontSize: 12 }, disabled: { opacity: .45 },
+  label: { fontFamily: F.semiBold, color: C.blue, fontSize: T.label, lineHeight: 22, marginTop: 10, marginBottom: 6 },
+  value: { fontFamily: F.semiBold, color: C.blue, fontSize: T.body, lineHeight: 22 },
+  note: { fontFamily: F.regular, color: C.blue, fontSize: T.body, lineHeight: 22, marginVertical: 10 },
+  input: { minHeight: 48, padding: 12, borderWidth: 1, borderColor: C.lightBlue, borderRadius: 14, color: C.blue, fontFamily: F.regular, fontSize: T.body },
+  action: { minHeight: 50, backgroundColor: C.blue, borderRadius: 25, paddingVertical: 14, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  actionText: { fontFamily: F.semiBold, color: C.white, fontSize: T.label, lineHeight: 22, textAlign: 'center' }, disabled: { opacity: .45 },
   toggleRow: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E4EBF5' }, toggleText: { flex: 1 },
-  description: { fontFamily: F.regular, color: C.blue, fontSize: 11, lineHeight: 18, marginTop: 4 },
-  choice: { padding: 14, borderWidth: 1, borderColor: '#DBE5F2', borderRadius: 15, marginVertical: 4 }, chosen: { backgroundColor: '#EDF3FB', borderColor: C.blue },
+  description: { fontFamily: F.regular, color: C.blue, fontSize: T.caption, lineHeight: 18, marginTop: 4 },
+  choice: { minHeight: 52, padding: 16, borderWidth: 1, borderColor: '#DBE5F2', borderRadius: 15, marginVertical: 4 }, chosen: { backgroundColor: '#EDF3FB', borderColor: C.blue },
   brightness: { paddingVertical: 18, marginTop: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#E4EBF5' },
   brightnessHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  subheading: { fontFamily: F.bold, color: C.blue, fontSize: 15, marginTop: 24, marginBottom: 4 },
+  subheading: { fontFamily: F.bold, color: C.blue, fontSize: T.section, lineHeight: 26, marginTop: 24, marginBottom: 4 },
 });

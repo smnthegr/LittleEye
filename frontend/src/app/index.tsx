@@ -4,7 +4,7 @@ import { GlowButton } from '@/components/glow-button';
 import { useAppSession } from '@/components/app-session';
 import { useMascotImages } from '@/components/mascot-images';
 import { Image } from 'expo-image';
-import { BrandColors, BrandFonts } from '@/constants/brand';
+import { BrandColors, BrandFonts, PageTypography } from '@/constants/brand';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
@@ -62,12 +62,12 @@ export default function WelcomeScreen() {
 const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BrandColors.white },
   page: { flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center', justifyContent: 'space-between' },
-  content: { paddingHorizontal: 36, paddingTop: '30%', paddingBottom: 48 },
-  title: { fontSize: 48, fontFamily: BrandFonts.extraBold, letterSpacing: -1.8, color: BrandColors.blue, textShadowColor: 'rgba(50,80,123,0.22)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 4 },
+  content: { paddingHorizontal: 24, paddingTop: '30%', paddingBottom: 32 },
+  title: { fontSize: 52, fontFamily: BrandFonts.extraBold, letterSpacing: -2, color: BrandColors.blue, textShadowColor: 'rgba(50,80,123,0.22)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 4 },
   accent: { color: BrandColors.lightBlue },
-  tagline: { marginTop: 10, fontSize: 20, lineHeight: 28, fontFamily: BrandFonts.semiBold, color: BrandColors.blue },
-  button: { alignSelf: 'flex-start', marginTop: 48, minHeight: 52, paddingHorizontal: 25, paddingVertical: 14, borderRadius: 30, backgroundColor: BrandColors.blue, justifyContent: 'center', alignItems: 'center', shadowColor: '#000000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 7 },
-  buttonText: { color: BrandColors.white, fontSize: 19, fontFamily: BrandFonts.extraBold },
+  tagline: { marginTop: 10, fontSize: PageTypography.section + 2, lineHeight: 28, fontFamily: BrandFonts.semiBold, color: BrandColors.blue },
+  button: { alignSelf: 'flex-start', marginTop: 32, minHeight: 52, paddingHorizontal: 26, paddingVertical: 15, borderRadius: 32, backgroundColor: BrandColors.blue, justifyContent: 'center', alignItems: 'center', shadowColor: '#000000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 7 },
+  buttonText: { color: BrandColors.white, fontSize: PageTypography.label + 1, fontFamily: BrandFonts.extraBold },
   mascotFrame: { alignSelf: 'center', overflow: 'hidden' },
 });
 

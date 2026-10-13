@@ -10,3 +10,11 @@ export const BrandFonts = {
   bold: 'Montserrat-Bold',
   extraBold: 'Montserrat-ExtraBold',
 } as const;
+
+export const PageTypography = {
+  title: 24,
+  section: 18,
+  body: 14,
+  caption: 12,
+  label: 14,
+} as const;

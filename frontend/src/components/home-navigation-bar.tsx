@@ -1,34 +1,88 @@
 import { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { Path } from 'react-native-svg';
 import Animated, {
   cancelAnimation,
   Easing,
   interpolate,
-  useAnimatedProps,
+  ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withRepeat,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
-import { NavigationBackdrop, NavigationIcon, NavigationMenuArtwork, NavigationMenuGlow } from '@/components/navigation-art';
+import {
+  NavigationBackdrop,
+  NavigationBackdropShadow,
+  NavigationIcon,
+  NavigationMenuArtwork,
+  NavigationMenuGlow,
+  NavigationSideTapEffect,
+} from '@/components/navigation-art';
 import { navigateWithTransition } from '@/components/navigation-transition';
-import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
+import { GlowButton } from '@/components/glow-button';
+import { useAppSession } from '@/components/app-session';
+import { getHomeDestination } from '@/utils/session-navigation';
+import { BrandColors as C } from '@/constants/brand';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { getHomeNavigationLayout } from '@/utils/responsive';
-import {
-  AID_CONTOUR_DISTANCE,
-  CONTOUR_LENGTH,
-  CONTOUR_MARKER_LENGTH,
-  HOME_CONTOUR_DISTANCE,
-  NAVIGATION_CONTOUR_PATH,
-} from '@/utils/navigation-contour';
 
-const AnimatedPath = Animated.createAnimatedComponent(Path);
+function useTapFeedback(visible: boolean, reducedMotion: boolean) {
+  const pressure = useSharedValue(0);
+  const halo = useSharedValue(0);
+  const ripple = useSharedValue(0);
+
+  useEffect(() => {
+    cancelAnimation(pressure);
+    cancelAnimation(halo);
+    cancelAnimation(ripple);
+    pressure.set(0);
+    halo.set(0);
+    ripple.set(0);
+    return () => {
+      cancelAnimation(pressure);
+      cancelAnimation(halo);
+      cancelAnimation(ripple);
+    };
+  }, [halo, pressure, reducedMotion, ripple, visible]);
+
+  function pressIn() {
+    cancelAnimation(ripple);
+    ripple.set(0);
+    if (!reducedMotion) ripple.set(withTiming(1, {
+      duration: 750, easing: Easing.linear, reduceMotion: ReduceMotion.Never,
+    }));
+    cancelAnimation(pressure);
+    cancelAnimation(halo);
+    pressure.set(reducedMotion ? 0 : withTiming(1, {
+      duration: 100, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.Never,
+    }));
+    halo.set(reducedMotion ? 1 : withTiming(1, {
+      duration: 100, reduceMotion: ReduceMotion.Never,
+    }));
+  }
+
+  function pressOut() {
+    pressure.set(reducedMotion ? 0 : withSpring(0, {
+      stiffness: 340, damping: 18, mass: 0.65, reduceMotion: ReduceMotion.Never,
+    }));
+    halo.set(reducedMotion ? 0 : withTiming(0, {
+      duration: 380, easing: Easing.out(Easing.cubic), reduceMotion: ReduceMotion.Never,
+    }));
+  }
+
+  const contentStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 - pressure.get() * 0.09 }],
+  }));
+  const haloStyle = useAnimatedStyle(() => ({
+    opacity: halo.get(),
+    transform: [{ scale: reducedMotion ? 1 : 1.12 - pressure.get() * 0.24 }],
+  }));
+  return { pressIn, pressOut, contentStyle, haloStyle, haloProgress: halo, rippleProgress: ripple };
+}
 
 type Props = {
   onOpenMenu: () => void;
@@ -47,43 +101,53 @@ export function HomeNavigationBar({
   onHomePress,
   onFirstAidPress,
 }: Props) {
-  const { pageWidth, insets } = useResponsiveLayout();
+  const session = useAppSession();
+  const { pageWidth, insets, scaleSize, fontScale } = useResponsiveLayout();
   const s = useResponsiveStyles(baseStyles);
-  const layout = getHomeNavigationLayout(pageWidth, insets.bottom);
+  const layout = getHomeNavigationLayout(pageWidth, insets.bottom, fontScale);
   const reducedMotion = useReducedMotion();
   const selectedIndex = activeTab === 'home' ? 0 : 1;
   const selection = useSharedValue(selectedIndex);
-  const glowPulse = useSharedValue(0);
+  const glowPulse = useSharedValue(0.5);
+  const menuFloat = useSharedValue(0);
+  const homeTap = useTapFeedback(visible, reducedMotion);
+  const aidTap = useTapFeedback(visible, reducedMotion);
+  const floatDistance = scaleSize(2.5);
+  const sideTouchHeight = Math.max(44, layout.iconSlotSize);
+  const sideBottom = layout.sideBottom + (layout.iconSlotSize + layout.iconGap + layout.labelHeight - sideTouchHeight) / 2;
 
   useEffect(() => {
     cancelAnimation(selection);
-    selection.set(reducedMotion ? selectedIndex : withSpring(selectedIndex, {
-      duration: 300,
-      dampingRatio: 1,
-      clamp: { min: 0, max: 1 },
-    }));
+    selection.set(selectedIndex);
     return () => cancelAnimation(selection);
   }, [reducedMotion, selectedIndex, selection]);
 
   useEffect(() => {
     cancelAnimation(glowPulse);
-    glowPulse.set(0);
+    cancelAnimation(menuFloat);
+    // Keep a steady light while hidden or when the phone requests less motion.
+    glowPulse.set(visible && !reducedMotion ? 0 : 0.5);
+    menuFloat.set(0);
     if (visible && !reducedMotion) {
+      // The live preference above controls this loop; Reanimated's startup
+      // snapshot must not leave it stopped after the preference changes.
       glowPulse.set(withRepeat(withTiming(1, {
-        duration: 3000,
+        duration: 2400,
         easing: Easing.inOut(Easing.sin),
-      }), -1, true));
+        reduceMotion: ReduceMotion.Never,
+      }), -1, true, undefined, ReduceMotion.Never));
+      menuFloat.set(withRepeat(withTiming(1, {
+        duration: 3200,
+        easing: Easing.inOut(Easing.sin),
+        reduceMotion: ReduceMotion.Never,
+      }), -1, true, undefined, ReduceMotion.Never));
     }
-    return () => cancelAnimation(glowPulse);
-  }, [glowPulse, reducedMotion, visible]);
+    return () => {
+      cancelAnimation(glowPulse);
+      cancelAnimation(menuFloat);
+    };
+  }, [glowPulse, menuFloat, reducedMotion, visible]);
 
-  // This changes the SVG dash's distance along the actual path on the UI thread.
-  // Neither the navbar shape nor the fixed center control moves.
-  const markerProps = useAnimatedProps(() => ({
-    strokeDashoffset: CONTOUR_MARKER_LENGTH / 2 - interpolate(
-      selection.get(), [0, 1], [HOME_CONTOUR_DISTANCE, AID_CONTOUR_DISTANCE],
-    ),
-  }));
   const homeStyle = useAnimatedStyle(() => ({
     opacity: interpolate(selection.get(), [0, 1], [1, 0.55]),
     transform: [{ scale: interpolate(selection.get(), [0, 1], [1.03, 1]) }],
@@ -93,73 +157,94 @@ export function HomeNavigationBar({
     transform: [{ scale: interpolate(selection.get(), [0, 1], [1, 1.03]) }],
   }));
   const glowStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(glowPulse.get(), [0, 1], [0.42, 0.62]),
-    transform: [{ scale: interpolate(glowPulse.get(), [0, 1], [1, 1.035]) }],
+    opacity: interpolate(glowPulse.get(), [0, 1], [0.3, 0.95]),
+    transform: [{ scale: interpolate(glowPulse.get(), [0, 1], [0.94, 1.1]) }],
+  }));
+  const shadowStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(glowPulse.get(), [0, 1], [0.32, 0.78]),
+  }));
+  const menuFloatStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: interpolate(menuFloat.get(), [0, 1], [0, -floatDistance]) }],
   }));
 
-  return <View pointerEvents="box-none" style={[s.fixedDock, { height: layout.height, paddingBottom: layout.sideBottom }]}>
-    <View pointerEvents="none" accessible={false} style={[s.wave, { height: layout.artworkHeight }]}>
-      <NavigationBackdrop width={pageWidth} height={layout.artworkHeight}>
-        <AnimatedPath animatedProps={markerProps} d={NAVIGATION_CONTOUR_PATH} fill="none"
-          stroke="#BEDFFF" strokeOpacity={0.2} strokeWidth={12} strokeLinecap="round"
-          strokeDasharray={[CONTOUR_MARKER_LENGTH, CONTOUR_LENGTH]} />
-        <AnimatedPath animatedProps={markerProps} d={NAVIGATION_CONTOUR_PATH} fill="none"
-          stroke="#D9EEFF" strokeOpacity={0.42} strokeWidth={5} strokeLinecap="round"
-          strokeDasharray={[CONTOUR_MARKER_LENGTH, CONTOUR_LENGTH]} />
-        <AnimatedPath animatedProps={markerProps} d={NAVIGATION_CONTOUR_PATH} fill="none"
-          stroke="#F2FAFF" strokeOpacity={0.95} strokeWidth={2.2} strokeLinecap="round"
-          strokeDasharray={[CONTOUR_MARKER_LENGTH, CONTOUR_LENGTH]} />
-      </NavigationBackdrop>
+  return <View pointerEvents="box-none" style={[s.fixedDock, {
+    height: layout.height, paddingBottom: sideBottom, paddingHorizontal: layout.sideInset,
+  }]}>
+    <View pointerEvents="none" accessible={false} style={[s.wave, {
+      top: layout.artworkTop, height: layout.artworkHeight,
+    }]}>
+      <Animated.View style={[StyleSheet.absoluteFill, shadowStyle]}>
+        <NavigationBackdropShadow width={pageWidth} height={layout.artworkHeight} />
+      </Animated.View>
+      <NavigationBackdrop width={pageWidth} height={layout.artworkHeight} />
     </View>
     <View pointerEvents="none" style={[s.footerFill, { top: layout.artworkHeight - 1 }]} />
+    <View pointerEvents="none" accessible={false} style={StyleSheet.absoluteFill}>
+      <NavigationSideTapEffect width={pageWidth} height={layout.height}
+        artworkHeight={layout.artworkHeight} home={homeTap.haloProgress} aid={aidTap.haloProgress}
+        homeRipple={homeTap.rippleProgress} aidRipple={aidTap.rippleProgress}
+        sideCenter={layout.sideCenterInset * 390 / pageWidth} />
+    </View>
 
     <Pressable accessibilityRole="button" accessibilityLabel="Home"
       accessibilityState={{ selected: activeTab === 'home' }}
+      onPressIn={homeTap.pressIn}
+      onPressOut={homeTap.pressOut}
       onPress={() => {
         if (activeTab !== 'home') {
           if (onHomePress) onHomePress();
-          else navigateWithTransition(() => router.dismissTo('/home'));
+          else navigateWithTransition(() => router.dismissTo(getHomeDestination(session)));
         }
-      }} style={({ pressed }) => [s.sideButton, baseStyles.touchTarget, pressed && s.pressedButton]}>
-      <Animated.View pointerEvents="none" style={[s.sideContent, homeStyle]}>
-        <View style={s.iconSlot}><NavigationIcon name="home" size={layout.iconSize} /></View>
-        <Text style={[s.label, { lineHeight: layout.labelHeight }]}>Home</Text>
+      }} style={[s.sideButton, baseStyles.touchTarget]}>
+      <Animated.View pointerEvents="none" style={homeTap.contentStyle}>
+        <Animated.View pointerEvents="none" style={[s.sideContent, homeStyle]}>
+          <View style={s.iconSlot}><NavigationIcon name="home" size={scaleSize(31)} /></View>
+        </Animated.View>
       </Animated.View>
     </Pressable>
 
-    <View pointerEvents="box-none" style={[s.mainPosition, { bottom: layout.mainBottom, height: layout.menuSize }]}>
+    <View pointerEvents="box-none" style={[s.mainPosition, {
+      bottom: layout.mainBottom, height: layout.menuSize + floatDistance, paddingTop: floatDistance,
+    }]}>
       <Animated.View pointerEvents="none" accessible={false} style={[
         s.menuGlow,
         {
           width: layout.menuGlowWidth,
           height: layout.menuGlowHeight,
           marginLeft: -layout.menuGlowWidth / 2,
-          top: (layout.menuSize - layout.menuGlowHeight) / 2,
+          top: floatDistance + (layout.menuSize - layout.menuGlowHeight) / 2 - scaleSize(4),
         },
         glowStyle,
       ]}>
         <NavigationMenuGlow width={layout.menuGlowWidth} height={layout.menuGlowHeight} />
       </Animated.View>
-      <Pressable accessibilityRole="button" accessibilityLabel={menuOpen ? 'Close menu' : 'Open menu'}
-        accessibilityState={{ expanded: menuOpen }} onPress={onOpenMenu}
-        style={({ pressed }) => [s.mainButton, {
-          width: layout.menuSize, height: layout.menuSize, borderRadius: layout.menuSize / 2,
-        }, pressed && s.pressedButton]}>
-        <View pointerEvents="none"><NavigationMenuArtwork size={layout.menuSize} /></View>
-      </Pressable>
+      <Animated.View style={menuFloatStyle}>
+        <View pointerEvents="none" accessible={false} style={StyleSheet.absoluteFill}>
+          <NavigationMenuArtwork size={layout.menuSize} />
+        </View>
+        <GlowButton accessibilityRole="button" accessibilityLabel={menuOpen ? 'Close menu' : 'Open menu'}
+          accessibilityState={{ expanded: menuOpen }} onPress={onOpenMenu}
+          style={[s.mainButton, {
+            width: layout.menuSize, height: layout.menuSize, borderRadius: layout.menuSize / 2,
+          }]}>
+        </GlowButton>
+      </Animated.View>
     </View>
 
     <Pressable accessibilityRole="button" accessibilityLabel="First aid"
       accessibilityState={{ selected: activeTab === 'first-aid' }}
+      onPressIn={aidTap.pressIn}
+      onPressOut={aidTap.pressOut}
       onPress={() => {
         if (activeTab !== 'first-aid') {
           if (onFirstAidPress) onFirstAidPress();
           else navigateWithTransition(() => router.navigate('/first-aid-guidance'));
         }
-      }} style={({ pressed }) => [s.sideButton, baseStyles.touchTarget, pressed && s.pressedButton]}>
-      <Animated.View pointerEvents="none" style={[s.sideContent, aidStyle]}>
-        <View style={s.iconSlot}><NavigationIcon name="first-aid" size={layout.iconSize} /></View>
-        <Text style={[s.label, { lineHeight: layout.labelHeight }]}>First-Aid</Text>
+      }} style={[s.sideButton, baseStyles.touchTarget]}>
+      <Animated.View pointerEvents="none" style={aidTap.contentStyle}>
+        <Animated.View pointerEvents="none" style={[s.sideContent, aidStyle]}>
+          <View style={s.iconSlot}><NavigationIcon name="first-aid" size={scaleSize(31)} /></View>
+        </Animated.View>
       </Animated.View>
     </Pressable>
   </View>;
@@ -168,17 +253,15 @@ export function HomeNavigationBar({
 const baseStyles = StyleSheet.create({
   fixedDock: {
     position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
-    flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 30,
+    flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between',
   },
   wave: { position: 'absolute', top: 0, left: 0, right: 0 },
   footerFill: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.blue },
-  sideButton: { zIndex: 2, width: 82, alignItems: 'center', justifyContent: 'flex-end' },
+  sideButton: { zIndex: 2, width: 82, alignItems: 'center', justifyContent: 'center' },
   touchTarget: { minWidth: 44, minHeight: 44 },
-  sideContent: { alignItems: 'center', gap: 6 },
+  sideContent: { alignItems: 'center' },
   iconSlot: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
-  label: { color: C.white, fontFamily: F.semiBold, fontSize: 13 },
   mainPosition: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 3 },
   menuGlow: { position: 'absolute', left: '50%' },
   mainButton: { alignItems: 'center', justifyContent: 'center' },
-  pressedButton: { opacity: 0.78 },
 });

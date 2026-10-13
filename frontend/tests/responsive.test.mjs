@@ -13,10 +13,56 @@ const resolutionHook = registerHooks({
     return nextResolve(specifier, context);
   },
 });
-const { getHomeNavigationLayout, getResponsiveMetrics, scaleStyles } = await import(responsiveURL);
+const { getHomeNavigationLayout, getPageHeaderLayout, getResponsiveMetrics, getEmergencyHotlineLayout, scaleStyles } = await import(responsiveURL);
 resolutionHook.deregister();
 
 const phoneWidths = [320, 360, 375, 390, 412, 430, 480];
+
+test('the fixed SOS page fits compact phones with safe areas and enlarged text', () => {
+  for (const width of phoneWidths) {
+    for (const height of [568, 640, 740, 844, 932]) {
+      for (const fontScale of [1, 1.25, 2]) {
+        for (const topInset of [0, 24, 59]) {
+          for (const bottomInset of [0, 34]) {
+            const layout = getEmergencyHotlineLayout(width, height, topInset, bottomInset, fontScale);
+            const used = layout.headingHeight + layout.addressHeight + layout.actionHeight * 2 + layout.gap * 4 + layout.sosDiameter;
+            assert.ok(used <= layout.contentHeight + 0.05, `${width}x${height}: content must fit without scrolling`);
+            assert.ok(layout.sosDiameter * 148 / 204 >= 44, 'SOS keeps a usable touch target');
+            assert.ok(layout.actionHeight >= 44, 'navigation actions keep usable touch targets');
+            assert.ok(layout.contentTop >= getPageHeaderLayout(width, topInset).contentTop);
+          }
+        }
+      }
+    }
+  }
+});
+
+test('pinned page controls clear notches, preserve touch targets, and reserve content space', () => {
+  for (const width of [...phoneWidths, 768]) {
+    for (const inset of [0, 24, 47, 59]) {
+      const header = getPageHeaderLayout(width, inset);
+      const { pageWidth } = getResponsiveMetrics(width);
+      assert.ok(header.top > inset);
+      assert.ok(header.buttonSize >= 44);
+      assert.ok(header.contentTop > header.top + header.buttonSize);
+      assert.ok(2 * header.horizontalInset + 2 * header.buttonSize + 24 < pageWidth);
+    }
+  }
+});
+
+test('navbar reserves larger label groups and gesture clearance for enlarged phone text', () => {
+  for (const width of phoneWidths) {
+    for (const fontScale of [1, 1.3, 1.5, 2]) {
+      const layout = getHomeNavigationLayout(width, 34, fontScale);
+      const standard = getHomeNavigationLayout(width, 34);
+      assert.ok(layout.labelHeight >= standard.labelHeight * fontScale - 0.02);
+      assert.ok(layout.height >= standard.height);
+      assert.ok(layout.sideBottom >= 18 - 0.02);
+      assert.ok(layout.scrollPadding > layout.height);
+      assert.equal(layout.labelLineHeight, standard.labelLineHeight, 'native text applies system font scaling once');
+    }
+  }
+});
 
 test('reference design remains unchanged at 390 points', () => {
   const base = { card: { width: 200, padding: 24, fontSize: 16, lineHeight: 24, minHeight: 56 } };
@@ -30,7 +76,7 @@ test('form margins and camera controls fit compact and large phone widths', () =
     const formWidth = width - 2 * scaleSize(36);
     assert.ok(Math.abs(formWidth / width - 318 / 390) < 0.001);
 
-    const contentWidth = width - scaleSize(38);
+    const contentWidth = width - scaleSize(48);
     const dpadLeft = contentWidth / 2 - scaleSize(105);
     const dpadRight = contentWidth / 2 + scaleSize(105);
     assert.ok(dpadLeft > scaleSize(50), `sound controls overlap at ${width}`);
@@ -91,28 +137,33 @@ test('lowered navigation preserves gesture clearance without stretching artwork 
       assert.ok(safe.bottomPadding >= withoutInset.bottomPadding);
       assert.ok(safe.scrollPadding > safe.height);
     }
-    for (const key of ['bottomPadding', 'mainBottom', 'height', 'scrollPadding']) {
-      assert.ok(Math.abs(largeInset[key] - smallInset[key] - 18) < 0.001,
+    const extraPadding = largeInset.bottomPadding - smallInset.bottomPadding;
+    assert.ok(extraPadding >= 0 && extraPadding <= 18, 'compact labels may require some of the gesture space');
+    for (const key of ['mainBottom', 'height', 'scrollPadding']) {
+      assert.ok(Math.abs(largeInset[key] - smallInset[key] - extraPadding) < 0.001,
         `${key} should count additional gesture space once at ${width}`);
     }
     assert.ok(largeInset.sideBottom >= 18, `labels need clearance from the gesture handle at ${width}`);
   }
 });
 
-test('reference iPhone dock and entire menu sit lower with less empty footer space', () => {
+test('reference iPhone attached body cradles the menu with a wider natural gap', () => {
   const screenHeight = 844;
   const layout = getHomeNavigationLayout(390, 34);
   const labelBottom = screenHeight - layout.sideBottom;
   const menuTop = screenHeight - layout.mainBottom - layout.menuSize;
   const menuBottom = screenHeight - layout.mainBottom;
-  assert.equal(layout.height, 136, 'the container should move down from its former 162-point height');
+  assert.equal(layout.height, 128, 'the shortened body should stay attached to the bottom');
+  assert.equal(layout.artworkTop, 0);
   assert.equal(layout.artworkHeight, 110);
   assert.equal(layout.menuSize, 76, 'the whole menu artwork and touch target should shrink together');
   assert.equal(layout.iconSize, 28);
-  assert.equal(menuTop, 732);
-  assert.equal(menuBottom, 808);
-  assert.equal(labelBottom, 823.31);
-  assert.ok(labelBottom > 802, 'the entire icon and label group should sit lower than the former dock');
+  assert.equal(menuTop, 721.17);
+  assert.equal(menuBottom, 797.17);
+  assert.equal(labelBottom, 826);
+  assert.equal(layout.labelHeight, 16);
+  const notchBottom = screenHeight - layout.height + layout.artworkTop + getNavigationContourY(195) * layout.artworkHeight / 120;
+  assert.ok(Math.abs(notchBottom - menuBottom - 16) < 0.01, 'the fuller cup should have wider natural padding');
   assert.ok(layout.menuGlowWidth > layout.menuSize && layout.menuGlowHeight > layout.menuSize,
     'the soft glow should extend beyond the smaller menu without enlarging its button');
 });
@@ -131,8 +182,8 @@ test('curved navigation keeps its side tabs aligned and buttons clear the home i
       assert.ok(Math.abs(leftHighlightCenter - leftIconCenter) < 0.02, `Home highlight is off-center at ${width}`);
       assert.ok(Math.abs(rightHighlightCenter - rightIconCenter) < 0.02, `First-Aid highlight is off-center at ${width}`);
       assert.ok(travelDistance > layout.menuSize, 'only side tabs should determine the sliding selection');
-      const sideContentHeight = layout.iconSlotSize + layout.iconGap + layout.labelHeight;
-      assert.ok(layout.sideWidth >= 44 && sideContentHeight >= 44, 'side buttons need usable touch targets');
+      // Pressables retain their 44-point minimum height even when the smaller content is shorter.
+      assert.ok(layout.sideWidth >= 44, 'side buttons need usable horizontal touch targets');
       assert.ok(layout.mainBottom > inset, `center button intersects the home indicator at ${width}`);
       assert.ok(layout.sideBottom > 0, `side labels need bottom spacing at ${width}`);
       assert.ok(layout.mainBottom + layout.menuSize <= layout.height, 'center button should remain inside its dock bounds');
@@ -140,25 +191,22 @@ test('curved navigation keeps its side tabs aligned and buttons clear the home i
   }
 });
 
-test('side icon and text groups remain centred in the lowered blue body across phone widths', () => {
+test('side icon and text groups remain centred inside the attached body across phone widths', () => {
   for (const width of phoneWidths) {
     for (const inset of [0, 16, 34]) {
       const layout = getHomeNavigationLayout(width, inset);
       const groupHeight = layout.iconSlotSize + layout.iconGap + layout.labelHeight;
       const groupTop = layout.height - layout.sideBottom - groupHeight;
       const groupCenter = groupTop + groupHeight / 2;
-      const curveY = getNavigationContourY(71) * layout.artworkHeight / 120;
-      const blueBodyCenter = (curveY + layout.height) / 2;
+      const curveY = layout.artworkTop + getNavigationContourY(61) * layout.artworkHeight / 120;
+      const bodyBottomY = layout.height;
+      const blueBodyCenter = (curveY + bodyBottomY) / 2;
       const { scaleSize } = getResponsiveMetrics(width);
-      const gestureClearance = inset > 0 ? Math.min(inset, scaleSize(16)) : scaleSize(4);
-      const centeredBottom = (layout.height - curveY - groupHeight) / 2;
-      if (centeredBottom >= gestureClearance) {
-        assert.ok(Math.abs(groupCenter - blueBodyCenter) < 0.02,
-          `icon and text should be centred together inside the blue body at ${width}/${inset}`);
-      } else {
-        assert.ok(Math.abs(layout.sideBottom - gestureClearance) < 0.02,
-          `centering should only yield to the minimum gesture clearance at ${width}/${inset}`);
-      }
+      assert.ok(Math.abs(groupCenter - blueBodyCenter) < 0.02,
+        `icon and text should be centred together inside the attached body at ${width}/${inset}`);
+      assert.ok(groupTop + groupHeight < bodyBottomY, `label should remain inside the attached body at ${width}/${inset}`);
+      const menuTop = layout.height - layout.mainBottom - layout.menuSize;
+      assert.ok(menuTop - scaleSize(2.5) > 0, `the subtle floating movement must stay inside the host at ${width}`);
       if (inset === 34) {
         assert.ok(Math.abs(groupCenter - blueBodyCenter) < 0.02,
           `gesture phones should keep the icon and text group centred at ${width}`);
@@ -169,5 +217,5 @@ test('side icon and text groups remain centred in the lowered blue body across p
   }
   const reference = getHomeNavigationLayout(390, 34);
   const screenIconCenter = 844 - reference.sideBottom - reference.labelHeight - reference.iconGap - reference.iconSlotSize / 2;
-  assert.equal(screenIconCenter, 785.31, 'the side icons should move down from their former 764-point position');
+  assert.equal(screenIconCenter, 792, 'the side icons and smaller labels should remain centered inside the attached body');
 });

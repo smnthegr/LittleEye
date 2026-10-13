@@ -1,17 +1,19 @@
-import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
+import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { router } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { GlowButton } from './glow-button';
 import { ProfileAvatar } from './profile-avatar';
 import { useSettingsCamera } from '@/hooks/use-settings-camera';
+import { getPageHeaderLayout } from '@/utils/responsive';
 
 export function SettingsProfileButton() {
   const s = useResponsiveStyles(baseStyles);
-  const { camera, isPreview } = useSettingsCamera();
-  if (!camera) return null;
+  const { pageWidth, insets } = useResponsiveLayout();
+  const { buttonSize } = getPageHeaderLayout(pageWidth, insets.top);
+  const { isPreview } = useSettingsCamera();
   return <GlowButton accessibilityRole="button" accessibilityLabel="Open your profile"
     onPress={() => router.push({ pathname: '/profile', params: isPreview ? { preview: 'connected' } : {} })}
-    style={s.button}><ProfileAvatar size={46} /></GlowButton>;
+    style={[s.button, { width: buttonSize, height: buttonSize, borderRadius: buttonSize / 2 }]}><ProfileAvatar size={40} /></GlowButton>;
 }
 
 const baseStyles = StyleSheet.create({

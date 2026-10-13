@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
+import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { SettingsPage } from '@/components/settings-page';
 import { SettingsDetails } from '@/components/settings-details';
@@ -6,7 +7,7 @@ import { SettingsDevicePage } from '@/components/settings-device-page';
 import { SettingsAboutPage } from '@/components/settings-about-page';
 import { SettingsSections, type SettingsSection } from '@/constants/settings';
 import { Policies, PolicyDetails } from '@/constants/policies';
-import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
+import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
 import appPackage from '../../../package.json';
 
 export function generateStaticParams() {
@@ -14,6 +15,7 @@ export function generateStaticParams() {
 }
 
 export default function SettingsDetailScreen() {
+  const s = useResponsiveStyles(baseStyles);
   const { section } = useLocalSearchParams<{ section: string }>();
   if (!section || !Object.prototype.hasOwnProperty.call(SettingsSections, section)) {
     return <SettingsPage title="Settings"><Text style={s.body}>This settings page is unavailable. Use the back button to return to Settings.</Text></SettingsPage>;
@@ -38,9 +40,9 @@ export default function SettingsDetailScreen() {
   return <SettingsPage title={title}><View style={s.paper}><SettingsDetails key={section} section={title} /></View></SettingsPage>;
 }
 
-const s = StyleSheet.create({
+const baseStyles = StyleSheet.create({
   paper: { backgroundColor: C.white, borderRadius: 28, padding: 22, boxShadow: '0 8px 22px rgba(111,160,235,.2)' },
-  heading: { fontFamily: F.bold, fontSize: 15, lineHeight: 23, color: C.blue, marginTop: 18, marginBottom: 8 },
-  body: { fontFamily: F.regular, fontSize: 12, lineHeight: 22, color: C.blue }, version: { fontFamily: F.extraBold, fontSize: 32, color: C.blue, marginVertical: 16 },
-  meta: { fontFamily: F.semiBold, fontSize: 10, lineHeight: 18, color: C.blue, marginBottom: 10 }, paragraph: { marginBottom: 14 },
+  heading: { fontFamily: F.bold, fontSize: T.section, lineHeight: 26, color: C.blue, marginTop: 18, marginBottom: 8 },
+  body: { fontFamily: F.regular, fontSize: T.body, lineHeight: 22, color: C.blue }, version: { fontFamily: F.extraBold, fontSize: 32, color: C.blue, marginVertical: 16 },
+  meta: { fontFamily: F.semiBold, fontSize: T.caption, lineHeight: 18, color: C.blue, marginBottom: 10 }, paragraph: { marginBottom: 14 },
 });

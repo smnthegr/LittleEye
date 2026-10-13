@@ -1,16 +1,17 @@
 import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
-import { BackButton } from '@/components/back-button';
+import { FixedPageHeader } from '@/components/fixed-page-header';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { useMascotImages } from '@/components/mascot-images';
 import { GlowButton } from '@/components/glow-button';
+import { TextButton } from '@/components/text-button';
 import { useAppSession } from '@/components/app-session';
 import { Image } from 'expo-image';
-import { BrandColors, BrandFonts } from '@/constants/brand';
+import { BrandColors, BrandFonts, PageTypography } from '@/constants/brand';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
-  Alert, KeyboardAvoidingView, Platform, Pressable,
+  Alert, KeyboardAvoidingView, Platform,
   StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -65,16 +66,10 @@ export default function SignInScreen() {
               top: insets.top - pageWidth * (125 / 1091),
             }}
           />
-          <BackButton
-            accessibilityRole="button"
-            accessibilityLabel="Back to welcome"
-            onPress={() => router.back()}
-            hitSlop={12}
-            style={[styles.back, { top: insets.top + scaleSize(12) }]} />
         </View>
 
         <View style={styles.form}>
-          <Text accessibilityRole="header" style={styles.heading} adjustsFontSizeToFit numberOfLines={1}>Hello! I’m Peeka</Text>
+          <Text accessibilityRole="header" style={styles.heading}>Hello! I’m Peeka</Text>
           <Text style={styles.subtitle}>Good to see you again—let’s get you in.</Text>
 
           <View style={styles.inputShadow}>
@@ -109,9 +104,9 @@ export default function SignInScreen() {
               style={[styles.input, !!password && styles.filledInput]}
             />
           </View>
-          <Pressable accessibilityRole="button" hitSlop={8} style={({ pressed }) => [styles.forgot, pressed && styles.textPressed]} onPress={() => router.push('/forgot-password')}>
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </Pressable>
+          <TextButton hitSlop={8} style={styles.forgot} textStyle={styles.forgotText} onPress={() => router.push('/forgot-password')}>
+            Forgot password?
+          </TextButton>
           {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
           <GlowButton accessibilityRole="button" onPress={signIn} style={styles.signIn}>
             <Text style={styles.signInText}>Sign In</Text>
@@ -135,11 +130,12 @@ export default function SignInScreen() {
         </GlowButton>
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don’t have an account yet? </Text>
-          <Pressable accessibilityRole="button" hitSlop={8} style={({ pressed }) => pressed && styles.textPressed} onPress={() => router.push('/sign-up')}>
-            <Text style={styles.signUp}>Sign Up!</Text>
-          </Pressable>
+          <TextButton hitSlop={8} textStyle={styles.signUp} onPress={() => router.push('/sign-up')}>
+            Sign Up!
+          </TextButton>
         </View>
       </EdgeScrollView>
+      <FixedPageHeader onBack={() => router.back()} profile={false} />
     </KeyboardAvoidingView>
   );
 }
@@ -150,25 +146,23 @@ const baseStyles = StyleSheet.create({
   page: { flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center', backgroundColor: BrandColors.white },
   hero: { backgroundColor: BrandColors.blue, overflow: 'hidden' },
 
-  back: { position: 'absolute', left: 16, zIndex: 1 },
-  backArrow: { width: 12, height: 12, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: BrandColors.white, transform: [{ rotate: '45deg' }], marginLeft: 6 },
-  form: { paddingHorizontal: 32, paddingTop: 12 },
-  heading: { fontSize: 32, fontFamily: BrandFonts.extraBold, color: '#000000', textAlign: 'center', letterSpacing: -1 },
-  subtitle: { fontSize: 13, lineHeight: 20, fontFamily: BrandFonts.regular, color: '#222222', textAlign: 'center', marginTop: 4, marginBottom: 22 },
+  form: { paddingHorizontal: 24, paddingTop: 16 },
+  heading: { fontSize: PageTypography.title, lineHeight: 32, fontFamily: BrandFonts.extraBold, color: '#000000', textAlign: 'center' },
+  subtitle: { fontSize: PageTypography.body, lineHeight: 22, fontFamily: BrandFonts.regular, color: '#222222', textAlign: 'center', marginTop: 8, marginBottom: 24 },
   inputShadow: { marginBottom: 20, borderRadius: 36, backgroundColor: '#FFFAFC', shadowColor: '#8298FF', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.24, shadowRadius: 18, elevation: 3 },
-  input: { minHeight: 58, paddingHorizontal: 24, paddingVertical: 16, borderRadius: 36, borderWidth: 1, borderColor: '#CEDAE9', fontFamily: BrandFonts.regular, fontSize: 15, color: BrandColors.blue },
-  forgot: { alignSelf: 'flex-end', marginTop: -10, minHeight: 30, justifyContent: 'center' },
-  forgotText: { fontSize: 10, fontFamily: BrandFonts.regular, color: BrandColors.blue },
-  textPressed: { opacity: 0.55 },
+  input: { minHeight: 56, paddingHorizontal: 22, paddingVertical: 14, borderRadius: 30, borderWidth: 1, borderColor: '#CEDAE9', fontFamily: BrandFonts.regular, fontSize: PageTypography.body, color: BrandColors.blue },
+  forgot: { alignSelf: 'flex-end', marginTop: -8, minHeight: 44, justifyContent: 'center' },
+  forgotText: { fontSize: PageTypography.caption, fontFamily: BrandFonts.regular, color: BrandColors.blue },
   error: { color: '#B42318', fontSize: 12, lineHeight: 18, fontFamily: BrandFonts.regular, marginBottom: 8 },
-  signIn: { alignSelf: 'center', width: '68%', minHeight: 48, borderRadius: 30, backgroundColor: BrandColors.lightBlue, alignItems: 'center', justifyContent: 'center', shadowColor: '#000000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.18, shadowRadius: 14, elevation: 4, marginTop: 4 },
-  signInText: { fontSize: 19, fontFamily: BrandFonts.extraBold, color: BrandColors.white },
+  signIn: { alignSelf: 'center', width: '68%', minHeight: 48, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 30, backgroundColor: BrandColors.lightBlue, alignItems: 'center', justifyContent: 'center', shadowColor: '#000000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.18, shadowRadius: 14, elevation: 4, marginTop: 4 },
+  signInText: { fontSize: PageTypography.label, fontFamily: BrandFonts.extraBold, color: BrandColors.white },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 34 },
   line: { flex: 1, height: 1, backgroundColor: '#555555' },
   dividerText: { fontFamily: BrandFonts.regular, fontSize: 14, color: '#111111' },
   google: { width: 68, minHeight: 48, borderRadius: 18, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', backgroundColor: BrandColors.white, marginTop: 16, shadowColor: BrandColors.blue, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 4 },
   googleIcon: { width: 24, height: 24 },
-  footer: { marginTop: 14, paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' },
+  // Balance the link's 44-point hit area so its letters keep their original gap.
+  footer: { marginTop: 1, marginBottom: -13, paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' },
   footerText: { fontFamily: BrandFonts.semiBold, fontSize: 14, color: '#111111' },
   signUp: { fontFamily: BrandFonts.extraBold, fontSize: 14, color: BrandColors.lightBlue },
 });

@@ -4,14 +4,16 @@ import { Redirect, router } from 'expo-router';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BackButton } from './back-button';
+import { FixedPageHeader } from './fixed-page-header';
 import { GlowButton } from './glow-button';
+import { SettingsSignOut } from './settings-sign-out';
 import { ProfileIcon, type ProfileIconName } from './profile-icon';
 import { useAppSession, type Profile } from './app-session';
 import { useSettingsCamera } from '@/hooks/use-settings-camera';
-import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
+import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
+import { getPageHeaderLayout } from '@/utils/responsive';
 
 type Mode = 'guardian' | 'child' | 'account';
 type Field = 'guardian-name' | 'child-name' | 'phone' | 'email' | 'address' | 'birthdate' | 'height' | 'sex' | 'password';
@@ -26,13 +28,11 @@ function InfoRow({ title, value, icon, onPress, chevron = false }: { title: stri
 }
 
 export function ProfileScreen({ mode = 'guardian' }: { mode?: Mode }) {
-  const { scaleSize } = useResponsiveLayout();
+  const { pageWidth, scaleSize } = useResponsiveLayout();
   const s = useResponsiveStyles(baseStyles);
   const session = useAppSession();
   const { camera, isPreview } = useSettingsCamera();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const pageWidth = Math.min(width - insets.left - insets.right, 440);
   const profile = session.profile ?? emptyProfile;
   const child = mode === 'child';
   const account = mode === 'account';
@@ -92,13 +92,14 @@ export function ProfileScreen({ mode = 'guardian' }: { mode?: Mode }) {
   if (!camera) return <Redirect href="/settings" />;
   return <View style={s.screen}>
     <StatusBar style="dark" />
+    <FixedPageHeader light profile={false} onBack={back} />
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.page, { width: pageWidth, minHeight: '100%', paddingBottom: insets.bottom + scaleSize(28) }]}>
       <View pointerEvents="none" style={[s.safeAreaFill, { height: insets.top }]} />
       <View pointerEvents="none" style={[s.headerArt, { top: insets.top, height: pageWidth * 350 / 440 }]}>
         <Image source={require('../../assets/images/profile-header-wave.svg')} contentFit="fill" style={StyleSheet.absoluteFill} />
       </View>
       <View pointerEvents="none" style={s.bottomBlob} />
-      <View style={[s.top, { paddingTop: insets.top + scaleSize(20) }]}><BackButton light onPress={back} />
+      <View style={[s.top, { paddingTop: getPageHeaderLayout(pageWidth, insets.top).contentTop }]}>
         <Text accessibilityRole="header" style={s.heading}>{account ? 'Account & Privacy' : child ? 'Child’s Profile' : 'Guardian’s Profile'}</Text>
       </View>
       {account ? <View style={s.laptopFrame}><View pointerEvents="none" style={s.laptopGlow} /><Image accessible={false} source={require('../../assets/images/profile-laptop-mascot-4k.png')} contentFit="contain" style={s.laptop} /></View> : <View style={s.avatarSection}>
@@ -137,12 +138,17 @@ export function ProfileScreen({ mode = 'guardian' }: { mode?: Mode }) {
           <GlowButton accessibilityRole="button" onPress={() => navigate('/profile-child')} style={s.childButton}><Text style={s.childButtonText}>Child’s Profile</Text></GlowButton>
         </>}
         <Text style={s.sessionNote}>Profile changes and photos are saved for this session.</Text>
+        {mode === 'guardian' && <SettingsSignOut light />}
       </View>
     </ScrollView>
     <Modal visible={!!edit} transparent animationType="fade" onRequestClose={() => setEdit(null)}>
-      <KeyboardAvoidingView style={s.overlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View accessibilityViewIsModal style={[s.modal, { maxHeight: '85%' }]}>
-          <ScrollView keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView style={s.keyboardOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View style={[s.overlay, {
+        paddingTop: insets.top + scaleSize(16), paddingBottom: insets.bottom + scaleSize(16),
+        paddingLeft: insets.left + scaleSize(24), paddingRight: insets.right + scaleSize(24),
+      }]}>
+        <View accessibilityViewIsModal style={s.modal}>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <Text accessibilityRole="header" style={s.modalTitle}>{edit ? fieldLabels[edit] : ''}</Text>
             {edit === 'password' ? <>
               <Text style={s.modalNote}>Password updates will be available when account authentication is connected.</Text>
@@ -157,6 +163,7 @@ export function ProfileScreen({ mode = 'guardian' }: { mode?: Mode }) {
               {edit !== 'password' && <GlowButton accessibilityRole="button" onPress={save} style={s.save}><Text style={s.saveText}>Save Changes</Text></GlowButton>}</View>
           </ScrollView>
         </View>
+      </View>
       </KeyboardAvoidingView>
     </Modal>
   </View>;
@@ -167,30 +174,31 @@ const baseStyles = StyleSheet.create({
   headerArt: { position: 'absolute', left: 0, right: 0 },
   safeAreaFill: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: C.white },
   bottomBlob: { position: 'absolute', width: 490, height: 490, left: -140, top: 430, borderRadius: 150, backgroundColor: 'rgba(148,176,213,.16)', transform: [{ rotate: '-26deg' }] },
-  top: { paddingHorizontal: 28 }, heading: { fontFamily: F.bold, color: C.blue, textAlign: 'center', fontSize: 22, lineHeight: 30, marginTop: 26, marginBottom: 20 },
+  top: { paddingHorizontal: 24 }, heading: { fontFamily: F.extraBold, color: C.blue, textAlign: 'center', fontSize: T.title, lineHeight: 32, marginBottom: 20 },
   avatarSection: { alignItems: 'center', paddingTop: 8, paddingHorizontal: 24 },
   avatarRing: { width: 204, height: 204, borderRadius: 102, borderWidth: 6, borderColor: C.lightBlue, backgroundColor: C.white, alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 24px 6px rgba(148,176,213,.65), 0 8px 20px rgba(25,46,86,.25)' },
   avatarClip: { width: 180, height: 180, borderRadius: 90, overflow: 'hidden', backgroundColor: '#E8EFF8' },
   mascotPair: { position: 'absolute', width: 420, height: 236.25, top: -15 },
   cameraBadge: { position: 'absolute', right: 0, bottom: 2, width: 42, height: 42, borderRadius: 21, backgroundColor: C.blue, borderWidth: 4, borderColor: C.white, justifyContent: 'center', alignItems: 'center' },
   nameButton: { minHeight: 44, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, borderRadius: 22, marginTop: 14, paddingHorizontal: 8 },
-  name: { fontFamily: F.bold, color: C.white, fontSize: 20, lineHeight: 28, flexShrink: 1, textAlign: 'center' }, email: { fontFamily: F.regular, color: C.lightBlue, fontSize: 13, textAlign: 'center', lineHeight: 20 },
-  photoNote: { color: C.white, fontFamily: F.regular, fontSize: 12, marginTop: 8, textAlign: 'center' }, removePhoto: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }, removeText: { color: '#D7E4F5', fontFamily: F.regular, fontSize: 11 },
-  details: { paddingHorizontal: 26, paddingTop: 20, gap: 12 },
+  name: { fontFamily: F.bold, color: C.white, fontSize: T.section, lineHeight: 26, flexShrink: 1, textAlign: 'center' }, email: { fontFamily: F.regular, color: C.lightBlue, fontSize: T.body, textAlign: 'center', lineHeight: 20 },
+  photoNote: { color: C.white, fontFamily: F.regular, fontSize: T.caption, lineHeight: 18, marginTop: 8, textAlign: 'center' }, removePhoto: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }, removeText: { color: '#D7E4F5', fontFamily: F.regular, fontSize: T.caption, lineHeight: 18 },
+  details: { paddingHorizontal: 24, paddingTop: 24, gap: 12 },
   row: { minHeight: 58, borderRadius: 26, borderWidth: 1.5, borderColor: 'rgba(148,176,213,.8)', backgroundColor: 'rgba(148,176,213,.32)', paddingVertical: 12, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rowText: { flex: 1 }, rowTitle: { fontFamily: F.bold, fontSize: 13, lineHeight: 19, color: C.white }, rowValue: { fontFamily: F.regular, fontSize: 11, lineHeight: 16, marginTop: 3, color: C.white },
+  rowText: { flex: 1, minWidth: 0 }, rowTitle: { fontFamily: F.bold, fontSize: T.label, lineHeight: 20, color: C.white }, rowValue: { fontFamily: F.regular, fontSize: T.body, lineHeight: 20, marginTop: 3, color: C.white },
   iconCircle: { width: 31, height: 31, borderRadius: 16, borderWidth: 2, borderColor: '#D8E7F8', alignItems: 'center', justifyContent: 'center' },
   chevron: { width: 9, height: 9, borderRightWidth: 2, borderTopWidth: 2, borderColor: C.white, transform: [{ rotate: '45deg' }] },
-  sectionTitle: { fontFamily: F.bold, fontSize: 20, color: C.white, marginTop: 12 }, empty: { fontFamily: F.regular, fontSize: 12, color: '#D8E7F8', lineHeight: 20 },
-  childButton: { minHeight: 48, alignSelf: 'center', paddingHorizontal: 28, justifyContent: 'center', borderRadius: 24, backgroundColor: C.white, marginTop: 10, boxShadow: '0 0 24px 5px rgba(148,176,213,.35)' }, childButtonText: { fontFamily: F.extraBold, color: C.blue, fontSize: 19 },
+  sectionTitle: { fontFamily: F.bold, fontSize: T.section, lineHeight: 26, color: C.white, marginTop: 12 }, empty: { fontFamily: F.regular, fontSize: T.body, color: '#D8E7F8', lineHeight: 20 },
+  childButton: { minHeight: 48, alignSelf: 'center', paddingHorizontal: 28, justifyContent: 'center', borderRadius: 24, backgroundColor: C.white, marginTop: 10, boxShadow: '0 0 24px 5px rgba(148,176,213,.35)' }, childButtonText: { fontFamily: F.bold, color: C.blue, fontSize: T.label, lineHeight: 20 },
   laptopFrame: { height: 260, alignItems: 'center', justifyContent: 'center' }, laptop: { width: '145%', height: 290 },
   laptopGlow: { position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(148,176,213,.18)', boxShadow: '0 0 28px 12px rgba(148,176,213,.4)' },
-  sessionNote: { fontFamily: F.regular, fontSize: 10, lineHeight: 16, color: '#D8E7F8', textAlign: 'center', marginTop: 16 },
-  overlay: { flex: 1, backgroundColor: 'rgba(15,30,51,.55)', justifyContent: 'center', alignItems: 'center', padding: 24 }, modal: { backgroundColor: C.white, width: '100%', maxWidth: 400, borderRadius: 28, padding: 24 },
-  modalTitle: { fontFamily: F.bold, color: C.blue, fontSize: 20, marginBottom: 18 }, modalNote: { fontFamily: F.regular, color: C.blue, fontSize: 12, lineHeight: 20, marginBottom: 12 },
+  sessionNote: { fontFamily: F.regular, fontSize: T.caption, lineHeight: 18, color: '#D8E7F8', textAlign: 'center', marginTop: 16 },
+  keyboardOverlay: { flex: 1, backgroundColor: 'rgba(15,30,51,.55)' },
+  overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' }, modal: { backgroundColor: C.white, width: '100%', maxWidth: 400, maxHeight: '100%', flexShrink: 1, borderRadius: 28, padding: 24 },
+  modalTitle: { fontFamily: F.bold, color: C.blue, fontSize: T.section, lineHeight: 26, marginBottom: 18 }, modalNote: { fontFamily: F.regular, color: C.blue, fontSize: T.body, lineHeight: 20, marginBottom: 12 },
   input: { minHeight: 52, backgroundColor: '#F2F6FC', borderWidth: 1, borderColor: C.lightBlue, borderRadius: 16, padding: 14, fontFamily: F.regular, color: C.blue, fontSize: 14, marginBottom: 12 },
   error: { fontFamily: F.regular, fontSize: 12, color: '#B23838', marginBottom: 12 }, modalActions: { flexDirection: 'row', gap: 12, marginTop: 12 },
-  cancel: { flex: 1, minHeight: 46, borderRadius: 23, justifyContent: 'center', alignItems: 'center', backgroundColor: '#E8EFF8' }, cancelText: { color: C.blue, fontFamily: F.semiBold, fontSize: 12 },
-  save: { flex: 1, minHeight: 46, borderRadius: 23, justifyContent: 'center', alignItems: 'center', backgroundColor: C.blue }, saveText: { color: C.white, fontFamily: F.semiBold, fontSize: 12 },
+  cancel: { flex: 1, minHeight: 46, borderRadius: 23, justifyContent: 'center', alignItems: 'center', backgroundColor: '#E8EFF8' }, cancelText: { color: C.blue, fontFamily: F.semiBold, fontSize: T.label, lineHeight: 20 },
+  save: { flex: 1, minHeight: 46, borderRadius: 23, justifyContent: 'center', alignItems: 'center', backgroundColor: C.blue }, saveText: { color: C.white, fontFamily: F.semiBold, fontSize: T.label, lineHeight: 20, textAlign: 'center' },
   options: { flexDirection: 'row', gap: 12 }, option: { flex: 1, minHeight: 48, borderRadius: 16, borderWidth: 1, borderColor: C.lightBlue, justifyContent: 'center', alignItems: 'center' }, selected: { backgroundColor: '#DBE8FA', borderColor: C.blue }, optionText: { fontFamily: F.semiBold, color: C.blue, fontSize: 14 },
 });

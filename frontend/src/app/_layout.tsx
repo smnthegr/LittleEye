@@ -14,6 +14,7 @@ import { FallAlertProvider } from '@/components/fall-alert';
 import { BottomNavigationHost, BottomNavigationProvider } from '@/components/bottom-navigation';
 import { NAVIGATION_TRANSITION_MS } from '@/components/navigation-transition';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { useSessionNavigation } from '@/hooks/use-session-navigation';
 
 
 SplashScreen.preventAutoHideAsync();
@@ -48,6 +49,7 @@ export default function TabLayout() {
 function AppNavigator() {
   const session = useAppSession();
   const reducedMotion = useReducedMotion();
+  useSessionNavigation();
   return (
     <View style={{ flex: 1 }}>
     <Stack screenOptions={{ headerShown: false, animation: reducedMotion ? 'none' : 'fade', animationDuration: NAVIGATION_TRANSITION_MS }}
@@ -58,7 +60,7 @@ function AppNavigator() {
             : route.name === 'first-aid-guidance'
               ? '#315780'
               : BrandColors.white;
-        return <ResponsiveScreen backgroundColor={backgroundColor} allowLandscape={['home', 'history'].includes(route.name)}>
+        return <ResponsiveScreen backgroundColor={backgroundColor} allowLandscape={['home', 'history', 'first-aid-guidance'].includes(route.name)}>
           <PageTransition backgroundColor={backgroundColor} animateOnMount={false}>{children}</PageTransition>
         </ResponsiveScreen>;
       }}>

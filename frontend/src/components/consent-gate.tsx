@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
+import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
 import { Policies, PolicyDetails } from '@/constants/policies';
 import { GlowButton } from './glow-button';
 
@@ -33,19 +33,18 @@ export function PolicyReader({ onRead }: { onRead?: () => void }) {
 }
 
 export function ConsentGate({ onAccept, onDecline }: { onAccept: () => void; onDecline: () => void }) {
-  const { scaleSize } = useResponsiveLayout();
+  const { scaleSize, availableHeight } = useResponsiveLayout();
   const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const [ready, setReady] = useState(false);
   const [agreed, setAgreed] = useState(false);
-  return <View style={[s.screen, { paddingTop: insets.top + scaleSize(20), paddingBottom: insets.bottom + scaleSize(16) }]}>
+  return <View style={[s.screen, { paddingTop: insets.top + scaleSize(20), paddingBottom: insets.bottom + scaleSize(8) }]}>
     <StatusBar style="dark" />
-    <View pointerEvents="none" style={s.halo} />
     <View style={s.page}>
       <Text style={s.logo}>Little<Text style={{ color: C.lightBlue }}>Eye</Text></Text>
       <Text accessibilityRole="header" style={s.title}>A little care, first.</Text>
       <Text style={s.intro}>Before we begin, review our Terms and Privacy Policy.</Text>
-        <View style={s.paper}><PolicyReader onRead={() => setReady(true)} /></View>
+        <View style={[s.paper, { height: Math.max(scaleSize(160), availableHeight - scaleSize(374)) }]}><PolicyReader onRead={() => setReady(true)} /></View>
         <Text accessibilityLiveRegion="polite" style={s.hint}>{ready ? 'Terms and Privacy reviewed. You can now agree.' : 'Scroll to the end to review the Terms and Privacy Policy.'}</Text>
         <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agreed, disabled: !ready }} disabled={!ready}
           onPress={() => setAgreed((value) => !value)} style={({ pressed }) => [s.agreement, !ready && s.disabled, pressed && s.pressed]}>
@@ -64,18 +63,17 @@ export function ConsentGate({ onAccept, onDecline }: { onAccept: () => void; onD
 const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.white, paddingHorizontal: 24 },
   page: { flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center' },
-  halo: { position: 'absolute', width: 270, height: 270, borderRadius: 200, right: -120, top: -90, backgroundColor: 'rgba(148,176,213,.18)', boxShadow: '0 0 70px 35px rgba(148,176,213,.12)' },
-  logo: { fontFamily: F.extraBold, color: C.blue, fontSize: 25, marginBottom: 20 },
-  title: { fontFamily: F.bold, color: C.blue, fontSize: 27 },
-  intro: { fontFamily: F.regular, color: C.blue, fontSize: 13, lineHeight: 20, marginTop: 8, marginBottom: 18 },
-  documentHeading: { fontFamily: F.bold, color: C.blue, fontSize: 20, marginBottom: 20 },
-  paper: { flex: 1, minHeight: 100, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(148,176,213,.45)', overflow: 'hidden', backgroundColor: C.white },
-  reader: { flex: 1 }, readerContent: { padding: 20 }, kicker: { fontFamily: F.semiBold, color: C.blue, opacity: .6, fontSize: 11, marginBottom: 22 },
-  paragraph: { marginBottom: 22 }, section: { fontFamily: F.bold, color: C.blue, fontSize: 15, marginBottom: 8 },
-  body: { fontFamily: F.regular, color: C.blue, fontSize: 13, lineHeight: 22 }, end: { fontFamily: F.semiBold, color: C.blue, fontSize: 12, marginBottom: 12 },
-  hint: { fontFamily: F.regular, color: C.blue, fontSize: 11, lineHeight: 17, marginVertical: 10 },
+  logo: { fontFamily: F.extraBold, color: C.blue, fontSize: 27, marginTop: 6, marginBottom: 12 },
+  title: { fontFamily: F.bold, color: C.blue, fontSize: T.title, lineHeight: 32 },
+  intro: { fontFamily: F.regular, color: C.blue, fontSize: T.body, lineHeight: 22, marginTop: 8, marginBottom: 18 },
+  documentHeading: { fontFamily: F.bold, color: C.blue, fontSize: T.section - 2, lineHeight: 24, marginBottom: 20 },
+  paper: { flexShrink: 1, minHeight: 0, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(148,176,213,.45)', overflow: 'hidden', backgroundColor: C.white },
+  reader: { flex: 1 }, readerContent: { padding: 20 }, kicker: { fontFamily: F.semiBold, color: C.blue, opacity: .6, fontSize: T.caption - 2, marginBottom: 22 },
+  paragraph: { marginBottom: 22 }, section: { fontFamily: F.bold, color: C.blue, fontSize: T.label - 2, lineHeight: 19, marginBottom: 8 },
+  body: { fontFamily: F.regular, color: C.blue, fontSize: T.body - 2, lineHeight: 20 }, end: { fontFamily: F.semiBold, color: C.blue, fontSize: T.caption - 2, marginBottom: 12 },
+  hint: { fontFamily: F.regular, color: C.blue, fontSize: T.caption, lineHeight: 18, marginVertical: 10 },
   agreement: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, minHeight: 48 },
-  agreementText: { flex: 1, fontFamily: F.semiBold, fontSize: 11, lineHeight: 17, color: C.blue },
+  agreementText: { flex: 1, fontFamily: F.semiBold, fontSize: T.caption, lineHeight: 18, color: C.blue },
   check: { width: 24, height: 24, borderRadius: 8, borderWidth: 1.5, borderColor: C.lightBlue, alignItems: 'center', justifyContent: 'center' }, checked: { backgroundColor: C.blue, borderColor: C.blue }, checkText: { color: C.white, fontFamily: F.bold },
   accept: { backgroundColor: C.blue, borderRadius: 26, minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: 12, boxShadow: '0 8px 22px rgba(50,80,123,.22)' },
   acceptText: { color: C.white, fontFamily: F.bold, fontSize: 14 }, disabled: { opacity: .4 }, pressed: { opacity: .55 },

@@ -1,11 +1,12 @@
 import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
-import { BackButton } from '@/components/back-button';
+import { FixedPageHeader } from '@/components/fixed-page-header';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { AuthBottomWave } from '@/components/auth-bottom-wave';
 import { GlowButton } from '@/components/glow-button';
 import { useAppSession } from '@/components/app-session';
 import { useMascotImages } from '@/components/mascot-images';
-import { BrandColors, BrandFonts } from '@/constants/brand';
+import { BrandColors, BrandFonts, PageTypography } from '@/constants/brand';
+import { getPageHeaderLayout } from '@/utils/responsive';
 import { Image } from 'expo-image';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -66,7 +67,8 @@ export default function SetUpScreen() {
   const { enterPreview } = useAppSession();
   const mascots = useMascotImages();
   const insets = useSafeAreaInsets();
-  const { pageWidth, height, availableHeight, scaleSize } = useResponsiveLayout();
+  const { pageWidth, height, scaleSize } = useResponsiveLayout();
+  const header = getPageHeaderLayout(pageWidth, insets.top);
   const { identifier } = useLocalSearchParams<{ identifier?: string }>();
   const initialIdentifier = typeof identifier === 'string' ? identifier : '';
   const [step, setStep] = useState(0);
@@ -157,10 +159,7 @@ export default function SetUpScreen() {
               left: pageWidth - 1190 * mascotScale, top: insets.top + pageWidth * 0.6 - 109 * mascotScale }} />
           <AuthBottomWave width={pageWidth} height={pageWidth * 0.62 + insets.bottom} />
         </View>
-        <BackButton accessibilityRole="button" accessibilityLabel={step === 0 ? 'Back to Sign Up' : 'Back to previous setup step'}
-          hitSlop={12} onPress={() => step === 0 ? router.back() : changeStep(step - 1)}
-          style={[styles.back, { top: insets.top + scaleSize(12) }]} />
-        <Animated.View style={[styles.form, { paddingTop: insets.top + Math.max(scaleSize(60), Math.min(scaleSize(76), availableHeight * 0.095)), opacity: fade }]}>
+        <Animated.View style={[styles.form, { paddingTop: header.contentTop, opacity: fade }]}>
           {sexOpen && <Pressable accessibilityRole="button" accessibilityLabel="Close sex menu"
             onPress={() => setSexOpen(false)} style={styles.menuDismiss} />}
           <Text accessibilityRole="header" style={styles.heading}>Set Up</Text>
@@ -192,14 +191,14 @@ export default function SetUpScreen() {
             {sexOpen && <View style={styles.options}>
               <Text style={styles.menuLabel}>SELECT SEX</Text>
               {['Female', 'Male'].map((sex) => (
-              <Pressable key={sex} accessibilityRole="radio" accessibilityState={{ checked: child.sex === sex }}
+              <GlowButton key={sex} accessibilityRole="radio" accessibilityState={{ checked: child.sex === sex }}
                 onPress={() => { setChild((current) => ({ ...current, sex })); setSexOpen(false); setError(''); }}
                 style={({ pressed }) => [styles.option, child.sex === sex && styles.optionSelected, pressed && styles.optionPressed]}>
                 <Text style={styles.optionText}>{sex}</Text>
                 <View style={[styles.selectionCircle, child.sex === sex && styles.selectionActive]}>
                   {child.sex === sex && <View style={styles.check} />}
                 </View>
-              </Pressable>
+              </GlowButton>
             ))}</View>}
             </View>
           </>}
@@ -245,6 +244,7 @@ export default function SetUpScreen() {
           </GlowButton>
         </Animated.View>
       </EdgeScrollView>
+      <FixedPageHeader onBack={() => step === 0 ? router.back() : changeStep(step - 1)} profile={false} />
     </KeyboardAvoidingView>
   );
 }
@@ -253,15 +253,13 @@ const baseStyles = StyleSheet.create({
   filledInput: { fontFamily: BrandFonts.semiBold },
   screen: { flex: 1, backgroundColor: BrandColors.blue },
   page: { width: '100%', maxWidth: 480, alignSelf: 'center', backgroundColor: BrandColors.blue, overflow: 'hidden' },
-  back: { position: 'absolute', left: 16, zIndex: 1 },
-  backArrow: { width: 12, height: 12, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: BrandColors.white, transform: [{ rotate: '45deg' }], marginLeft: 6 },
-  form: { width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 36 },
-  heading: { fontFamily: BrandFonts.extraBold, fontSize: 36, color: BrandColors.white, textAlign: 'center' },
-  subtitle: { fontFamily: BrandFonts.regular, fontSize: 15, lineHeight: 22, color: BrandColors.white, textAlign: 'center', marginTop: 8, marginBottom: 24 },
+  form: { width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 24 },
+  heading: { fontFamily: BrandFonts.extraBold, fontSize: PageTypography.title, lineHeight: 32, color: BrandColors.white, textAlign: 'center' },
+  subtitle: { fontFamily: BrandFonts.regular, fontSize: PageTypography.body, lineHeight: 22, color: BrandColors.white, textAlign: 'center', marginTop: 8, marginBottom: 24 },
   brand: { fontFamily: BrandFonts.bold, color: BrandColors.lightBlue },
   section: { borderRadius: 24, backgroundColor: BrandColors.white, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 12, boxShadow: '0 6px 16px rgba(50,80,123,0.2)' },
-  sectionText: { fontFamily: BrandFonts.extraBold, fontSize: 15, color: BrandColors.blue, textAlign: 'center' },
-  progress: { fontFamily: BrandFonts.regular, fontSize: 11, color: BrandColors.white, textAlign: 'center', marginTop: 10, marginBottom: 20 },
+  sectionText: { fontFamily: BrandFonts.extraBold, fontSize: PageTypography.label, color: BrandColors.blue, textAlign: 'center' },
+  progress: { fontFamily: BrandFonts.regular, fontSize: PageTypography.caption, color: BrandColors.white, textAlign: 'center', marginTop: 10, marginBottom: 20 },
   input: { minHeight: 56, borderRadius: 30, borderWidth: 1.5, borderColor: 'rgba(148,176,213,0.8)', backgroundColor: 'rgba(148,176,213,0.4)', paddingHorizontal: 22, paddingVertical: 14, color: BrandColors.white, fontFamily: BrandFonts.regular, fontSize: 14, marginBottom: 16 },
   inputText: { fontFamily: BrandFonts.regular, fontSize: 14, color: BrandColors.white },
   menuDismiss: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 10 },
@@ -272,7 +270,7 @@ const baseStyles = StyleSheet.create({
   chevron: { width: 8, height: 8, borderRightWidth: 1.5, borderBottomWidth: 1.5, borderColor: BrandColors.white, transform: [{ rotate: '45deg' }] },
   chevronOpen: { transform: [{ rotate: '225deg' }] },
   options: { position: 'absolute', top: 64, left: 0, right: 0, zIndex: 40, borderRadius: 20, backgroundColor: BrandColors.white, padding: 8, borderColor: 'rgba(148,176,213,0.35)', borderWidth: 1, boxShadow: '0 10px 28px rgba(50,80,123,0.3)' },
-  menuLabel: { fontFamily: BrandFonts.semiBold, fontSize: 9, letterSpacing: 1.2, color: BrandColors.blue, opacity: 0.65, marginHorizontal: 12, marginTop: 6, marginBottom: 8 },
+  menuLabel: { fontFamily: BrandFonts.semiBold, fontSize: PageTypography.caption, letterSpacing: 1.2, color: BrandColors.blue, opacity: 0.65, marginHorizontal: 12, marginTop: 6, marginBottom: 8 },
   option: { minHeight: 46, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, borderRadius: 12, marginBottom: 2 },
   optionText: { fontFamily: BrandFonts.semiBold, fontSize: 14, color: BrandColors.blue },
   optionSelected: { backgroundColor: 'rgba(148,176,213,0.2)' },
@@ -282,25 +280,25 @@ const baseStyles = StyleSheet.create({
   check: { width: 8, height: 5, borderLeftWidth: 1.5, borderBottomWidth: 1.5, borderColor: BrandColors.white, transform: [{ rotate: '-45deg' }], marginTop: -2 },
   textPressed: { opacity: 0.55 },
   contactHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  contactTitle: { fontFamily: BrandFonts.semiBold, fontSize: 13, color: BrandColors.white },
+  contactTitle: { flexShrink: 1, fontFamily: BrandFonts.semiBold, fontSize: PageTypography.label, color: BrandColors.white },
   contactHint: { fontFamily: BrandFonts.regular, fontSize: 12, lineHeight: 18, color: BrandColors.white, marginBottom: 18 },
   primaryBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, backgroundColor: BrandColors.lightBlue },
-  primaryText: { fontFamily: BrandFonts.semiBold, fontSize: 10, color: BrandColors.blue },
+  primaryText: { fontFamily: BrandFonts.semiBold, fontSize: PageTypography.caption, color: BrandColors.blue },
   limitNote: { fontFamily: BrandFonts.semiBold, fontSize: 12, color: BrandColors.white, textAlign: 'center', marginBottom: 16 },
   addContact: { flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', minHeight: 48, borderRadius: 24, backgroundColor: 'rgba(148,176,213,0.18)', borderWidth: 1, borderColor: 'rgba(148,176,213,0.5)', marginBottom: 16 },
   addText: { fontFamily: BrandFonts.semiBold, fontSize: 14, color: BrandColors.white },
   addIcon: { width: 26, height: 26, borderRadius: 13, backgroundColor: BrandColors.white, alignItems: 'center', justifyContent: 'center' },
   plusHorizontal: { position: 'absolute', width: 10, height: 2, borderRadius: 1, backgroundColor: BrandColors.blue },
   plusVertical: { position: 'absolute', width: 2, height: 10, borderRadius: 1, backgroundColor: BrandColors.blue },
-  removeContact: { minHeight: 36, paddingHorizontal: 12, borderRadius: 18, flexDirection: 'row', gap: 7, alignItems: 'center', backgroundColor: 'rgba(148,176,213,0.2)' },
-  removeText: { fontFamily: BrandFonts.semiBold, fontSize: 11, color: BrandColors.white },
+  removeContact: { minHeight: 44, paddingHorizontal: 12, borderRadius: 18, flexDirection: 'row', gap: 7, alignItems: 'center', backgroundColor: 'rgba(148,176,213,0.2)' },
+  removeText: { fontFamily: BrandFonts.semiBold, fontSize: PageTypography.caption, color: BrandColors.white },
   trashIcon: { width: 14, height: 16 },
   trashHandle: { position: 'absolute', top: 0, left: 4, width: 6, height: 3, borderTopWidth: 1.5, borderLeftWidth: 1.5, borderRightWidth: 1.5, borderColor: BrandColors.white, borderTopLeftRadius: 2, borderTopRightRadius: 2 },
   trashLid: { position: 'absolute', top: 3, width: 14, height: 1.5, borderRadius: 1, backgroundColor: BrandColors.white },
   trashBody: { position: 'absolute', top: 5, left: 2, width: 10, height: 10, borderWidth: 1.5, borderTopWidth: 0, borderColor: BrandColors.white, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 },
   error: { fontFamily: BrandFonts.semiBold, fontSize: 12, lineHeight: 18, color: '#FF5C5C', marginBottom: 12 },
-  next: { width: '60%', alignSelf: 'center', minHeight: 44, borderRadius: 24, backgroundColor: BrandColors.white, alignItems: 'center', justifyContent: 'center', marginTop: 6, boxShadow: '0 8px 20px rgba(50,80,123,0.3), 0 2px 6px rgba(50,80,123,0.15)' },
-  nextText: { fontFamily: BrandFonts.extraBold, fontSize: 18, color: BrandColors.blue },
+  next: { width: '60%', alignSelf: 'center', minHeight: 48, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 24, backgroundColor: BrandColors.white, alignItems: 'center', justifyContent: 'center', marginTop: 6, boxShadow: '0 8px 20px rgba(50,80,123,0.3), 0 2px 6px rgba(50,80,123,0.15)' },
+  nextText: { fontFamily: BrandFonts.extraBold, fontSize: PageTypography.label, color: BrandColors.blue },
   finish: { width: '100%', paddingHorizontal: 16 },
-  finishText: { fontSize: 15, textAlign: 'center' },
+  finishText: { fontSize: PageTypography.label, textAlign: 'center' },
 });

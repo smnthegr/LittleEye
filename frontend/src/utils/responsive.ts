@@ -1,5 +1,5 @@
 import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
-import { getNavigationContourY } from './navigation-contour';
+import { getNavigationContourY, NAVIGATION_SIDE_CENTER_X } from './navigation-contour';
 
 export const DESIGN_WIDTH = 390;
 export const MAX_PAGE_WIDTH = 480;
@@ -36,39 +36,81 @@ export function getResponsiveMetrics(width: number) {
   };
 }
 
-export function getHomeNavigationLayout(width: number, bottomInset: number) {
+export function getHomeNavigationLayout(width: number, bottomInset: number, fontScale = 1) {
   const { scaleSize, textScale } = getResponsiveMetrics(width);
-  // Leave room for the gesture handle without raising the whole dock by its full inset.
-  const bottomPadding = round(Math.max(0, bottomInset - scaleSize(12)) + scaleSize(4));
+  // Keep the blue body attached to the bottom while protecting the gesture area.
+  const baseBottomPadding = round(Math.max(0, bottomInset - scaleSize(20)) + scaleSize(4));
+  const artworkTop = 0;
   const artworkHeight = scaleSize(110);
   const menuSize = scaleSize(76);
   const iconSlotSize = scaleSize(28);
-  const labelHeight = round(18 * Math.max(12 / 13, textScale));
-  const iconGap = scaleSize(6);
-  const height = artworkHeight + bottomPadding;
+  const labelLineHeight = round(16 * Math.max(1, textScale));
+  const sideWidth = scaleSize(82);
+  const accessibleScale = Math.max(1, fontScale);
+  const labelLines = Math.max(1, Math.ceil(56 * Math.max(1, textScale) * accessibleScale / sideWidth));
+  const labelHeight = round(labelLineHeight * accessibleScale * labelLines);
+  const iconGap = scaleSize(4);
   const sideContentHeight = iconSlotSize + iconGap + labelHeight;
-  const shoulderY = getNavigationContourY(71) * artworkHeight / 120;
+  const shoulderY = getNavigationContourY(61) * artworkHeight / 120;
+  const gestureClearance = bottomInset > 0 ? Math.min(bottomInset, 18) : scaleSize(4);
+  const minimumBottomPadding = Math.ceil((shoulderY + sideContentHeight + 2 * gestureClearance - artworkHeight) * 100) / 100;
+  const bottomPadding = round(Math.max(baseBottomPadding, minimumBottomPadding));
+  const height = artworkHeight + bottomPadding;
   const centeredSideBottom = (height - shoulderY - sideContentHeight) / 2;
-  const gestureClearance = bottomInset > 0 ? Math.min(bottomInset, scaleSize(16)) : scaleSize(4);
+  // Leave breathing room inside the notch and keep the full float in the host.
+  const menuBottomY = getNavigationContourY(195) * artworkHeight / 120 - scaleSize(16);
   return {
     bottomPadding,
     artworkHeight,
+    artworkTop,
     height,
-    // Center the icon and label together within the blue area beneath each shoulder.
-    sideBottom: round(Math.max(gestureClearance, centeredSideBottom)),
-    mainBottom: bottomPadding + scaleSize(10),
+    // Center each icon and label in the attached body, including its bottom fill.
+    sideBottom: round(centeredSideBottom),
+    mainBottom: round(height - menuBottomY),
     menuSize,
-    menuGlowWidth: round(menuSize * 1.65),
-    menuGlowHeight: round(menuSize * 1.45),
+    menuGlowWidth: round(menuSize * 1.95),
+    menuGlowHeight: round(menuSize * 1.8),
     iconSlotSize,
     iconSize: scaleSize(28),
-    sideWidth: scaleSize(82),
-    sideInset: scaleSize(30),
-    sideCenterInset: scaleSize(71),
+    sideWidth,
+    sideInset: scaleSize(32),
+    sideCenterInset: scaleSize(NAVIGATION_SIDE_CENTER_X),
     labelHeight,
+    labelLineHeight,
     iconGap,
     scrollPadding: height + scaleSize(16),
   };
+}
+
+/** Shared safe-area geometry for the pinned back/profile controls on every route. */
+export function getPageHeaderLayout(width: number, topInset: number) {
+  const { scaleSize } = getResponsiveMetrics(width);
+  const top = Math.max(0, topInset) + scaleSize(8);
+  const buttonSize = Math.max(44, scaleSize(44));
+  return {
+    top,
+    horizontalInset: scaleSize(24),
+    buttonSize,
+    contentTop: round(top + buttonSize + scaleSize(8)),
+  };
+}
+
+/** Reserve the fixed SOS page's text and actions before sizing its central artwork. */
+export function getEmergencyHotlineLayout(width: number, height: number, topInset: number, bottomInset: number, fontScale = 1) {
+  const { scale, scaleSize, textScale } = getResponsiveMetrics(width);
+  const { contentTop } = getPageHeaderLayout(width, topInset);
+  const bottomPadding = Math.max(0, bottomInset) + scaleSize(16);
+  const contentHeight = Math.max(0, height - contentTop - bottomPadding);
+  const spacingScale = Math.min(scale, Math.max(0.75, contentHeight / 560));
+  const contentTextScale = Math.min(textScale, Math.max(0.9, contentHeight / 560));
+  const textMultiplier = contentTextScale * Math.max(1, Math.min(fontScale, 1.25));
+  const gap = round((contentHeight < scaleSize(560) ? 10 : 16) * spacingScale);
+  const headingHeight = round(72 * textMultiplier + 8 * spacingScale);
+  const addressHeight = round(Math.max(76 * spacingScale, 60 * textMultiplier + 20 * spacingScale));
+  const actionHeight = round(Math.max(52, 64 * spacingScale, 40 * textMultiplier + 16 * spacingScale));
+  const fixedHeight = headingHeight + addressHeight + actionHeight * 2 + gap * 4;
+  const sosDiameter = round(Math.max(64, Math.min(scaleSize(280), contentHeight - fixedHeight)));
+  return { contentTop, bottomPadding, contentHeight, gap, headingHeight, addressHeight, actionHeight, sosDiameter, spacingScale, textScale: contentTextScale };
 }
 
 /** Scale design dimensions, leaving percentages, width caps, borders and colors intact. */

@@ -1,18 +1,18 @@
 import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useMemo, useState } from 'react';
-import { Alert, Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Alert, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BackButton } from '@/components/back-button';
+import { FixedPageHeader } from '@/components/fixed-page-header';
 import { ResponsiveBackground } from '@/components/responsive-background';
 import { GlowButton } from '@/components/glow-button';
 import { useAppSession } from '@/components/app-session';
-import { SettingsProfileButton } from '@/components/settings-profile-button';
-import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
+import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
+import { getPageHeaderLayout } from '@/utils/responsive';
 
 const contactIcon = {
   ios: 'person.crop.circle.badge.plus',
@@ -21,10 +21,9 @@ const contactIcon = {
 } satisfies SymbolViewProps['name'];
 
 export default function EmergencyContactsScreen() {
-  const { scaleSize } = useResponsiveLayout();
+  const { pageWidth, scaleSize } = useResponsiveLayout();
   const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
   const { profile, profilePhoto, updateProfile } = useAppSession();
   const [localContacts, setLocalContacts] = useState(profile?.contacts ?? []);
   const contacts = useMemo(() => (profile?.contacts ?? localContacts).filter(contact => contact.fullName.trim() || contact.phone.trim()), [profile?.contacts, localContacts]);
@@ -131,12 +130,8 @@ export default function EmergencyContactsScreen() {
   return <View style={s.screen}>
     <StatusBar style="light" />
     <ResponsiveBackground source={require('../../assets/images/emergency-contacts-background.svg')} />
-    <ScrollView contentContainerStyle={[s.content, { paddingTop: insets.top + scaleSize(10), paddingBottom: Math.max(insets.bottom, 16) + scaleSize(14) }]} showsVerticalScrollIndicator={false}>
-      <View style={s.headerRow}>
-        <BackButton accessibilityLabel="Back" onPress={goBack} />
-        <SettingsProfileButton />
-      </View>
-
+    <FixedPageHeader onBack={goBack} />
+    <ScrollView contentContainerStyle={[s.content, { width: pageWidth, paddingTop: getPageHeaderLayout(pageWidth, insets.top).contentTop, paddingBottom: insets.bottom + scaleSize(24) }]} showsVerticalScrollIndicator={false}>
       <Text accessibilityRole="header" style={s.title}>Emergency Contacts</Text>
 
       <View style={s.contactList}>
@@ -149,9 +144,9 @@ export default function EmergencyContactsScreen() {
             <View style={s.contactCopy}>
               <View style={s.contactNameRow}>
                 <Text numberOfLines={1} style={s.contactName}>{contact.fullName}</Text>
-                <Pressable accessibilityRole="button" accessibilityLabel={`Edit ${contact.fullName}`} onPress={() => openEditContact(index)} hitSlop={8} style={s.editIconButton}>
+                <GlowButton accessibilityRole="button" accessibilityLabel={`Edit ${contact.fullName}`} onPress={() => openEditContact(index)} hitSlop={8} style={s.editIconButton}>
                   <SymbolView name={{ ios: 'pencil', android: 'edit', web: 'edit' }} size={scaleSize(14)} tintColor={C.white} />
-                </Pressable>
+                </GlowButton>
               </View>
               {!!contact.phone && <Text numberOfLines={1} style={s.contactPhone}>{contact.phone}</Text>}
               {!!contacts[index]?.email && <Text numberOfLines={1} style={s.contactMeta}>{contacts[index].email}</Text>}
@@ -176,15 +171,19 @@ export default function EmergencyContactsScreen() {
       </GlowButton>
     </ScrollView>
     <Modal visible={showAddContact} transparent animationType="fade" onRequestClose={() => setShowAddContact(false)}>
-      <View style={s.addModalOverlay}>
+      <KeyboardAvoidingView style={s.keyboardOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View style={[s.addModalOverlay, {
+        paddingTop: insets.top + scaleSize(16), paddingBottom: insets.bottom + scaleSize(16),
+        paddingLeft: insets.left + scaleSize(20), paddingRight: insets.right + scaleSize(20),
+      }]}>
         <Pressable accessibilityRole="button" accessibilityLabel="Close add contact form" onPress={() => setShowAddContact(false)} style={StyleSheet.absoluteFill} />
-        <ScrollView style={[s.addModalCard, { maxHeight: height * .84 }]} contentContainerStyle={s.addModalContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView accessibilityViewIsModal style={s.addModalCard} contentContainerStyle={s.addModalContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <Image pointerEvents="none" source={require('../../assets/images/emergency-contacts-mascot.png')} contentFit="contain" transition={0} accessible={false} style={s.addModalMascot} />
           <View style={s.addModalHeading}>
             <Text accessibilityRole="header" style={s.addModalTitle}>{editingContactIndex === null ? 'Add Contact' : 'Edit Contact'}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setShowAddContact(false)} style={s.modalClose}>
+            <GlowButton accessibilityRole="button" accessibilityLabel="Close" onPress={() => setShowAddContact(false)} style={s.modalClose}>
               <View style={s.closeLineOne} /><View style={s.closeLineTwo} />
-            </Pressable>
+            </GlowButton>
           </View>
           <Text style={s.addModalSubtitle}>Emergency contact details</Text>
           <View style={s.formFields}>
@@ -196,52 +195,53 @@ export default function EmergencyContactsScreen() {
           <GlowButton accessibilityRole="button" accessibilityLabel={editingContactIndex === null ? 'Save emergency contact' : 'Save contact changes'} onPress={saveContact} style={s.saveContactButton}>
             <Text style={s.saveContactText}>{editingContactIndex === null ? 'Save Contact' : 'Save Changes'}</Text>
           </GlowButton>
-          {editingContactIndex !== null && <Pressable accessibilityRole="button" accessibilityLabel="Delete contact" onPress={removeEditingContact} style={s.deleteContactButton}>
+          {editingContactIndex !== null && <GlowButton accessibilityRole="button" accessibilityLabel="Delete contact" onPress={removeEditingContact} style={s.deleteContactButton}>
             <SymbolView name={{ ios: 'trash', android: 'delete', web: 'delete' }} size={scaleSize(16)} tintColor="#B13E4B" />
             <Text style={s.deleteContactText}>Delete Contact</Text>
-          </Pressable>}
+          </GlowButton>}
         </ScrollView>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   </View>;
 }
 
 const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.blue },
-  content: { flexGrow: 1, paddingHorizontal: 22 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { color: C.white, fontFamily: F.extraBold, fontSize: 19, lineHeight: 25, textAlign: 'center', marginTop: 17 },
-  contactList: { gap: 20, marginTop: 28 },
+  content: { flexGrow: 1, alignSelf: 'center', paddingHorizontal: 24 },
+  title: { color: C.white, fontFamily: F.extraBold, fontSize: T.title, lineHeight: 32, textAlign: 'center' },
+  contactList: { gap: 16, marginTop: 24 },
   contactCard: { gap: 9, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 22, backgroundColor: 'rgba(255,255,255,.16)', borderWidth: 1, borderColor: 'rgba(255,255,255,.5)' },
   contactMainRow: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatar: { width: 48, height: 48, borderRadius: 24, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: '#B9CEE3' },
   avatarInitials: { color: C.blue, fontFamily: F.bold, fontSize: 14 },
   contactCopy: { flex: 1, justifyContent: 'center', gap: 5 },
   contactNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  contactName: { color: C.white, fontFamily: F.bold, fontSize: 13, lineHeight: 16 },
+  contactName: { flexShrink: 1, color: C.white, fontFamily: F.bold, fontSize: T.label, lineHeight: 20 },
   editIconButton: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center', borderRadius: 11, backgroundColor: 'rgba(255,255,255,.2)' },
-  contactPhone: { color: C.white, fontFamily: F.regular, fontSize: 11, lineHeight: 13 },
-  contactRole: { alignSelf: 'flex-start', overflow: 'hidden', color: C.blue, fontFamily: F.bold, fontSize: 10, lineHeight: 15, paddingHorizontal: 7, borderRadius: 7, backgroundColor: '#D9E9F8' },
-  contactMeta: { color: 'rgba(255,255,255,.86)', fontFamily: F.regular, fontSize: 10, lineHeight: 13 },
+  contactPhone: { color: C.white, fontFamily: F.regular, fontSize: T.body, lineHeight: 20 },
+  contactRole: { alignSelf: 'flex-start', overflow: 'hidden', color: C.blue, fontFamily: F.bold, fontSize: T.caption, lineHeight: 18, paddingHorizontal: 7, borderRadius: 7, backgroundColor: '#D9E9F8' },
+  contactMeta: { color: 'rgba(255,255,255,.86)', fontFamily: F.regular, fontSize: T.caption, lineHeight: 18 },
   callButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#DCEAF7', backgroundColor: 'rgba(50,80,123,.18)' },
-  emptyMessage: { color: 'rgba(255,255,255,.8)', fontFamily: F.regular, fontSize: 12, textAlign: 'center', paddingVertical: 18 },
+  emptyMessage: { color: 'rgba(255,255,255,.8)', fontFamily: F.regular, fontSize: T.body, lineHeight: 20, textAlign: 'center', paddingVertical: 18 },
   addContact: { minHeight: 78, flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 20, paddingHorizontal: 14, borderRadius: 22, backgroundColor: C.white, boxShadow: '0 6px 12px rgba(0,0,0,.3)' },
   addIconBox: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 11, backgroundColor: C.blue },
   addCopy: { flex: 1, gap: 2 },
-  addTitle: { color: C.blue, fontFamily: F.bold, fontSize: 12 },
-  addSubtitle: { color: '#6F829B', fontFamily: F.regular, fontSize: 9 },
+  addTitle: { color: C.blue, fontFamily: F.bold, fontSize: T.label, lineHeight: 20 },
+  addSubtitle: { color: '#6F829B', fontFamily: F.regular, fontSize: T.caption, lineHeight: 18 },
   chevron: { width: 8, height: 8, borderTopWidth: 1.7, borderRightWidth: 1.7, borderColor: C.blue, transform: [{ rotate: '45deg' }], marginRight: 3 },
-  addModalOverlay: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, backgroundColor: 'rgba(0,0,0,.48)' },
-  addModalCard: { width: '100%', maxWidth: 360, flexGrow: 0, flexShrink: 1, borderRadius: 28, backgroundColor: C.white, overflow: 'hidden' },
+  keyboardOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,.48)' },
+  addModalOverlay: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  addModalCard: { width: '100%', maxWidth: 360, maxHeight: '100%', flexGrow: 0, flexShrink: 1, borderRadius: 28, backgroundColor: C.white, overflow: 'hidden' },
   addModalContent: { flexGrow: 0, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 18 },
   addModalHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  addModalTitle: { color: C.blue, fontFamily: F.bold, fontSize: 18 },
-  addModalSubtitle: { marginTop: 4, color: '#71839B', fontFamily: F.regular, fontSize: 11 },
+  addModalTitle: { color: C.blue, fontFamily: F.bold, fontSize: T.section, lineHeight: 26 },
+  addModalSubtitle: { marginTop: 4, color: '#71839B', fontFamily: F.regular, fontSize: T.caption, lineHeight: 18 },
   modalClose: { width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: '#91A5BE', alignItems: 'center', justifyContent: 'center' },
   closeLineOne: { position: 'absolute', width: 12, height: 1.5, borderRadius: 1, backgroundColor: '#526F92', transform: [{ rotate: '45deg' }] },
   closeLineTwo: { position: 'absolute', width: 12, height: 1.5, borderRadius: 1, backgroundColor: '#526F92', transform: [{ rotate: '-45deg' }] },
   formFields: { gap: 16, marginTop: 26 },
-  formInput: { minHeight: 48, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(126,164,209,.57)', backgroundColor: 'rgba(255,255,255,.57)', color: C.blue, fontFamily: F.regular, fontSize: 13, boxShadow: '0 0 12px rgba(81,112,255,.24)' },
+  formInput: { minHeight: 48, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(126,164,209,.57)', backgroundColor: 'rgba(255,255,255,.57)', color: C.blue, fontFamily: F.regular, fontSize: T.body, boxShadow: '0 0 12px rgba(81,112,255,.24)' },
   saveContactButton: { width: '78%', minHeight: 44, alignSelf: 'center', alignItems: 'center', justifyContent: 'center', marginTop: 26, borderRadius: 999, backgroundColor: '#7EA4D1', boxShadow: '0 2px 5px rgba(0,0,0,.25)' },
   deleteContactButton: { minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 12, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(177,62,75,.35)', backgroundColor: 'rgba(255,255,255,.86)' },
   deleteContactText: { color: '#B13E4B', fontFamily: F.bold, fontSize: 13 },

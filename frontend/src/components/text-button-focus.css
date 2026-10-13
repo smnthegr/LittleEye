@@ -1,0 +1,8 @@
+[data-text-button]:focus {
+  outline: none;
+}
+
+[data-text-button]:focus-visible > * {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
