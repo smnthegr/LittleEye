@@ -72,7 +72,9 @@ export default function FirstAidGuidanceScreen() {
   }
 
   const selectedColor = severityLevels.find(level => level.label === selectedSeverity)?.color;
-  if (landscape && selectedSeverity) return <View style={s.landscapeScreen}>
+  if (landscape && selectedSeverity) return <View style={[s.landscapeScreen, {
+    position: 'absolute', top: 0, bottom: 0, left: -insets.left, right: -insets.right,
+  }]}>
     <StatusBar style="light" />
     <NavigationBar hidden />
     <Animated.View style={[StyleSheet.absoluteFill, { opacity }]}>
@@ -92,7 +94,7 @@ export default function FirstAidGuidanceScreen() {
         {demoPlaying ? <View style={s.playerPauseGlyph}><View style={s.playerPauseBar} /><View style={s.playerPauseBar} /></View> : <View style={s.playerPlayGlyph} />}
       </GlowButton>
       <View style={[s.landscapePlayback, { bottom: insets.bottom + scaleSize(16), left: scaleSize(24), right: scaleSize(24) }]}>
-        <DemoTimeline seconds={demoSeconds} onSeek={seekDemo} />
+        <DemoTimeline seconds={demoSeconds} onSeek={seekDemo} compact />
       </View>
     </Animated.View>
   </View>;
@@ -198,7 +200,7 @@ export default function FirstAidGuidanceScreen() {
   </View>;
 }
 
-function DemoTimeline({ seconds, onSeek }: { seconds: number; onSeek: (seconds: number) => void }) {
+function DemoTimeline({ seconds, onSeek, compact = false }: { seconds: number; onSeek: (seconds: number) => void; compact?: boolean }) {
   const { scaleSize } = useResponsiveLayout();
   const s = useResponsiveStyles(baseStyles);
   const [width, setWidth] = useState(0);
@@ -215,7 +217,7 @@ function DemoTimeline({ seconds, onSeek }: { seconds: number; onSeek: (seconds: 
       onResponderGrant={event => { setSeeking(true); onSeek(getDemoSecondsAtPosition(event.nativeEvent.locationX, width)); }}
       onResponderMove={event => onSeek(getDemoSecondsAtPosition(event.nativeEvent.locationX, width))}
       onResponderRelease={() => setSeeking(false)} onResponderTerminate={() => setSeeking(false)}
-      style={[s.timelineTouch, { minHeight: Math.max(44, scaleSize(44)) }]}>
+      style={[s.timelineTouch, { minHeight: compact ? scaleSize(26) : Math.max(44, scaleSize(44)) }]}>
       {seeking && <View pointerEvents="none" style={[s.seekTimeBubble, { left: `${Math.max(8, Math.min(92, progress))}%` }]}>
         <Text style={s.seekTimeText}>{formatDemoTime(seconds)}</Text>
       </View>}
@@ -285,7 +287,7 @@ const baseStyles = StyleSheet.create({
   landscapeExitButton: { width: 44, height: 44, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 8, backgroundColor: 'rgba(0,0,0,.35)', borderWidth: 1, borderColor: 'rgba(255,255,255,.22)' },
   landscapeExitLineOne: { position: 'absolute', width: 19, height: 2, borderRadius: 1, backgroundColor: C.white, transform: [{ rotate: '45deg' }] },
   landscapeExitLineTwo: { position: 'absolute', width: 19, height: 2, borderRadius: 1, backgroundColor: C.white, transform: [{ rotate: '-45deg' }] },
-  landscapePlayback: { position: 'absolute', zIndex: 2, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.42)' },
+  landscapePlayback: { position: 'absolute', zIndex: 2, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(0,0,0,.42)' },
   landscapeTimestamp: { color: C.white, fontFamily: F.semiBold, fontSize: T.caption, lineHeight: 18, fontVariant: ['tabular-nums'] },
   playerPlayGlyph: { width: 0, height: 0, marginLeft: 4, borderTopWidth: 11, borderBottomWidth: 11, borderLeftWidth: 16, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: C.blue },
   playerPauseGlyph: { flexDirection: 'row', alignItems: 'center', gap: 6 },

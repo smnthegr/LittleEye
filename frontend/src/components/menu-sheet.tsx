@@ -116,9 +116,9 @@ function OpenMenuSheet({ onClose, sheetStyle, artwork, children }: Props) {
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end', touchAction: 'none' },
+  overlay: { flex: 1, justifyContent: 'flex-end', touchAction: 'none' } as ViewStyle,
   backdrop: { backgroundColor: 'rgba(0,0,0,.32)' },
-  dragArea: { position: 'absolute', top: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center', zIndex: 1, touchAction: 'none' },
+  dragArea: { position: 'absolute', top: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center', zIndex: 1, touchAction: 'none' } as ViewStyle,
   handle: { width: 37, height: 3, borderRadius: 2, backgroundColor: '#A5B8D1' },
   optionsScroll: { flexGrow: 0, flexShrink: 1 },
 });

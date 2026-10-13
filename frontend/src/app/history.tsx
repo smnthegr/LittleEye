@@ -23,6 +23,16 @@ function formatPlaybackTime(progress: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
+function formatPlaybackDate(date: string | undefined) {
+  if (!date) return '';
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(date);
+  if (!match) return date;
+  const [, day, month, year] = match;
+  const dateValue = new Date(Number(year), Number(month) - 1, Number(day));
+  if (dateValue.getFullYear() !== Number(year) || dateValue.getMonth() !== Number(month) - 1 || dateValue.getDate() !== Number(day)) return date;
+  return dateValue.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
 // Demo footage keeps the Playback screen preview usable until real recordings are available.
 const playbackEntries: HistoryEntry[] = [
   { date: '29/12/2026', detail: 'Sample playback footage', kind: 'playback', sample: true },
@@ -39,7 +49,7 @@ export default function HistoryScreen() {
   const [selectedRecording, setSelectedRecording] = useState<HistoryEntry | null>(null);
   const liveTimestamp = useLiveTimestamp(selectedRecording?.sample === true);
   const footageTime = selectedRecording?.sample ? liveTimestamp.time : '07:15:32';
-  const footageDate = selectedRecording?.sample ? liveTimestamp.date : selectedRecording?.date;
+  const footageDate = formatPlaybackDate(selectedRecording?.sample ? liveTimestamp.date : selectedRecording?.date);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0.32);
@@ -101,7 +111,7 @@ export default function HistoryScreen() {
   const currentEntries = activeTab === 'Playback' ? playbackEntries : eventEntries;
 
   return <>
-    {landscapeLayout && selectedRecording ? <View style={s.landscapeScreen}>
+    {landscapeLayout && selectedRecording ? <View style={[s.landscapeScreen, { left: -insets.left, right: -insets.right }]}>
       <StatusBar style="light" />
       <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
       <View style={[s.landscapeTopRow, { top: insets.top + scaleSize(20), left: scaleSize(24), right: scaleSize(24) }]}>
@@ -133,8 +143,17 @@ export default function HistoryScreen() {
         {isSeeking && <View pointerEvents="none" style={[s.seekTimeBubble, s.landscapeSeekTimeBubble, { left: `${Math.max(8, Math.min(92, playbackProgress * 100))}%` }]}><Text style={s.seekTimeText}>{playbackTime}</Text></View>}
         <View
           accessibilityRole="adjustable"
+          accessible
           accessibilityLabel="Playback position"
           accessibilityValue={{ min: 0, max: 100, now: Math.round(playbackProgress * 100) }}
+          accessibilityActions={[{ name: 'increment', label: 'Forward 5 seconds' }, { name: 'decrement', label: 'Back 5 seconds' }]}
+          onAccessibilityAction={event => {
+            setIsPlaying(false);
+            const change = event.nativeEvent.actionName === 'increment' ? 5 : -5;
+            const nextProgress = Math.max(0, Math.min(1, playbackProgress + change / PLAYBACK_DURATION_SECONDS));
+            playbackProgressRef.current = nextProgress;
+            setPlaybackProgress(nextProgress);
+          }}
           onLayout={event => setTimelineWidth(event.nativeEvent.layout.width)}
           onStartShouldSetResponder={() => true}
           onMoveShouldSetResponder={() => true}
@@ -216,8 +235,17 @@ export default function HistoryScreen() {
               {isSeeking && <View pointerEvents="none" style={[s.seekTimeBubble, { left: `${Math.max(8, Math.min(92, playbackProgress * 100))}%` }]}><Text style={s.seekTimeText}>{playbackTime}</Text></View>}
               <View
                 accessibilityRole="adjustable"
+                accessible
                 accessibilityLabel="Playback position"
                 accessibilityValue={{ min: 0, max: 100, now: Math.round(playbackProgress * 100) }}
+                accessibilityActions={[{ name: 'increment', label: 'Forward 5 seconds' }, { name: 'decrement', label: 'Back 5 seconds' }]}
+                onAccessibilityAction={event => {
+                  setIsPlaying(false);
+                  const change = event.nativeEvent.actionName === 'increment' ? 5 : -5;
+                  const nextProgress = Math.max(0, Math.min(1, playbackProgress + change / PLAYBACK_DURATION_SECONDS));
+                  playbackProgressRef.current = nextProgress;
+                  setPlaybackProgress(nextProgress);
+                }}
                 onLayout={event => setTimelineWidth(event.nativeEvent.layout.width)}
                 onStartShouldSetResponder={() => true}
                 onMoveShouldSetResponder={() => true}
@@ -234,7 +262,7 @@ export default function HistoryScreen() {
             </View>
             <View style={s.recordingInfo}>
               {selectedRecording.kind === 'event' && <Text style={s.eventLabel}>Fall Detected</Text>}
-              <Text style={s.recordingDate}>{selectedRecording.date}</Text>
+              <Text style={s.recordingDate}>{formatPlaybackDate(selectedRecording.date)}</Text>
               <Text style={s.recordingDetail}>{selectedRecording.detail}</Text>
             </View>
           </View> : currentEntries.length ? <View style={s.entryList}>
@@ -243,13 +271,13 @@ export default function HistoryScreen() {
               <View style={s.entryText}>
                 {entry.kind === 'event' ? <>
                   <Text style={s.eventLabel}>Fall Detected</Text>
-                  <Text style={s.eventDate}>{entry.date}</Text>
+                  <Text style={s.eventDate}>{formatPlaybackDate(entry.date)}</Text>
                 </> : <>
-                  <Text style={s.entryDate}>{entry.date}</Text>
+                  <Text style={s.entryDate}>{formatPlaybackDate(entry.date)}</Text>
                   <Text style={s.entryDetail}>{entry.detail}</Text>
                 </>}
               </View>
-              <GlowButton accessibilityRole="button" accessibilityLabel={`Play ${entry.kind === 'event' ? 'fall event' : 'recording'} from ${entry.date}`} onPress={() => { setSelectedRecording(entry); setIsPlaying(false); playbackProgressRef.current = 0.32; setPlaybackProgress(0.32); }} style={s.playButton}>
+              <GlowButton accessibilityRole="button" accessibilityLabel={`Play ${entry.kind === 'event' ? 'fall event' : 'recording'} from ${formatPlaybackDate(entry.date)}`} onPress={() => { setSelectedRecording(entry); setIsPlaying(false); playbackProgressRef.current = 0.32; setPlaybackProgress(0.32); }} style={s.playButton}>
                 <View style={s.playGlyph} />
               </GlowButton>
             </View>)}
