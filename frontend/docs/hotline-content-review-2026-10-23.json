@@ -1,0 +1,306 @@
+{
+  "reviewedAt": "2026-10-23",
+  "scope": "52 previous source URLs plus eight follow-ups; fall-relevant city/provincial dispatch, rescue, EMS and emergency-directory hospitals. Not a live-call check or exhaustive national directory.",
+  "sources": [
+    {
+      "url": "https://agusandelsur.gov.ph/emergency-hotline/",
+      "status": "readable",
+      "findings": "Bayugan number appears in Search and Rescue and BFP Smart tables; preserve Smart and the same team’s Globe alternative. Add provincial SAR. Exclude police and generic provincial office trunks."
+    },
+    {
+      "url": "https://bacolodcity.gov.ph/wp-content/uploads/2024/04/E.-Bacolod-City-DRRM-Plan-2023-2025-Annexes-References.pdf",
+      "status": "PDF visually inspected",
+      "findings": "Rendered Annex E physical page140 (printed390) plus pages141–144. The page140 image explicitly publishes 09561976151, although text extraction misses it; retained after visual confirmation. Add Red Cross and CLMMRH lines, Amity/Chamber response and BFP contacts, whose medical-response participation is independently documented by the city citizen’s charter. Other dispatch alternatives cite that charter. Exclude traffic, personal barangay/officer/admin and legacy117."
+    },
+    {
+      "url": "https://bacoor.gov.ph/latest-news/in-case-of-emergency-please-contact-the-following-numbers/",
+      "status": "readable",
+      "findings": "Retain BDRRMO 0464170727; exclude police, fire-only and information-office lines. Embedded social post is not a separately readable telephone source."
+    },
+    {
+      "url": "https://batac.gov.ph/?query-101-page=2",
+      "status": "text and image inspected",
+      "findings": "Read homepage plus original 2024/05/Emergency-Hotline-Numbers.jpg. CDRRMO retained; add MMMH&MC mobile/landline and both CHO medical-assistance mobiles after dispatch options. City hall, CARD, utilities and fire-only excluded. No mobile carrier labels in image."
+    },
+    {
+      "url": "https://caloocancity.gov.ph/15732-2/",
+      "status": "readable",
+      "findings": "Health advisory explicitly offers all three retained emergency numbers for immediate assistance. No explicit mobile carrier labels; fallback remains an estimate."
+    },
+    {
+      "url": "https://candoncity.gov.ph/",
+      "status": "replacement path read",
+      "findings": "Homepage previously redirected away from Candon; use https://candoncity.gov.ph/page/18/. Both emergency mobiles explicitly labelled Globe/Smart. Do not silently follow root redirect as Candon proof."
+    },
+    {
+      "url": "https://cavite.gov.ph/directory/",
+      "status": "readable",
+      "findings": "Include all fully specified city-hotline alternatives for eight Cavite cities and three OPDRRMO emergency numbers, with provincial coverage labelled accurately. Municipality-only rows are outside the existing city picker. Do not guess the meaning of (046)161. Official/officer admin sections excluded."
+    },
+    {
+      "url": "https://cdrrmo.iloilocity.gov.ph/",
+      "status": "readable; linked directory followed",
+      "findings": "Followed complete Emergency Hotlines Directory. Add ICER/USAR landlines, BFP Search and Rescue mobile/landline, Red Cross alternatives and named hospital contacts/ranges. Police, traffic, fire-only station rows and ICAG without documented medical/rescue role excluded."
+    },
+    {
+      "url": "https://cityofdasmarinas.gov.ph/cdrrmo-emergency-assistance-services/",
+      "status": "readable",
+      "findings": "Include 09088185555 along with existing rescue mobiles and four landlines. Named personal officer contacts excluded; no explicit carrier labels in readable text."
+    },
+    {
+      "url": "https://cityofilagan.gov.ph/index.php/city-drrm/",
+      "status": "readable",
+      "findings": "Source explicitly labels Rescue 1124 mobile Globe and landline PLDT. Store labels without replacing them with fallback. Other alternate rescue mobile comes from provincial directory."
+    },
+    {
+      "url": "https://cityofimus.gov.ph/",
+      "status": "partial current confirmation",
+      "findings": "Homepage confirms emergency 0468889911. Existing mobile 09190691703 was not visible in current parsed page; retain its earlier Oct 22 review date, not a new completeness claim. Fire-only excluded."
+    },
+    {
+      "url": "https://cityofnagacebu.gov.ph/office-of-the-city-disaster-risk-reduction-management/",
+      "status": "readable",
+      "findings": "Ambulance service lists both existing mobiles and the 0324894155 landline. No explicit carrier labels in parsed source. General city office contacts excluded."
+    },
+    {
+      "url": "https://davaocity.gov.ph/departments/social-services/central-911/",
+      "status": "readable",
+      "findings": "911 is emergency contact. 0822961433 is administration; 0822960443 fax and header office number excluded."
+    },
+    {
+      "url": "https://digoscity.gov.ph/?page_id=1634",
+      "status": "indexed official content; live fetch failed",
+      "findings": "Official indexed page identifies CDRRMO 09466957777 as SMART/TNT. Store Smart / TNT. Fire and police-only alternatives excluded. Live browser fetch failed; index is not proof of current live accessibility."
+    },
+    {
+      "url": "https://gad.calambacity.gov.ph/hotlines/",
+      "status": "readable",
+      "findings": "Add hospital alternatives under Emergency Hotlines (Rizal Memorial, Calamba Doctors, Calamba Medical Center, Pamana). Generic hospital contacts clearly labelled, never claimed as direct ambulance dispatch. Exclude police/BJMP/fire, POSO without medical role, and old seven-digit Metro Manila 5208851 pending current full number."
+    },
+    {
+      "url": "https://legazpi.gov.ph/wp-content/uploads/2023/09/CDRRMO-PAGE-189-224.pdf",
+      "status": "PDF visually inspected",
+      "findings": "Downloaded official 36-page PDF. Reviewed emergency-call and hospital-transfer tables (physical pages 21, 23 and text search). Confirms 911 for medical/rescue response. No new fully specified alternative found."
+    },
+    {
+      "url": "https://ligaocity.albay.gov.ph/contact-us-2/",
+      "status": "indexed official content; live 403",
+      "findings": "Official indexed contact page also lists Special Rescue Unit 09297759604 and 09356992804; both added. Fire-only, police and city-hall/fax excluded. Do not describe live link as repaired."
+    },
+    {
+      "url": "https://mandaluyong.gov.ph/government/",
+      "status": "readable",
+      "findings": "Retain rescue landline and add hospital 0285395500. Police, fire-only, COVID-specific and generic health-office contacts excluded."
+    },
+    {
+      "url": "https://muntinlupacity.gov.ph/iwasan-ang-heat-stroke/",
+      "status": "readable",
+      "findings": "137175, landline, Smart and Globe numbers already present with exact source labels. No missing emergency alternate found."
+    },
+    {
+      "url": "https://ncr.dilg.gov.ph/dilg-leads-nationwide-campaign-for-unified-911-emergency-hotline/",
+      "status": "readable",
+      "findings": "National unified 911 retained. No separately published medical alternative imported from unrelated campaign or admin contacts."
+    },
+    {
+      "url": "https://olongapocity.gov.ph/emergency-hotlines/",
+      "status": "readable",
+      "findings": "Add Disaster Management, named barangay rescue/fire-and-rescue/quick-response alternatives and Red Cross. Restore 047 regional dialing context for local landlines; no subscriber digits invented. City hall and fire-only SBMA excluded."
+    },
+    {
+      "url": "https://panabocity.gov.ph/panabo-city-police-station-hotline-numbers/",
+      "status": "readable; linked emergency page followed",
+      "findings": "Old police-only contacts removed from fall view. Followed /emergency-hotlines/ and read its published June 2026 image; add CDRRMO Response 09302385937. Police, utility, Coast Guard and mayor contacts excluded."
+    },
+    {
+      "url": "https://pasigcity.gov.ph/news-and-releases/pasig-city-incident-command-team-activation-august-29-2026-716",
+      "status": "old link unavailable; replacement read",
+      "findings": "Replace August 2026 path with readable/indexed official July 24 2024 emergency-contacts post. Add Children’s Hospital, General Hospital and Santolan ambulance/patient transport/rescue with barangay name preserved. Generic barangay hall/security and fire-only excluded. Temporary June 2025 outage mobile not treated as permanent."
+    },
+    {
+      "url": "https://pia.gov.ph/disaster-information-service/san-fernando-city-ramps-up-preparedness-as-typhoon-uwan-enters-par/",
+      "status": "readable",
+      "findings": "Retain San Fernando CDRRMO; add La Union PDRRMO with provincial area label. City hall extensions without emergency department role and police-only excluded."
+    },
+    {
+      "url": "https://pia.gov.ph/news/malabon-mayor-steps-up-flood-monitoring-response-as-habagat-brings-heavy-rains/",
+      "status": "readable",
+      "findings": "Add both fully specified command-center landlines alongside existing mobiles. TXTMJS contacts are text-only and excluded."
+    },
+    {
+      "url": "https://pia.gov.ph/news/typhoon-uwan-prompts-forced-evacuations-liquor-ban-in-dagupan-city/",
+      "status": "readable",
+      "findings": "Add CDRRMO landline, PARMC EOC mobile and CHO mobile explicitly offered for emergency assistance. CHO landline is also attributed to Panda Fire in same source, so withhold that ambiguous number pending correction. Label CHO as medical assistance after dispatch options. Police/fire/maritime/utilities/POSO excluded."
+    },
+    {
+      "url": "https://pia.gov.ph/regions/alaminos-city-activates-state-of-the-art-911-emergency-hotline/",
+      "status": "readable",
+      "findings": "Local 911 activation retained; no separate medical response alternate found in this article."
+    },
+    {
+      "url": "https://provinceofisabela.gov.ph/emergency-hotlines/",
+      "status": "readable",
+      "findings": "Read Rescue column for Ilagan, Cauayan and Santiago; add missing Ilagan/Cauayan and provincial DART 831. No source carrier labels in table. PNP/BFP-only and municipality-specific numbers not assigned to cities."
+    },
+    {
+      "url": "https://psa.gov.ph/classification/psgc/cities",
+      "status": "metadata only",
+      "findings": "PSA page is city identity/PSGC provenance, not a hotline source. This review does not re-certify city counts or telephone numbers from it."
+    },
+    {
+      "url": "https://quezon.gov.ph/quezon-province-emergency-hotlines/",
+      "status": "readable",
+      "findings": "Retain Lucena and Tayabas DRRMO and add both provincial PDRRMO emergency alternatives with provincial area. Exclude police/fire-only/admin. Municipal rows not misassigned to a city; malformed Mulanay number not repaired by guessing."
+    },
+    {
+      "url": "https://quezoncity.gov.ph/emergency-hotline-numbers/",
+      "status": "readable",
+      "findings": "All existing Smart/Globe EOC and EMS alternatives retained; add published trunk with EOC extension 7245. No automatic extension concatenation."
+    },
+    {
+      "url": "https://redcross.org.ph/contact-us/",
+      "status": "readable",
+      "findings": "143 emergency hotline retained. General trunk, blood-donation, training, media and staff extensions not presented as ambulance dispatch."
+    },
+    {
+      "url": "https://region3.bfp.gov.ph/contact-us/",
+      "status": "readable; excluded scope",
+      "findings": "Fire station directory alone does not establish each listed number’s medical/rescue role. Retain historical raw rows for audit; exclude from fall view unless a separate reviewed rescue source exists."
+    },
+    {
+      "url": "https://region5.bfp.gov.ph/wp-content/uploads/2025/01/6th-Edition-PBDs_DOG-FOOD-2025.pdf",
+      "status": "live 403; excluded scope",
+      "findings": "Dog-food procurement PDF is not suitable proof of urgent medical response. Naga fire-only row excluded; no additional emergency numbers claimed from unreadable PDF."
+    },
+    {
+      "url": "https://roxascity.gov.ph/public-advisory-low-pressure-area/",
+      "status": "text and image inspected",
+      "findings": "Downloaded original LPA_2.jpg. RCERT image adds landline 0365227878 and EOC 0365201086; mobile already present. Radio frequencies are not phone numbers. Image says cellphone, not a specific carrier."
+    },
+    {
+      "url": "https://sakata.malaybalaycity.gov.ph/contact-us/",
+      "status": "readable",
+      "findings": "Add CDRRMO 0888133611 alongside existing mobile. Other departments and admin numbers excluded."
+    },
+    {
+      "url": "https://sipalaycity.gov.ph/wp-content/uploads/2023/10/Citizens-Charter-2022.pdf",
+      "status": "live 403; incomplete",
+      "findings": "Direct PDF download returns 403, including ordinary public HTTPS request. Existing two rescue mobiles retain prior Oct 22 source review date. Could not establish completeness or additional carrier labels this pass. Do not claim all Sipalay contacts reverified."
+    },
+    {
+      "url": "https://tabukcity.gov.ph/contact-us/",
+      "status": "indexed official content; live 403",
+      "findings": "Official indexed contact page lists Red Cross, Kalinga Provincial Hospital ER, named hospitals/clinic and CHSO under emergency contacts; added. CHSO labelled medical assistance after dispatch options. Administrative extensions, PNP/BFP-only and utilities excluded. Carrier labels not asserted without source."
+    },
+    {
+      "url": "https://taguig.gov.ph/awards/",
+      "status": "readable",
+      "findings": "Add Command Center 0287893200 and Doctor-on-call 09190799112. Retain rescue mobile. Exclude roads-only REACT, police/fire-only, COVID and city-hall trunks."
+    },
+    {
+      "url": "https://valenzuela.gov.ph/bureau-of-fire-protection-bfp-valenzuela/",
+      "status": "readable; excluded scope",
+      "findings": "BFP-only page does not identify a medical/rescue dispatch contact. Remove fire-only entry from fall view; national numbers remain. Separate rescue contact still pending."
+    },
+    {
+      "url": "https://web.generaltrias.gov.ph/about/directory-of-offices",
+      "status": "readable",
+      "findings": "Add CDRRMO 0464097303; retain ambulance mobile and city rescue mobile 09190771760. Provincial source separately publishes 09170771760; preserve both source-specific alternatives rather than silently correcting one. Exclude fire-only, COVID and general health/admin."
+    },
+    {
+      "url": "https://www.batangascity.gov.ph/web/piocitizen-scharter/66-leipo",
+      "status": "readable",
+      "findings": "Add CDRRMO, Red Cross and all named hospital alternatives under Emergency Numbers, preserving hospital names. Existing 24/7 EBD health contact retained. Utilities, VAWC, police/fire-only and admin excluded."
+    },
+    {
+      "url": "https://www.cagayandeoro.gov.ph/index.php/news-and-article/item/2301-cdrrmd-gihangyo-ang-publiko-pagtawag-gilayon-sa-911-hotline-kung-adunay-emergency-cases.html",
+      "status": "readable",
+      "findings": "Oro Rescue 911 handles emergency incidents; retained national contact without duplicate local 911 or invented alternate."
+    },
+    {
+      "url": "https://www.cavitecity.gov.ph/index.php/about-lgu/directory/lgu-offices",
+      "status": "live unavailable; provincial replacement used",
+      "findings": "City directory live request timed out/failed TLS in earlier checks; no claim of repaired link. Cavite provincial readable directory independently supports rescue alternatives. Exclude fire-only row; prior rescue source date not advanced."
+    },
+    {
+      "url": "https://www.cdrrmo.baguio.gov.ph/contact-us",
+      "status": "readable",
+      "findings": "911 is explicitly for emergencies. 0746611455 and Globe/Smart mobiles explicitly for ADMIN/OPERATION concern, so excluded despite published networks."
+    },
+    {
+      "url": "https://www.cityofcauayan.gov.ph/contact",
+      "status": "readable",
+      "findings": "All three Rescue 922 mobiles retain exact Globe / TM, Smart and Sun labels. Pure PNP and fire-only excluded. Provincial Rescue column supplies another rescue mobile."
+    },
+    {
+      "url": "https://www.makati.gov.ph/city",
+      "status": "indexed official content; JS page partial",
+      "findings": "Official indexed /city page lists two missing Makati Rescue landlines 88998928 and 88962828; added with Metro Manila 02 dialing context. Direct page is JavaScript-only here. Administrative DRRMO/health/trunk and third-party 168 claims not imported."
+    },
+    {
+      "url": "https://www.mandauecity.gov.ph/emergency-hotlines",
+      "status": "readable",
+      "findings": "Add Command Center landline and second mobile, explicitly listed Emergency trunk, ERUF, Red Cross, emergency-directory hospitals, City Hospital ER extension1051. Generic hospital lines are labelled as hospitals; ER extension displayed separately. No guess about Command Center local1000 base; police/fire-only/utilities/admin excluded."
+    },
+    {
+      "url": "https://www.marikina.gov.ph/contact-us",
+      "status": "readable",
+      "findings": "All named Smart/Globe mobiles and fully specified rescue landlines already included. Ambiguous 8-161 notation not converted into guessed shortcode. General city-hall and unrelated departments excluded."
+    },
+    {
+      "url": "https://www.sanjuancity.gov.ph/Makabagong_SJ_Directory",
+      "status": "readable",
+      "findings": "CDRRMO 137135 requires department extension532; preserve it. Add CEDOC extension160 on the published city trunk. Exclude mayor-office Smart/Globe, police/fire-only, council and unrelated office extensions."
+    },
+    {
+      "url": "https://www.sanpablocity.gov.ph/services",
+      "status": "readable",
+      "findings": "Add CDRRMO 0498000405 alongside existing emergency mobile. Exclude information-office/admin contacts."
+    },
+    {
+      "url": "https://www2.naga.gov.ph/",
+      "status": "readable",
+      "findings": "Smart09085253000 and TNT09632209700 retained exactly. Add 0544723000. Bare 8712050 local3000 lacks explicit area code in that listing; hold rather than assume routing. Generic barangay/office links excluded."
+    },
+    {
+      "url": "https://cdrrmo.iloilocity.gov.ph/about-us/emergency-hotlines-directory/",
+      "status": "readable",
+      "findings": "Follow-up to source7; complete rescue, Red Cross and hospital alternatives, including explicitly printed ranges."
+    },
+    {
+      "url": "https://panabocity.gov.ph/emergency-hotlines/",
+      "status": "text and image inspected",
+      "findings": "Follow-up to source21; CDRRMO Response mobile independently agrees in HTML and poster."
+    },
+    {
+      "url": "https://servicesdirectory.bacolodcity.gov.ph/?page_id=204",
+      "status": "official indexed content",
+      "findings": "Documented emergency medical/rescue dispatch phones 09302434706,09369401591 and 0344323871–73 plus 24/7 operations center0344457826. Charter explicitly documents BFP participation in medical/rescue response; retain the city emergency poster’s BFP alternatives accordingly. Published response-time claims are not copied into app."
+    },
+    {
+      "url": "https://tourism.bacolodcity.gov.ph/contact.php",
+      "status": "official indexed content",
+      "findings": "Add Red Cross mobiles, One Hospital Command medical coordination, and all Amity/Chamber emergency alternatives; their response role is supported by the Annex E poster and city response documentation. Malformed information-desk emergency number, blood bank and financial-assistance/admin contacts excluded. No unsupported assertion that the currently published hospital-command line is COVID-only."
+    },
+    {
+      "url": "https://pasigcity.gov.ph/news-and-releases/emergency-contact-numbers-ng-lungsod-ng-pasig-393",
+      "status": "official indexed content",
+      "findings": "Replacement post supplies local hospital and Santolan medical/rescue contacts; barangay qualifier preserved."
+    },
+    {
+      "url": "https://batac.gov.ph/wp-content/uploads/2024/05/Emergency-Hotline-Numbers.jpg",
+      "status": "image inspected",
+      "findings": "Hospital mobile and landline; source publishes no named mobile carrier."
+    },
+    {
+      "url": "https://candoncity.gov.ph/page/18/",
+      "status": "readable",
+      "findings": "Working source content used for Candon emergency Smart/Globe alternatives; root redirect not relied upon."
+    },
+    {
+      "url": "https://olongapocity.gov.ph/government-directory/",
+      "status": "official indexed content",
+      "findings": "DRRMO entry pairs 0472327530 and 0476111911 with the already published rescue mobile09985937446. Include both department alternatives; the page independently confirms the 047 dialing context. Other government departments excluded."
+    }
+  ]
+}

@@ -1,0 +1,1263 @@
+{
+  "checkedAt": "2026-10-22T05:40:39.116Z",
+  "note": "HTTP accessibility and automated text checks only. Text matches are not verification of emergency purpose, currency, or working telephone lines. PDFs and image-only contacts require manual review.",
+  "sources": [
+    {
+      "name": "Agusan del Sur Provincial Government — Bayugan emergency hotlines",
+      "url": "https://agusandelsur.gov.ph/emergency-hotline/",
+      "contacts": [
+        {
+          "id": "local-1600301000-09317218885",
+          "number": "0931 721 8885",
+          "dialNumber": "09317218885"
+        },
+        {
+          "id": "local-1600301000-09985987308",
+          "number": "0998 598 7308",
+          "dialNumber": "09985987308"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://agusandelsur.gov.ph/emergency-hotline/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Emergency Hotline",
+      "textMatches": [
+        "0931 721 8885",
+        "0998 598 7308"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Bacolod City Government — DRRM Plan directory",
+      "url": "https://bacolodcity.gov.ph/wp-content/uploads/2024/04/E.-Bacolod-City-DRRM-Plan-2023-2025-Annexes-References.pdf",
+      "contacts": [
+        {
+          "id": "local-1830200000-09302434706",
+          "number": "0930 243 4706",
+          "dialNumber": "09302434706"
+        },
+        {
+          "id": "local-1830200000-09561976151",
+          "number": "0956 197 6151",
+          "dialNumber": "09561976151"
+        },
+        {
+          "id": "local-1830200000-09213417002",
+          "number": "0921 341 7002",
+          "dialNumber": "09213417002"
+        }
+      ],
+      "status": null,
+      "error": "UND_ERR_CONNECT_TIMEOUT"
+    },
+    {
+      "name": "Bacoor City Government — emergency hotlines",
+      "url": "https://bacoor.gov.ph/latest-news/in-case-of-emergency-please-contact-the-following-numbers/",
+      "contacts": [
+        {
+          "id": "local-0402103000-0464170727",
+          "number": "(046) 417 0727",
+          "dialNumber": "0464170727"
+        },
+        {
+          "id": "local-0402103000-0464176366",
+          "number": "(046) 417 6366",
+          "dialNumber": "0464176366"
+        },
+        {
+          "id": "local-0402103000-0464176060",
+          "number": "(046) 417 6060",
+          "dialNumber": "0464176060"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://bacoor.gov.ph/latest-news/in-case-of-emergency-please-contact-the-following-numbers/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "In Case of Emergency, please contact the following numbers | Bacoor Government Center",
+      "textMatches": [
+        "(046) 417 0727",
+        "(046) 417 6366",
+        "(046) 417 6060"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Batac City Government — emergency hotlines",
+      "url": "https://batac.gov.ph/?query-101-page=2",
+      "contacts": [
+        {
+          "id": "local-0102805000-09228927971",
+          "number": "0922 892 7971",
+          "dialNumber": "09228927971"
+        },
+        {
+          "id": "local-0102805000-09065836071",
+          "number": "0906 583 6071",
+          "dialNumber": "09065836071"
+        }
+      ],
+      "status": null,
+      "error": "UND_ERR_CONNECT_TIMEOUT"
+    },
+    {
+      "name": "Caloocan City Government — emergency advisory",
+      "url": "https://caloocancity.gov.ph/15732-2/",
+      "contacts": [
+        {
+          "id": "local-1380100000-0288825664",
+          "number": "(02) 8882 5664",
+          "dialNumber": "0288825664"
+        },
+        {
+          "id": "local-1380100000-09088125664",
+          "number": "0908 812 5664",
+          "dialNumber": "09088125664"
+        },
+        {
+          "id": "local-1380100000-09985125664",
+          "number": "0998 512 5664",
+          "dialNumber": "09985125664"
+        }
+      ],
+      "status": 403,
+      "finalUrl": "https://caloocancity.gov.ph/15732-2/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Attention Required! | Cloudflare",
+      "textMatches": [],
+      "needsContentReview": [
+        "(02) 8882 5664",
+        "0908 812 5664",
+        "0998 512 5664"
+      ]
+    },
+    {
+      "name": "Candon City Government — emergency hotline",
+      "url": "https://candoncity.gov.ph/",
+      "contacts": [
+        {
+          "id": "local-0102906000-09178683742",
+          "number": "0917 868 3742",
+          "dialNumber": "09178683742"
+        },
+        {
+          "id": "local-0102906000-09688623742",
+          "number": "0968 862 3742",
+          "dialNumber": "09688623742"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://candoncity.gov.ph/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Home - Candon City Official Website",
+      "textMatches": [
+        "0917 868 3742",
+        "0968 862 3742"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Provincial Government of Cavite — city hotline directory",
+      "url": "https://cavite.gov.ph/directory/",
+      "contacts": [
+        {
+          "id": "local-0402104000-09171120291",
+          "number": "0917 112 0291",
+          "dialNumber": "09171120291"
+        },
+        {
+          "id": "local-0402119000-09560034681",
+          "number": "0956 003 4681",
+          "dialNumber": "09560034681"
+        },
+        {
+          "id": "local-0402122000-09496298026",
+          "number": "0949 629 8026",
+          "dialNumber": "09496298026"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://cavite.gov.ph/directory/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Directory - Provincial Government of Cavite",
+      "textMatches": [
+        "0917 112 0291",
+        "0956 003 4681",
+        "0949 629 8026"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Iloilo City CDRRMO — emergency hotlines",
+      "url": "https://cdrrmo.iloilocity.gov.ph/",
+      "contacts": [
+        {
+          "id": "local-0631000000-09190662333",
+          "number": "0919 066 2333",
+          "dialNumber": "09190662333"
+        },
+        {
+          "id": "local-0631000000-09190661554",
+          "number": "0919 066 1554",
+          "dialNumber": "09190661554"
+        },
+        {
+          "id": "local-0631000000-0333373011",
+          "number": "(033) 337 3011",
+          "dialNumber": "0333373011"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://cdrrmo.iloilocity.gov.ph/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Office of the Iloilo City Disaster Risk Reduction and Management Officer",
+      "textMatches": [
+        "0919 066 2333",
+        "0919 066 1554",
+        "(033) 337 3011"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Dasmariñas City Government — emergency assistance",
+      "url": "https://cityofdasmarinas.gov.ph/cdrrmo-emergency-assistance-services/",
+      "contacts": [
+        {
+          "id": "local-0402106000-09177218825",
+          "number": "0917 721 8825",
+          "dialNumber": "09177218825"
+        },
+        {
+          "id": "local-0402106000-09988435477",
+          "number": "0998 843 5477",
+          "dialNumber": "09988435477"
+        }
+      ],
+      "status": 403,
+      "finalUrl": "https://cityofdasmarinas.gov.ph/cdrrmo-emergency-assistance-services/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Attention Required! | Cloudflare",
+      "textMatches": [],
+      "needsContentReview": [
+        "0917 721 8825",
+        "0998 843 5477"
+      ]
+    },
+    {
+      "name": "City of Ilagan — CDRRMO / Rescue 1124",
+      "url": "https://cityofilagan.gov.ph/index.php/city-drrm/",
+      "contacts": [
+        {
+          "id": "local-0203114000-09152341124",
+          "number": "0915 234 1124",
+          "dialNumber": "09152341124"
+        }
+      ],
+      "status": null,
+      "error": "UND_ERR_CONNECT_TIMEOUT"
+    },
+    {
+      "name": "Imus City Government — emergency hotlines",
+      "url": "https://cityofimus.gov.ph/",
+      "contacts": [
+        {
+          "id": "local-0402109000-0468889911",
+          "number": "(046) 888 9911",
+          "dialNumber": "0468889911"
+        },
+        {
+          "id": "local-0402109000-09190691703",
+          "number": "0919 069 1703",
+          "dialNumber": "09190691703"
+        },
+        {
+          "id": "local-0402109000-09155283256",
+          "number": "0915 528 3256",
+          "dialNumber": "09155283256"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://cityofimus.gov.ph/",
+      "contentType": "text/html",
+      "title": "City of Imus",
+      "textMatches": [
+        "(046) 888 9911",
+        "0919 069 1703",
+        "0915 528 3256"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "City of Naga, Cebu — CDRRMO ambulance services",
+      "url": "https://cityofnagacebu.gov.ph/office-of-the-city-disaster-risk-reduction-management/",
+      "contacts": [
+        {
+          "id": "local-0702234000-09163614638",
+          "number": "0916 361 4638",
+          "dialNumber": "09163614638"
+        },
+        {
+          "id": "local-0702234000-09084137220",
+          "number": "0908 413 7220",
+          "dialNumber": "09084137220"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://cityofnagacebu.gov.ph/office-of-the-city-disaster-risk-reduction-management/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "OFFICE OF THE CITY DISASTER RISK REDUCTION &amp; MANAGEMENT &#8211; City of Naga Official Website",
+      "textMatches": [
+        "0916 361 4638",
+        "0908 413 7220"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Davao City Government",
+      "url": "https://davaocity.gov.ph/departments/social-services/central-911/",
+      "contacts": [],
+      "status": null,
+      "error": "UND_ERR_CONNECT_TIMEOUT"
+    },
+    {
+      "name": "Digos City Government — CDRRMO emergency hotlines",
+      "url": "https://digoscity.gov.ph/?page_id=1634",
+      "contacts": [
+        {
+          "id": "local-1102403000-09466957777",
+          "number": "0946 695 7777",
+          "dialNumber": "09466957777"
+        },
+        {
+          "id": "local-1102403000-09198588656",
+          "number": "0919 858 8656",
+          "dialNumber": "09198588656"
+        },
+        {
+          "id": "local-1102403000-09399240779",
+          "number": "0939 924 0779",
+          "dialNumber": "09399240779"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://digoscity.gov.ph/?page_id=1634",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "CDRRMO Digos City - Emergency Hotlines",
+      "textMatches": [
+        "0946 695 7777",
+        "0919 858 8656",
+        "0939 924 0779"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Calamba City Government — emergency hotlines",
+      "url": "https://gad.calambacity.gov.ph/hotlines/",
+      "contacts": [
+        {
+          "id": "local-0403405000-0495451694",
+          "number": "(049) 545 1694",
+          "dialNumber": "0495451694"
+        }
+      ],
+      "status": null,
+      "error": "UND_ERR_CONNECT_TIMEOUT"
+    },
+    {
+      "name": "Legazpi City Government — 911 Emergency Action Center",
+      "url": "https://legazpi.gov.ph/wp-content/uploads/2023/09/CDRRMO-PAGE-189-224.pdf",
+      "contacts": [],
+      "status": 200,
+      "finalUrl": "https://legazpi.gov.ph/wp-content/uploads/2023/09/CDRRMO-PAGE-189-224.pdf",
+      "contentType": "application/pdf",
+      "title": "",
+      "textMatches": [],
+      "needsContentReview": []
+    },
+    {
+      "name": "Ligao City Government — emergency hotlines",
+      "url": "https://ligaocity.albay.gov.ph/contact-us-2/",
+      "contacts": [
+        {
+          "id": "local-0500508000-09190780730",
+          "number": "0919 078 0730",
+          "dialNumber": "09190780730"
+        },
+        {
+          "id": "local-0500508000-09954004711",
+          "number": "0995 400 4711",
+          "dialNumber": "09954004711"
+        },
+        {
+          "id": "local-0500508000-09365474962",
+          "number": "0936 547 4962",
+          "dialNumber": "09365474962"
+        }
+      ],
+      "status": 403,
+      "finalUrl": "https://ligaocity.albay.gov.ph/contact-us-2/",
+      "contentType": "text/html",
+      "title": "Azure WAF",
+      "textMatches": [],
+      "needsContentReview": [
+        "0919 078 0730",
+        "0995 400 4711",
+        "0936 547 4962"
+      ]
+    },
+    {
+      "name": "Mandaluyong City Government",
+      "url": "https://mandaluyong.gov.ph/government/",
+      "contacts": [
+        {
+          "id": "local-1380500000-0285332225",
+          "number": "(02) 8533 2225",
+          "dialNumber": "0285332225"
+        },
+        {
+          "id": "local-1380500000-0285322145",
+          "number": "(02) 8532 2145",
+          "dialNumber": "0285322145"
+        },
+        {
+          "id": "local-1380500000-0285322189",
+          "number": "(02) 8532 2189",
+          "dialNumber": "0285322189"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://mandaluyong.gov.ph/government/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Government - City of Mandaluyong",
+      "textMatches": [],
+      "needsContentReview": [
+        "(02) 8533 2225",
+        "(02) 8532 2145",
+        "(02) 8532 2189"
+      ]
+    },
+    {
+      "name": "Muntinlupa City Government — emergency hotline advisory",
+      "url": "https://muntinlupacity.gov.ph/iwasan-ang-heat-stroke/",
+      "contacts": [
+        {
+          "id": "local-1380800000-137175",
+          "number": "137-175",
+          "dialNumber": "137175"
+        },
+        {
+          "id": "local-1380800000-09215427123",
+          "number": "0921 542 7123",
+          "dialNumber": "09215427123"
+        },
+        {
+          "id": "local-1380800000-09272579322",
+          "number": "0927 257 9322",
+          "dialNumber": "09272579322"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://muntinlupacity.gov.ph/iwasan-ang-heat-stroke/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "IWASAN ANG HEAT STROKE &#8211; City Government of Muntinlupa",
+      "textMatches": [
+        "0921 542 7123",
+        "0927 257 9322"
+      ],
+      "needsContentReview": [
+        "137-175"
+      ]
+    },
+    {
+      "name": "Department of the Interior and Local Government",
+      "url": "https://ncr.dilg.gov.ph/dilg-leads-nationwide-campaign-for-unified-911-emergency-hotline/",
+      "contacts": [
+        {
+          "id": "ph-911",
+          "number": "911",
+          "dialNumber": "911"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://ncr.dilg.gov.ph/dilg-leads-nationwide-campaign-for-unified-911-emergency-hotline/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "DILG Leads Nationwide Campaign for Unified 911 Emergency Hotline - DILG-NCR",
+      "textMatches": [],
+      "needsContentReview": [
+        "911"
+      ]
+    },
+    {
+      "name": "Olongapo City Government — emergency hotlines",
+      "url": "https://olongapocity.gov.ph/emergency-hotlines/",
+      "contacts": [
+        {
+          "id": "local-0331400000-09985937446",
+          "number": "0998 593 7446",
+          "dialNumber": "09985937446"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://olongapocity.gov.ph/emergency-hotlines/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Emergency Hotlines - Olongapo City Official Website",
+      "textMatches": [
+        "0998 593 7446"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Panabo City Government — police station hotlines",
+      "url": "https://panabocity.gov.ph/panabo-city-police-station-hotline-numbers/",
+      "contacts": [
+        {
+          "id": "local-1102315000-09073122991",
+          "number": "0907 312 2991",
+          "dialNumber": "09073122991"
+        },
+        {
+          "id": "local-1102315000-09985987104",
+          "number": "0998 598 7104",
+          "dialNumber": "09985987104"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://panabocity.gov.ph/panabo-city-police-station-hotline-numbers/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "PANABO CITY POLICE STATION HOTLINE NUMBERS | City Government of Panabo",
+      "textMatches": [
+        "0907 312 2991",
+        "0998 598 7104"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Pasig City Government",
+      "url": "https://pasigcity.gov.ph/news-and-releases/pasig-city-incident-command-team-activation-august-29-2026-716",
+      "contacts": [
+        {
+          "id": "pasig-emergency",
+          "number": "(02) 8643 0000",
+          "dialNumber": "0286430000"
+        }
+      ],
+      "status": null,
+      "error": "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+    },
+    {
+      "name": "Philippine Information Agency — San Fernando city emergency advisory",
+      "url": "https://pia.gov.ph/disaster-information-service/san-fernando-city-ramps-up-preparedness-as-typhoon-uwan-enters-par/",
+      "contacts": [
+        {
+          "id": "local-0103314000-09285220622",
+          "number": "0928 522 0622",
+          "dialNumber": "09285220622"
+        }
+      ],
+      "status": 403,
+      "finalUrl": "https://pia.gov.ph/disaster-information-service/san-fernando-city-ramps-up-preparedness-as-typhoon-uwan-enters-par/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Just a moment...",
+      "textMatches": [],
+      "needsContentReview": [
+        "0928 522 0622"
+      ]
+    },
+    {
+      "name": "Philippine Information Agency — Malabon emergency advisory",
+      "url": "https://pia.gov.ph/news/malabon-mayor-steps-up-flood-monitoring-response-as-habagat-brings-heavy-rains/",
+      "contacts": [
+        {
+          "id": "local-1380400000-09423729891",
+          "number": "0942 372 9891",
+          "dialNumber": "09423729891"
+        },
+        {
+          "id": "local-1380400000-09190625588",
+          "number": "0919 062 5588",
+          "dialNumber": "09190625588"
+        }
+      ],
+      "status": 403,
+      "finalUrl": "https://pia.gov.ph/news/malabon-mayor-steps-up-flood-monitoring-response-as-habagat-brings-heavy-rains/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Just a moment...",
+      "textMatches": [],
+      "needsContentReview": [
+        "0942 372 9891",
+        "0919 062 5588"
+      ]
+    },
+    {
+      "name": "Philippine Information Agency — Dagupan emergency advisory",
+      "url": "https://pia.gov.ph/news/typhoon-uwan-prompts-forced-evacuations-liquor-ban-in-dagupan-city/",
+      "contacts": [
+        {
+          "id": "local-0105518000-09684449598",
+          "number": "0968 444 9598",
+          "dialNumber": "09684449598"
+        },
+        {
+          "id": "local-0105518000-09171842611",
+          "number": "0917 184 2611",
+          "dialNumber": "09171842611"
+        },
+        {
+          "id": "local-0105518000-09985985121",
+          "number": "0998 598 5121",
+          "dialNumber": "09985985121"
+        }
+      ],
+      "status": 403,
+      "finalUrl": "https://pia.gov.ph/news/typhoon-uwan-prompts-forced-evacuations-liquor-ban-in-dagupan-city/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Just a moment...",
+      "textMatches": [],
+      "needsContentReview": [
+        "0968 444 9598",
+        "0917 184 2611",
+        "0998 598 5121"
+      ]
+    },
+    {
+      "name": "Philippine Information Agency — Alaminos local 911 activation",
+      "url": "https://pia.gov.ph/regions/alaminos-city-activates-state-of-the-art-911-emergency-hotline/",
+      "contacts": [],
+      "status": 403,
+      "finalUrl": "https://pia.gov.ph/regions/alaminos-city-activates-state-of-the-art-911-emergency-hotline/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Just a moment...",
+      "textMatches": [],
+      "needsContentReview": []
+    },
+    {
+      "name": "Isabela Provincial Government — emergency directory (July 2026)",
+      "url": "https://provinceofisabela.gov.ph/emergency-hotlines/",
+      "contacts": [
+        {
+          "id": "local-0203135000-09055586669",
+          "number": "0905 558 6669",
+          "dialNumber": "09055586669"
+        },
+        {
+          "id": "local-0203135000-09175008535",
+          "number": "0917 500 8535",
+          "dialNumber": "09175008535"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://provinceofisabela.gov.ph/emergency-hotlines/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Emergency Hotlines - Official Website of the Province of Isabela",
+      "textMatches": [
+        "0905 558 6669",
+        "0917 500 8535"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Philippine Statistics Authority (PSGC)",
+      "url": "https://psa.gov.ph/classification/psgc/cities",
+      "contacts": [],
+      "status": 403,
+      "finalUrl": "https://psa.gov.ph/classification/psgc/cities",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Just a moment...",
+      "textMatches": [],
+      "needsContentReview": []
+    },
+    {
+      "name": "Quezon Provincial Government — city DRRMO hotlines",
+      "url": "https://quezon.gov.ph/quezon-province-emergency-hotlines/",
+      "contacts": [
+        {
+          "id": "local-0431200000-09701285078",
+          "number": "0970 128 5078",
+          "dialNumber": "09701285078"
+        },
+        {
+          "id": "local-0405647000-09178398434",
+          "number": "0917 839 8434",
+          "dialNumber": "09178398434"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://quezon.gov.ph/quezon-province-emergency-hotlines/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Official Website of the Provincial Government of Quezon",
+      "textMatches": [
+        "0970 128 5078",
+        "0917 839 8434"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Quezon City Government",
+      "url": "https://quezoncity.gov.ph/emergency-hotline-numbers/",
+      "contacts": [
+        {
+          "id": "qc-122",
+          "number": "122",
+          "dialNumber": "122"
+        },
+        {
+          "id": "qc-eoc",
+          "number": "0947 885 9929",
+          "dialNumber": "09478859929"
+        }
+      ],
+      "status": 502,
+      "finalUrl": "https://quezoncity.gov.ph/emergency-hotline-numbers/",
+      "contentType": "text/html",
+      "title": "502 Bad Gateway",
+      "textMatches": [],
+      "needsContentReview": [
+        "122",
+        "0947 885 9929"
+      ]
+    },
+    {
+      "name": "Philippine Red Cross",
+      "url": "https://redcross.org.ph/contact-us/",
+      "contacts": [
+        {
+          "id": "ph-red-cross",
+          "number": "143",
+          "dialNumber": "143"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://redcross.org.ph/contact-us/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Philippine Red Cross | Humanitarian Organization in the Philippines",
+      "textMatches": [],
+      "needsContentReview": [
+        "143"
+      ]
+    },
+    {
+      "name": "Bureau of Fire Protection — Central Luzon",
+      "url": "https://region3.bfp.gov.ph/contact-us/",
+      "contacts": [
+        {
+          "id": "local-0330100000-0453222333",
+          "number": "(045) 322 2333",
+          "dialNumber": "0453222333"
+        },
+        {
+          "id": "local-0300803000-09616945781",
+          "number": "0961 694 5781",
+          "dialNumber": "09616945781"
+        },
+        {
+          "id": "local-0301403000-09423527440",
+          "number": "0942 352 7440",
+          "dialNumber": "09423527440"
+        },
+        {
+          "id": "local-0304903000-09433034279",
+          "number": "0943 303 4279",
+          "dialNumber": "09433034279"
+        },
+        {
+          "id": "local-0304908000-09331113640",
+          "number": "0933 111 3640",
+          "dialNumber": "09331113640"
+        },
+        {
+          "id": "local-0305409000-09339909960",
+          "number": "0933 990 9960",
+          "dialNumber": "09339909960"
+        },
+        {
+          "id": "local-0301410000-09951860370",
+          "number": "0995 186 0370",
+          "dialNumber": "09951860370"
+        },
+        {
+          "id": "local-0301412000-09431347740",
+          "number": "0943 134 7740",
+          "dialNumber": "09431347740"
+        },
+        {
+          "id": "local-0331400000-09512779025",
+          "number": "0951 277 9025",
+          "dialNumber": "09512779025"
+        },
+        {
+          "id": "local-0304919000-09430669962",
+          "number": "0943 066 9962",
+          "dialNumber": "09430669962"
+        },
+        {
+          "id": "local-0305416000-0459612331",
+          "number": "(045) 961 2331",
+          "dialNumber": "0459612331"
+        },
+        {
+          "id": "local-0304926000-0449405258",
+          "number": "(044) 940 5258",
+          "dialNumber": "0449405258"
+        },
+        {
+          "id": "local-0301420000-09323732444",
+          "number": "0932 373 2444",
+          "dialNumber": "09323732444"
+        },
+        {
+          "id": "local-0304917000-0444565893",
+          "number": "(044) 456 5893",
+          "dialNumber": "0444565893"
+        },
+        {
+          "id": "local-0306916000-09682149184",
+          "number": "0968 214 9184",
+          "dialNumber": "09682149184"
+        }
+      ],
+      "status": 403,
+      "finalUrl": "https://region3.bfp.gov.ph/contact-us/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Attention Required! | Cloudflare",
+      "textMatches": [],
+      "needsContentReview": [
+        "(045) 322 2333",
+        "0961 694 5781",
+        "0942 352 7440",
+        "0943 303 4279",
+        "0933 111 3640",
+        "0933 990 9960",
+        "0995 186 0370",
+        "0943 134 7740",
+        "0951 277 9025",
+        "0943 066 9962",
+        "(045) 961 2331",
+        "(044) 940 5258",
+        "0932 373 2444",
+        "(044) 456 5893",
+        "0968 214 9184"
+      ]
+    },
+    {
+      "name": "Bureau of Fire Protection — Naga City Central Fire Station",
+      "url": "https://region5.bfp.gov.ph/wp-content/uploads/2025/01/6th-Edition-PBDs_DOG-FOOD-2025.pdf",
+      "contacts": [
+        {
+          "id": "local-0501724000-09230839429",
+          "number": "0923 083 9429",
+          "dialNumber": "09230839429"
+        }
+      ],
+      "status": 403,
+      "finalUrl": "https://region5.bfp.gov.ph/wp-content/uploads/2025/01/6th-Edition-PBDs_DOG-FOOD-2025.pdf",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Just a moment...",
+      "textMatches": [],
+      "needsContentReview": [
+        "0923 083 9429"
+      ]
+    },
+    {
+      "name": "Roxas City Government — emergency advisory",
+      "url": "https://roxascity.gov.ph/public-advisory-low-pressure-area/",
+      "contacts": [
+        {
+          "id": "local-0601914000-09124722669",
+          "number": "0912 472 2669",
+          "dialNumber": "09124722669"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://roxascity.gov.ph/public-advisory-low-pressure-area/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "PUBLIC ADVISORY: Low Pressure Area - Bigger, Brighter, Better Roxas City",
+      "textMatches": [
+        "0912 472 2669"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Malaybalay City Government — CDRRMO contact directory",
+      "url": "https://sakata.malaybalaycity.gov.ph/contact-us/",
+      "contacts": [
+        {
+          "id": "local-1001312000-09178276117",
+          "number": "0917 827 6117",
+          "dialNumber": "09178276117"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://sakata.malaybalaycity.gov.ph/contact-us/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "CONTACT US &#8211; The Official Website of the City Government of Malaybalay",
+      "textMatches": [
+        "0917 827 6117"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Sipalay City Government — disaster and emergency response",
+      "url": "https://sipalaycity.gov.ph/wp-content/uploads/2023/10/Citizens-Charter-2022.pdf",
+      "contacts": [
+        {
+          "id": "local-1804527000-09496877325",
+          "number": "0949 687 7325",
+          "dialNumber": "09496877325"
+        },
+        {
+          "id": "local-1804527000-09175043266",
+          "number": "0917 504 3266",
+          "dialNumber": "09175043266"
+        }
+      ],
+      "status": 403,
+      "finalUrl": "https://sipalaycity.gov.ph/wp-content/uploads/2023/10/Citizens-Charter-2022.pdf",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Attention Required! | Cloudflare",
+      "textMatches": [],
+      "needsContentReview": [
+        "0949 687 7325",
+        "0917 504 3266"
+      ]
+    },
+    {
+      "name": "Tabuk City Government — emergency hotlines",
+      "url": "https://tabukcity.gov.ph/contact-us/",
+      "contacts": [
+        {
+          "id": "local-1403213000-09171643658",
+          "number": "0917 164 3658",
+          "dialNumber": "09171643658"
+        },
+        {
+          "id": "local-1403213000-09773607633",
+          "number": "0977 360 7633",
+          "dialNumber": "09773607633"
+        },
+        {
+          "id": "local-1403213000-09985987824",
+          "number": "0998 598 7824",
+          "dialNumber": "09985987824"
+        }
+      ],
+      "status": 403,
+      "finalUrl": "https://tabukcity.gov.ph/contact-us/",
+      "contentType": "text/html",
+      "title": "Azure WAF",
+      "textMatches": [],
+      "needsContentReview": [
+        "0917 164 3658",
+        "0977 360 7633",
+        "0998 598 7824"
+      ]
+    },
+    {
+      "name": "Taguig City Government",
+      "url": "https://taguig.gov.ph/awards/",
+      "contacts": [
+        {
+          "id": "local-1381500000-09190703112",
+          "number": "0919 070 3112",
+          "dialNumber": "09190703112"
+        },
+        {
+          "id": "local-1381500000-0288370740",
+          "number": "(02) 8837 0740",
+          "dialNumber": "0288370740"
+        },
+        {
+          "id": "local-1381500000-09985987932",
+          "number": "0998 598 7932",
+          "dialNumber": "09985987932"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://www.taguig.gov.ph/",
+      "contentType": "text/html",
+      "title": "City of Taguig Website",
+      "textMatches": [
+        "0919 070 3112",
+        "(02) 8837 0740",
+        "0998 598 7932"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Valenzuela City Government — Bureau of Fire Protection",
+      "url": "https://valenzuela.gov.ph/bureau-of-fire-protection-bfp-valenzuela/",
+      "contacts": [
+        {
+          "id": "local-1381600000-0282923519",
+          "number": "(02) 8292 3519",
+          "dialNumber": "0282923519"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://valenzuela.gov.ph/bureau-of-fire-protection-bfp-valenzuela/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Bureau of Fire Protection (BFP) - Valenzuela - Valenzuela City Website",
+      "textMatches": [
+        "(02) 8292 3519"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "General Trias City Government",
+      "url": "https://web.generaltrias.gov.ph/about/directory-of-offices",
+      "contacts": [
+        {
+          "id": "gentri-rescue",
+          "number": "0919 077 1760",
+          "dialNumber": "09190771760"
+        },
+        {
+          "id": "local-0402108000-09625385617",
+          "number": "0962 538 5617",
+          "dialNumber": "09625385617"
+        },
+        {
+          "id": "local-0402108000-09674290363",
+          "number": "0967 429 0363",
+          "dialNumber": "09674290363"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://web.generaltrias.gov.ph/about/directory-of-offices",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Official Website of General Trias :: Province of Cavite",
+      "textMatches": [
+        "0919 077 1760",
+        "0962 538 5617",
+        "0967 429 0363"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Batangas City Government — emergency numbers",
+      "url": "https://www.batangascity.gov.ph/web/piocitizen-scharter/66-leipo",
+      "contacts": [
+        {
+          "id": "local-0401005000-09992226626",
+          "number": "0999 222 6626",
+          "dialNumber": "09992226626"
+        },
+        {
+          "id": "local-0401005000-0434257163",
+          "number": "(043) 425 7163",
+          "dialNumber": "0434257163"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://www.batangascity.gov.ph/web/piocitizen-scharter/66-leipo",
+      "contentType": "text/html",
+      "title": "Batangas City Official Website - Emergency Numbers",
+      "textMatches": [
+        "0999 222 6626",
+        "(043) 425 7163"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Cagayan de Oro City Government — Oro Rescue 911 advisory",
+      "url": "https://www.cagayandeoro.gov.ph/index.php/news-and-article/item/2301-cdrrmd-gihangyo-ang-publiko-pagtawag-gilayon-sa-911-hotline-kung-adunay-emergency-cases.html",
+      "contacts": [],
+      "status": 200,
+      "finalUrl": "https://www.cagayandeoro.gov.ph/index.php/news-and-article/item/2301-cdrrmd-gihangyo-ang-publiko-pagtawag-gilayon-sa-911-hotline-kung-adunay-emergency-cases.html",
+      "contentType": "text/html; charset=utf-8",
+      "title": "City Government of Cagayan de Oro",
+      "textMatches": [],
+      "needsContentReview": []
+    },
+    {
+      "name": "Cavite City Government — CDRRMO hotlines",
+      "url": "https://www.cavitecity.gov.ph/index.php/about-lgu/directory/lgu-offices",
+      "contacts": [
+        {
+          "id": "local-0402105000-09485150632",
+          "number": "0948 515 0632",
+          "dialNumber": "09485150632"
+        },
+        {
+          "id": "local-0402105000-09089508557",
+          "number": "0908 950 8557",
+          "dialNumber": "09089508557"
+        }
+      ],
+      "status": null,
+      "error": "CERT_HAS_EXPIRED"
+    },
+    {
+      "name": "Baguio CDRRMO",
+      "url": "https://www.cdrrmo.baguio.gov.ph/contact-us",
+      "contacts": [],
+      "status": 200,
+      "finalUrl": "https://www.cdrrmo.baguio.gov.ph/contact-us",
+      "contentType": "text/html; charset=utf-8",
+      "title": "CDRRMO-BAGUIO - CONTACT US",
+      "textMatches": [],
+      "needsContentReview": []
+    },
+    {
+      "name": "Cauayan City Government — Rescue 922",
+      "url": "https://www.cityofcauayan.gov.ph/contact",
+      "contacts": [
+        {
+          "id": "local-0203108000-09171278785",
+          "number": "0917 127 8785",
+          "dialNumber": "09171278785"
+        },
+        {
+          "id": "local-0203108000-09997275090",
+          "number": "0999 727 5090",
+          "dialNumber": "09997275090"
+        },
+        {
+          "id": "local-0203108000-09264905075",
+          "number": "0926 490 5075",
+          "dialNumber": "09264905075"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://www.cityofcauayan.gov.ph/contact",
+      "contentType": "text/html; charset=utf-8",
+      "title": "City Government of Cauayan, Isabela | Official Portal",
+      "textMatches": [
+        "0917 127 8785",
+        "0999 727 5090",
+        "0926 490 5075"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Makati City Government",
+      "url": "https://www.makati.gov.ph/city",
+      "contacts": [
+        {
+          "id": "makati-rescue",
+          "number": "(02) 8895 8243",
+          "dialNumber": "0288958243"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://www.makati.gov.ph/city",
+      "contentType": "text/html; charset=utf-8",
+      "title": "Makati Web Portal",
+      "textMatches": [],
+      "needsContentReview": [
+        "(02) 8895 8243"
+      ]
+    },
+    {
+      "name": "Mandaue City Government — emergency hotlines",
+      "url": "https://www.mandauecity.gov.ph/emergency-hotlines",
+      "contacts": [
+        {
+          "id": "local-0731300000-09171116633",
+          "number": "0917 111 6633",
+          "dialNumber": "09171116633"
+        },
+        {
+          "id": "local-0731300000-09288907047",
+          "number": "0928 890 7047",
+          "dialNumber": "09288907047"
+        },
+        {
+          "id": "local-0731300000-0323444747",
+          "number": "(032) 344 4747",
+          "dialNumber": "0323444747"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://www.mandauecity.gov.ph/emergency-hotlines",
+      "contentType": "text/html; charset=utf-8",
+      "title": "Mandaue City Web Portal - Emergency Hotlines",
+      "textMatches": [
+        "0917 111 6633",
+        "0928 890 7047",
+        "(032) 344 4747"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Marikina City Government",
+      "url": "https://www.marikina.gov.ph/contact-us",
+      "contacts": [
+        {
+          "id": "marikina-rescue",
+          "number": "0917 584 2168",
+          "dialNumber": "09175842168"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://www.marikina.gov.ph/contact-us",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "Contact Us",
+      "textMatches": [
+        "0917 584 2168"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "San Juan City Government — CDRRMO directory",
+      "url": "https://www.sanjuancity.gov.ph/Makabagong_SJ_Directory",
+      "contacts": [
+        {
+          "id": "local-1381400000-137135",
+          "number": "137-135",
+          "dialNumber": "137135"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://www.sanjuancity.gov.ph/Makabagong_SJ_Directory",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "San Juan City Government",
+      "textMatches": [],
+      "needsContentReview": [
+        "137-135"
+      ]
+    },
+    {
+      "name": "San Pablo City Government — emergency hotlines",
+      "url": "https://www.sanpablocity.gov.ph/services",
+      "contacts": [
+        {
+          "id": "local-0403424000-09985407171",
+          "number": "0998 540 7171",
+          "dialNumber": "09985407171"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://www.sanpablocity.gov.ph/services",
+      "contentType": "text/html; charset=utf-8",
+      "title": "City of San Pablo",
+      "textMatches": [
+        "0998 540 7171"
+      ],
+      "needsContentReview": []
+    },
+    {
+      "name": "Naga City Government — COMCEN emergency numbers",
+      "url": "https://www2.naga.gov.ph/",
+      "contacts": [
+        {
+          "id": "local-0501724000-09085253000",
+          "number": "0908 525 3000",
+          "dialNumber": "09085253000"
+        },
+        {
+          "id": "local-0501724000-09632209700",
+          "number": "0963 220 9700",
+          "dialNumber": "09632209700"
+        }
+      ],
+      "status": 200,
+      "finalUrl": "https://www2.naga.gov.ph/",
+      "contentType": "text/html; charset=UTF-8",
+      "title": "CITY OF NAGA &#8211; DAGOS PO KAMO SA MAOGMANG LUGAR",
+      "textMatches": [
+        "0908 525 3000",
+        "0963 220 9700"
+      ],
+      "needsContentReview": []
+    }
+  ]
+}

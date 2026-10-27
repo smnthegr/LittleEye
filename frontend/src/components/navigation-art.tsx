@@ -1,9 +1,10 @@
 import { memo, useId, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Svg, { Circle, ClipPath, Defs, FeDropShadow, Filter, G, LinearGradient, Mask, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, Ellipse, FeDropShadow, Filter, G, LinearGradient, Mask, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import Animated, { interpolate, useAnimatedProps, type SharedValue } from 'react-native-reanimated';
 
 import { NAVIGATION_CONTOUR_PATH, NAVIGATION_SHAPE_PATH } from '@/utils/navigation-contour';
+import { HomeNavigationSurface } from '@/components/home-ambient-background';
 
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 const AnimatedGroup = Animated.createAnimatedComponent(G);
@@ -85,6 +86,7 @@ type NavigationBackdropProps = {
   width: number;
   height: number;
   children?: ReactNode;
+  homeAmbient?: boolean;
 };
 
 /** The exact navbar silhouette casts this shadow; its parent pulses opacity. */
@@ -104,12 +106,13 @@ export const NavigationBackdropShadow = memo(function NavigationBackdropShadow({
 });
 
 /** The bar and its animation share this exact curve; no image assets are used. */
-export function NavigationBackdrop({ width, height, children }: NavigationBackdropProps) {
+export function NavigationBackdrop({ width, height, children, homeAmbient = false }: NavigationBackdropProps) {
   const shapeId = `navigation-shape-${useId().replace(/:/g, '')}`;
 
   return (
     <View pointerEvents="none" style={{ width, height }}>
-      <NavigationBackdropSurface width={width} height={height} />
+      {homeAmbient ? <HomeNavigationSurface width={width} height={height} />
+        : <NavigationBackdropSurface width={width} height={height} />}
       <Svg style={styles.layer} width={width} height={height} viewBox="0 0 390 120" preserveAspectRatio="none">
         <Defs>
           <ClipPath id={shapeId}>
@@ -169,26 +172,31 @@ const NavigationBackdropSurface = memo(function NavigationBackdropSurface({ widt
     <Svg style={styles.layer} width={width} height={height * 136 / 120} viewBox="0 0 390 136" preserveAspectRatio="none">
       <Defs>
         <LinearGradient id={fillId} x1="0" y1="0" x2="0" y2="120" gradientUnits="userSpaceOnUse">
-          <Stop offset="0" stopColor="#3B5D88" />
-          <Stop offset="1" stopColor="#32507B" />
+          <Stop offset="0" stopColor="#639BD2" />
+          <Stop offset="0.5" stopColor="#376FA9" />
+          <Stop offset="1" stopColor="#295D94" />
         </LinearGradient>
         <Filter id={shadowId} x="-15%" y="-35%" width="130%" height="170%">
           <FeDropShadow dx={0} dy={-3} stdDeviation={4} floodColor="#102C4C" floodOpacity={0.18} />
         </Filter>
       </Defs>
       <Path d={NAVIGATION_SHAPE_PATH} fill={`url(#${fillId})`} filter={`url(#${shadowId})`} />
-      <Path d={NAVIGATION_CONTOUR_PATH} fill="none" stroke="#F1F8FF" strokeOpacity={0.12} strokeWidth={0.75} />
     </Svg>
   );
 });
 
-/** A diffuse pool of light behind the menu, without a visible ring or edge. */
+/** Translucent blue petals and droplets surrounding the center menu control. */
 export function NavigationMenuGlow({ width, height }: { width: number; height: number }) {
   const glowId = `navigation-menu-glow-${useId().replace(/:/g, '')}`;
 
   return (
     <Svg width={width} height={height} viewBox="0 0 160 128" preserveAspectRatio="none">
       <Defs>
+        <LinearGradient id={`${glowId}-petal`} x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor="#E5F3FF" stopOpacity={0.85} />
+          <Stop offset="0.5" stopColor="#83BCFF" stopOpacity={0.65} />
+          <Stop offset="1" stopColor="#4696EF" stopOpacity={0.4} />
+        </LinearGradient>
         <RadialGradient id={glowId} cx="80" cy="64" rx="78" ry="62" gradientUnits="userSpaceOnUse">
           <Stop offset="0" stopColor="#75CFFF" stopOpacity={0.48} />
           <Stop offset="0.35" stopColor="#75CFFF" stopOpacity={0.4} />
@@ -198,8 +206,32 @@ export function NavigationMenuGlow({ width, height }: { width: number; height: n
         </RadialGradient>
       </Defs>
       <Rect width={160} height={128} fill={`url(#${glowId})`} />
+      <Circle cx={80} cy={64} r={51} stroke="#FFFFFF" strokeOpacity={0.75} strokeWidth={4} />
+      {[0, 60, 120].map(angle => <Ellipse key={angle} cx={80} cy={64} rx={31} ry={58}
+        transform={`rotate(${angle} 80 64)`} fill={`url(#${glowId}-petal)`}
+        stroke="#B9DBFF" strokeOpacity={0.6} strokeWidth={0.8} />)}
+      <G fill="#8BC6FF" opacity={0.85}>
+        <Path d="M 19 40 C 4 36 7 23 14 27 C 19 29 20 36 19 40 Z" />
+        <Path d="M 12 57 C -1 61 1 48 7 51 Z" />
+        <Path d="M 140 30 C 140 13 155 15 151 23 C 149 27 144 29 140 30 Z" />
+        <Path d="M 145 48 C 158 34 165 49 155 50 Z" />
+        <Circle cx={27} cy={15} r={2.4} opacity={0.45} />
+        <Circle cx={131} cy={12} r={2.4} opacity={0.45} />
+      </G>
     </Svg>
   );
+}
+
+/** A few airy accents outside the menu's circular touch target. */
+export function NavigationMenuAccents({ size }: { size: number }) {
+  return <Svg width={size * 1.6} height={size * 1.4} viewBox="0 0 160 140" fill="none">
+    <Path d="M 22 31 Q 22 37 28 37 Q 22 37 22 43 Q 22 37 16 37 Q 22 37 22 31 Z"
+      fill="#B8DEFF" opacity={0.8} />
+    <Path d="M 139 60 Q 139 64 143 64 Q 139 64 139 68 Q 139 64 135 64 Q 139 64 139 60 Z"
+      fill="#C7E7FF" opacity={0.65} />
+    <Circle cx={126} cy={28} r={2.2} fill="#8BC6FF" opacity={0.65} />
+    <Circle cx={19} cy={81} r={1.7} fill="#B8DEFF" opacity={0.5} />
+  </Svg>;
 }
 
 type NavigationIconProps = {
@@ -230,42 +262,48 @@ export function NavigationIcon({ name, size, color = '#FFFFFF' }: NavigationIcon
 }
 
 /** The fixed center control is drawn with gradients rather than a glass PNG. */
-export function NavigationMenuArtwork({ size, tapProgress }: { size: number; tapProgress?: SharedValue<number> }) {
+export function NavigationMenuArtwork({ size, glossOpacity }: { size: number; glossOpacity?: SharedValue<number> }) {
   const id = useId().replace(/:/g, '');
   const depthId = `navigation-menu-depth-${id}`;
   const lightId = `navigation-menu-light-${id}`;
+  const glossId = `navigation-menu-gloss-${id}`;
+  const glossProps = useAnimatedProps(() => ({
+    opacity: glossOpacity?.get() ?? 0,
+  }));
 
   return (
     <Svg width={size} height={size} viewBox="0 0 92 92" fill="none">
       <Defs>
         <LinearGradient id={depthId} x1="20" y1="2" x2="67" y2="90" gradientUnits="userSpaceOnUse">
-          <Stop offset="0" stopColor="#496F9B" />
-          <Stop offset="0.5" stopColor="#315780" />
-          <Stop offset="1" stopColor="#234367" />
+          <Stop offset="0" stopColor="#639BD2" />
+          <Stop offset="0.5" stopColor="#376FA9" />
+          <Stop offset="1" stopColor="#295D94" />
         </LinearGradient>
         <RadialGradient id={lightId} cx="26" cy="16" rx="60" ry="65" gradientUnits="userSpaceOnUse">
           <Stop offset="0" stopColor="#C8E9FF" stopOpacity={0.2} />
           <Stop offset="0.58" stopColor="#C8E9FF" stopOpacity={0.04} />
           <Stop offset="1" stopColor="#C8E9FF" stopOpacity={0} />
         </RadialGradient>
-        <ClipPath id={`menu-water-${id}`}>
+        <LinearGradient id={glossId} x1={46} y1={0} x2={46} y2={92} gradientUnits="userSpaceOnUse">
+          <Stop offset="0" stopColor="#E6F6FF" stopOpacity={0.7} />
+          <Stop offset="0.4" stopColor="#E6F6FF" stopOpacity={0.45} />
+          <Stop offset="1" stopColor="#E6F6FF" stopOpacity={0.25} />
+        </LinearGradient>
+        <ClipPath id={`menu-surface-${id}`}>
           <Circle cx={46} cy={46} r={44.8} />
         </ClipPath>
       </Defs>
       <Circle cx={46} cy={46} r={44.8} fill={`url(#${depthId})`} />
       <Circle cx={46} cy={46} r={44.8} fill={`url(#${lightId})`} />
-      <Circle cx={46} cy={46} r={44.8} stroke="#D7EDFF" strokeOpacity={0.3} strokeWidth={0.8} />
-      <Path d="M 57 6.5 A 41 41 0 0 1 75 17.5" stroke="#F4FAFF" strokeOpacity={0.33} strokeWidth={2.8} strokeLinecap="round" />
+      {glossOpacity && <AnimatedGroup animatedProps={glossProps} clipPath={`url(#menu-surface-${id})`}>
+        <Rect width={92} height={92} fill={`url(#${glossId})`} />
+      </AnimatedGroup>}
       <G fill="#FFFFFF">
-        <Rect x={31} y={31} width={12} height={12} rx={2.5} />
-        <Rect x={49} y={31} width={12} height={12} rx={2.5} />
-        <Rect x={31} y={49} width={12} height={12} rx={2.5} />
-        <Rect x={49} y={49} width={12} height={12} rx={2.5} />
+        <Rect x={33} y={27} width={26} height={4.5} rx={2.25} />
+        <Rect x={33} y={35.5} width={26} height={4.5} rx={2.25} />
+        <Rect x={33} y={44} width={26} height={4.5} rx={2.25} />
       </G>
-      {tapProgress && <G clipPath={`url(#menu-water-${id})`}>
-        {[0, 1].map(index => <WaterRing key={index} progress={tapProgress}
-          index={index} x={46} y={46} radius={58} />)}
-      </G>}
+      <SvgText x={46} y={69} textAnchor="middle" fill="#FFFFFF" fontSize={12} fontWeight="600" letterSpacing={1.4}>MENU</SvgText>
     </Svg>
   );
 }

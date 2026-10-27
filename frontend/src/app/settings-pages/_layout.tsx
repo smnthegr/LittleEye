@@ -4,5 +4,5 @@ import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 export default function SettingsLayout() {
   const reducedMotion = useReducedMotion();
-  return <Stack screenOptions={{ headerShown: false, animation: reducedMotion ? 'none' : 'fade', animationDuration: NAVIGATION_TRANSITION_MS }} />;
+  return <Stack screenOptions={{ headerShown: false, gestureEnabled: false, fullScreenGestureEnabled: false, animation: reducedMotion ? 'none' : 'fade', animationDuration: NAVIGATION_TRANSITION_MS }} />;
 }

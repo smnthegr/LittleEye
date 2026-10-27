@@ -1,7 +1,7 @@
 import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
@@ -14,7 +14,7 @@ export function PolicyReader({ onRead }: { onRead?: () => void }) {
   function checkFits() {
     if (size.current.viewport > 0 && size.current.content > 0 && size.current.content <= size.current.viewport + 2) onRead?.();
   }
-  return <EdgeScrollView style={s.reader} contentContainerStyle={s.readerContent}
+  return <EdgeScrollView nestedScrollEnabled style={s.reader} contentContainerStyle={s.readerContent}
     onLayout={(e) => { size.current.viewport = e.nativeEvent.layout.height; checkFits(); }}
     onContentSizeChange={(_, height) => { size.current.content = height; checkFits(); }}
     scrollEventThrottle={16} onScroll={(e) => {
@@ -38,13 +38,26 @@ export function ConsentGate({ onAccept, onDecline }: { onAccept: () => void; onD
   const insets = useSafeAreaInsets();
   const [ready, setReady] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [footerHeight, setFooterHeight] = useState(0);
+  // Keep the existing reader size when possible, without sacrificing its viewport
+  // when text or a short landscape window needs the surrounding page to scroll.
+  const surroundingHeight = headerHeight + footerHeight;
+  const paperHeight = Math.max(scaleSize(160), Math.min(
+    availableHeight - scaleSize(374),
+    availableHeight - scaleSize(28) - surroundingHeight,
+  ));
   return <View style={[s.screen, { paddingTop: insets.top + scaleSize(20), paddingBottom: insets.bottom + scaleSize(8) }]}>
     <StatusBar style="dark" />
-    <View style={s.page}>
+    <ScrollView style={s.scroll} contentContainerStyle={s.page} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never">
+      <View style={s.content}>
+      <View onLayout={event => setHeaderHeight(event.nativeEvent.layout.height)}>
       <Text style={s.logo}>Little<Text style={{ color: C.lightBlue }}>Eye</Text></Text>
       <Text accessibilityRole="header" style={s.title}>A little care, first.</Text>
       <Text style={s.intro}>Before we begin, review our Terms and Privacy Policy.</Text>
-        <View style={[s.paper, { height: Math.max(scaleSize(160), availableHeight - scaleSize(374)) }]}><PolicyReader onRead={() => setReady(true)} /></View>
+      </View>
+        <View style={[s.paper, { height: paperHeight }]}><PolicyReader onRead={() => setReady(true)} /></View>
+      <View onLayout={event => setFooterHeight(event.nativeEvent.layout.height)}>
         <Text accessibilityLiveRegion="polite" style={s.hint}>{ready ? 'Terms and Privacy reviewed. You can now agree.' : 'Scroll to the end to review the Terms and Privacy Policy.'}</Text>
         <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agreed, disabled: !ready }} disabled={!ready}
           onPress={() => setAgreed((value) => !value)} style={({ pressed }) => [s.agreement, !ready && s.disabled, pressed && s.pressed]}>
@@ -56,18 +69,23 @@ export function ConsentGate({ onAccept, onDecline }: { onAccept: () => void; onD
           <Text style={s.acceptText}>Agree & continue</Text>
         </GlowButton>
         <Pressable accessibilityRole="button" onPress={onDecline} style={({ pressed }) => [s.decline, pressed && s.pressed]}><Text style={s.declineText}>Decline & exit</Text></Pressable>
-    </View>
+      </View>
+      </View>
+    </ScrollView>
   </View>;
 }
 
 const baseStyles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: C.white, paddingHorizontal: 24 },
-  page: { flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center' },
+  screen: { flex: 1, backgroundColor: C.white },
+  scroll: { flex: 1 },
+  // Keep the viewport full width so button shadows can fade into the page gutters.
+  page: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 16 },
+  content: { width: '100%', maxWidth: 440, alignSelf: 'center' },
   logo: { fontFamily: F.extraBold, color: C.blue, fontSize: 27, marginTop: 6, marginBottom: 12 },
   title: { fontFamily: F.bold, color: C.blue, fontSize: T.title, lineHeight: 32 },
   intro: { fontFamily: F.regular, color: C.blue, fontSize: T.body, lineHeight: 22, marginTop: 8, marginBottom: 18 },
   documentHeading: { fontFamily: F.bold, color: C.blue, fontSize: T.section - 2, lineHeight: 24, marginBottom: 20 },
-  paper: { flexShrink: 1, minHeight: 0, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(148,176,213,.45)', overflow: 'hidden', backgroundColor: C.white },
+  paper: { flexShrink: 0, minHeight: 0, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(148,176,213,.45)', overflow: 'hidden', backgroundColor: C.white },
   reader: { flex: 1 }, readerContent: { padding: 20 }, kicker: { fontFamily: F.semiBold, color: C.blue, opacity: .6, fontSize: T.caption - 2, marginBottom: 22 },
   paragraph: { marginBottom: 22 }, section: { fontFamily: F.bold, color: C.blue, fontSize: T.label - 2, lineHeight: 19, marginBottom: 8 },
   body: { fontFamily: F.regular, color: C.blue, fontSize: T.body - 2, lineHeight: 20 }, end: { fontFamily: F.semiBold, color: C.blue, fontSize: T.caption - 2, marginBottom: 12 },

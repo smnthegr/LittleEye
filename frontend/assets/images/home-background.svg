@@ -1,4 +1,10 @@
 <svg width="390" height="500" viewBox="0 0 390 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="waveDepth" x="-20%" y="-100%" width="140%" height="300%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+  <path d="M0 350C29 383 73 413 126 428C179 443 234 426 282 389C318 361 353 344 390 335" transform="translate(0 5)" stroke="#355F91" stroke-opacity=".2" stroke-width="12" filter="url(#waveDepth)"/>
   <path d="M0 0H390V335C353 344 318 361 282 389C234 426 179 443 126 428C73 413 29 383 0 350V0Z" fill="#32507B"/>
   <path d="M0 83C32 77 49 80 78 99C111 121 140 131 175 119C208 107 222 93 253 98C294 104 312 139 345 150C362 156 377 158 390 158V258L0 228V83Z" fill="#94B0D5" fill-opacity="0.27"/>
 </svg>

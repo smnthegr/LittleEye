@@ -3,7 +3,13 @@ import { FixedPageHeader } from '@/components/fixed-page-header';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { AuthBottomWave } from '@/components/auth-bottom-wave';
 import { GlowButton } from '@/components/glow-button';
-import { useAppSession } from '@/components/app-session';
+import { FormError } from '@/components/form-error';
+import { useAppSession, type Contact } from '@/components/app-session';
+import { PhilippineAddressField } from '@/components/philippine-address-field';
+import { formatPhilippineAddress, getPhilippineAddressError } from '@/utils/philippine-address';
+import { EmergencyAreaCard } from '@/components/emergency-area-card';
+import type { EmergencyAreaChoice } from '@/utils/emergency-directory';
+import { getChildAge, isValidBirthdate, isValidChildHeight, isValidEmail, isValidOptionalEmail, isValidPhoneNumber, normalizePhoneNumber, PHONE_NUMBER_HINT } from '@/utils/contact-validation';
 import { useMascotImages } from '@/components/mascot-images';
 import { BrandColors, BrandFonts, PageTypography } from '@/constants/brand';
 import { getPageHeaderLayout } from '@/utils/responsive';
@@ -13,46 +19,22 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform,
-  Pressable, type ScrollView, StyleSheet, Text, TextInput, View,
+  Pressable, ScrollView, StyleSheet, Text, TextInput, View,
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type Contact = { fullName: string; phone: string; email: string; address: string };
 const emptyContact = (): Contact => ({ fullName: '', phone: '', email: '', address: '' });
 const MAX_CONTACTS = 3;
 const sections = ['Guardian’s Information', 'Child’s Information', 'Emergency Contact'];
-const validEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-const validPhone = (value: string) => /^\+?\d{10,15}$/.test(value.replace(/[\s()-]/g, ''));
 
 function contactError(contact: Contact, emailOptional = false) {
   if (!contact.fullName.trim()) return 'Enter a full name.';
-  if (!validPhone(contact.phone)) return 'Enter a valid contact number.';
-  if ((!emailOptional || contact.email.trim()) && !validEmail(contact.email)) return 'Enter a valid email address.';
-  if (!contact.address.trim()) return 'Enter an address.';
+  if (!isValidPhoneNumber(contact.phone)) return PHONE_NUMBER_HINT;
+  if (!(emailOptional ? isValidOptionalEmail(contact.email) : isValidEmail(contact.email))) return 'Enter a valid email address.';
+  const addressError = getPhilippineAddressError(contact.addressDetails);
+  if (addressError) return addressError;
   return '';
-}
-
-function validBirthdate(value: string) {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
-  if (!match) return false;
-  const [, month, day, year] = match.map(Number);
-  const date = new Date(year, month - 1, day);
-  return year >= 1900 && date.getFullYear() === year && date.getMonth() === month - 1
-    && date.getDate() === day && date.getTime() <= Date.now();
-}
-
-function childAge(value: string, today = new Date()) {
-  if (!validBirthdate(value)) return -1;
-  const [month, day, year] = value.split('/').map(Number);
-  let age = today.getFullYear() - year;
-  if (today.getMonth() + 1 < month || (today.getMonth() + 1 === month && today.getDate() < day)) age--;
-  return age;
-}
-
-function validChildHeight(value: string) {
-  // Broad input sanity limits, not a clinical growth assessment.
-  return /^\d{2,3}(\.\d{1,2})?$/.test(value.trim()) && Number(value) >= 40 && Number(value) <= 140;
 }
 
 function Field({ placeholder, value, style, ...props }: TextInputProps) {
@@ -73,18 +55,34 @@ export default function SetUpScreen() {
   const initialIdentifier = typeof identifier === 'string' ? identifier : '';
   const [step, setStep] = useState(0);
   const [guardian, setGuardian] = useState<Contact>(() => ({ ...emptyContact(),
-    email: validEmail(initialIdentifier) ? initialIdentifier : '',
-    phone: validPhone(initialIdentifier) ? initialIdentifier : '',
+    email: isValidEmail(initialIdentifier) ? initialIdentifier : '',
+    phone: isValidPhoneNumber(initialIdentifier) ? initialIdentifier : '',
   }));
   const [child, setChild] = useState({ fullName: '', birthdate: '', height: '', sex: '' });
   const [contacts, setContacts] = useState<Contact[]>([emptyContact()]);
+  const [emergencyArea, setEmergencyArea] = useState<EmergencyAreaChoice>();
   const [sexOpen, setSexOpen] = useState(false);
+  const [sexTriggerHeight, setSexTriggerHeight] = useState(0);
+  const [sexMenuHeight, setSexMenuHeight] = useState(0);
+  const sexAnchorY = useRef(0);
+  const scrollOffset = useRef(0);
   const [error, setError] = useState('');
   const [fade] = useState(() => new Animated.Value(1));
   const scroll = useRef<ScrollView>(null);
   const pendingContactScroll = useRef<number | null>(null);
   const mascotScale = (pageWidth * 0.82) / 533;
   useEffect(() => () => fade.stopAnimation(), [fade]);
+  useEffect(() => {
+    if (!sexOpen || !sexMenuHeight || !sexTriggerHeight) return;
+    const menuBottom = sexAnchorY.current + sexTriggerHeight + scaleSize(8) + sexMenuHeight;
+    const visibleBottom = height - insets.bottom - scaleSize(16);
+    if (menuBottom - scrollOffset.current <= visibleBottom) return;
+    // Keep the overlay reachable on short screens without reserving layout space.
+    const frame = requestAnimationFrame(() => scroll.current?.scrollTo({
+      y: Math.max(0, menuBottom - visibleBottom), animated: true,
+    }));
+    return () => cancelAnimationFrame(frame);
+  }, [height, insets.bottom, scaleSize, sexMenuHeight, sexOpen, sexTriggerHeight]);
 
   const changeStep = useCallback((value: number) => {
     Keyboard.dismiss();
@@ -112,38 +110,41 @@ export default function SetUpScreen() {
     if (step === 0) message = contactError(guardian);
     if (step === 1) {
       if (!child.fullName.trim()) message = 'Enter your child’s full name.';
-      else if (!validBirthdate(child.birthdate)) message = 'Enter a valid birthdate in MM/DD/YYYY format.';
-      else if (childAge(child.birthdate) < 1 || childAge(child.birthdate) > 4) message = 'Profile setup is for children ages 1–4.';
-      else if (!validChildHeight(child.height)) message = 'Please double-check your child’s height.';
+      else if (!isValidBirthdate(child.birthdate)) message = 'Enter a valid birthdate (MM/DD/YYYY).';
+      else if (getChildAge(child.birthdate) < 1 || getChildAge(child.birthdate) > 4) message = 'Profile setup is for children ages 1–4.';
+      else if (!isValidChildHeight(child.height)) message = 'Please check your child’s height.';
       else if (!child.sex) message = 'Select your child’s sex.';
     }
     if (step === 2) {
+      const phoneNumbers = new Set<string>();
       for (let index = 0; index < contacts.length; index++) {
         const problem = contactError(contacts[index], true);
         if (problem) { message = `Contact ${index + 1}: ${problem}`; break; }
+        const phone = normalizePhoneNumber(contacts[index].phone)!;
+        if (phoneNumbers.has(phone)) { message = `Contact ${index + 1}: This phone number is already added.`; break; }
+        phoneNumbers.add(phone);
       }
     }
     if (message) { setError(message); return; }
     if (step < 2) changeStep(step + 1);
-    else { Keyboard.dismiss(); enterPreview({ guardian, child, contacts }); }
+    else { Keyboard.dismiss(); enterPreview({ guardian, child, contacts, emergencyArea }); }
   }
 
-  function updateContact(index: number, key: keyof Contact, value: string) {
-    setContacts((current) => current.map((contact, item) => item === index ? { ...contact, [key]: value } : contact));
+  function updateContact(index: number, changes: Partial<Contact>) {
+    setContacts((current) => current.map((contact, item) => item === index ? { ...contact, ...changes } : contact));
     setError('');
   }
 
-  function contactFields(contact: Contact, update: (key: keyof Contact, value: string) => void, emailOptional = false) {
+  function contactFields(contact: Contact, update: (changes: Partial<Contact>) => void, emailOptional = false) {
     return <>
       <Field placeholder="Full Name" value={contact.fullName} autoCapitalize="words"
-        autoComplete="name" onChangeText={(value) => update('fullName', value)} />
+        autoComplete="name" onChangeText={(value) => update({ fullName: value })} />
       <Field placeholder="Contact Number" value={contact.phone} keyboardType="phone-pad"
-        autoComplete="tel" onChangeText={(value) => update('phone', value)} />
+        autoComplete="tel" onChangeText={(value) => update({ phone: value })} />
       <Field placeholder={emailOptional ? 'Email (optional)' : 'Email'} value={contact.email} keyboardType="email-address"
         autoCapitalize="none" autoCorrect={false} autoComplete="email"
-        onChangeText={(value) => update('email', value)} />
-      <Field placeholder="Address" value={contact.address} autoCapitalize="words"
-        autoComplete="street-address" onChangeText={(value) => update('address', value)} />
+        onChangeText={(value) => update({ email: value })} />
+      <PhilippineAddressField light allowCurrentLocation={!emailOptional} value={contact.addressDetails} onChange={addressDetails => update({ addressDetails, address: formatPhilippineAddress(addressDetails) })} />
     </>;
   }
 
@@ -151,6 +152,7 @@ export default function SetUpScreen() {
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="light" />
       <EdgeScrollView topColor={BrandColors.blue} bottomColor={BrandColors.white} ref={scroll} keyboardShouldPersistTaps="handled"
+        onScroll={event => { scrollOffset.current = event.nativeEvent.contentOffset.y; }} scrollEventThrottle={16}
         contentInsetAdjustmentBehavior="never"
         contentContainerStyle={[styles.page, { minHeight: height, paddingBottom: insets.bottom + scaleSize(40) }]}>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -163,12 +165,12 @@ export default function SetUpScreen() {
           {sexOpen && <Pressable accessibilityRole="button" accessibilityLabel="Close sex menu"
             onPress={() => setSexOpen(false)} style={styles.menuDismiss} />}
           <Text accessibilityRole="header" style={styles.heading}>Set Up</Text>
-          <Text style={styles.subtitle}>your profile with <Text style={styles.brand}>LittleEye</Text></Text>
           <View style={styles.section}><Text style={styles.sectionText}>{sections[step]}</Text></View>
+          <View style={styles.formSurface}>
           <Text style={styles.progress}>Step {step + 1} of 3</Text>
-          {step === 0 && contactFields(guardian, (key, value) => {
-            setGuardian((current) => ({ ...current, [key]: value })); setError('');
-          })}
+          {step === 0 && <>{contactFields(guardian, changes => {
+            setGuardian((current) => ({ ...current, ...changes })); setError('');
+          })}{!!guardian.address.trim() && <EmergencyAreaCard compact address={guardian.address} localityCode={guardian.addressDetails?.localityCode} choice={emergencyArea} onChange={setEmergencyArea} />}</>}
           {step === 1 && <>
             <Field placeholder="Full Name" value={child.fullName} autoCapitalize="words"
               onChangeText={(value) => { setChild((current) => ({ ...current, fullName: value })); setError(''); }} />
@@ -181,15 +183,20 @@ export default function SetUpScreen() {
               }} />
             <Field placeholder="Height (cm)" value={child.height} keyboardType="decimal-pad"
               onChangeText={(value) => { setChild((current) => ({ ...current, height: value })); setError(''); }} />
-            <View style={[styles.selectAnchor, sexOpen && styles.selectAbove]}>
+            <View onLayout={event => { sexAnchorY.current = event.nativeEvent.layout.y; }}
+              style={[styles.selectAnchor, sexOpen && styles.selectAbove]}>
             <Pressable accessibilityRole="button" accessibilityLabel="Select sex" accessibilityState={{ expanded: sexOpen }}
+              onLayout={event => setSexTriggerHeight(event.nativeEvent.layout.height)}
               onPress={() => { Keyboard.dismiss(); setSexOpen(!sexOpen); }}
               style={({ pressed }) => [styles.input, styles.select, sexOpen && styles.selectOpen, pressed && styles.textPressed]}>
               <Text style={[styles.inputText, !!child.sex && styles.filledInput]}>{child.sex || 'Sex'}</Text>
               <View style={[styles.chevron, sexOpen && styles.chevronOpen]} />
             </Pressable>
-            {sexOpen && <View style={styles.options}>
-              <Text style={styles.menuLabel}>SELECT SEX</Text>
+            {sexOpen && <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled"
+              onLayout={event => setSexMenuHeight(event.nativeEvent.layout.height)}
+              style={[styles.options, { top: sexTriggerHeight + scaleSize(8),
+                maxHeight: Math.max(44, height - header.contentTop - insets.bottom - sexTriggerHeight - scaleSize(32)) }]}
+              contentContainerStyle={styles.optionsContent}>
               {['Female', 'Male'].map((sex) => (
               <GlowButton key={sex} accessibilityRole="radio" accessibilityState={{ checked: child.sex === sex }}
                 onPress={() => { setChild((current) => ({ ...current, sex })); setSexOpen(false); setError(''); }}
@@ -199,12 +206,12 @@ export default function SetUpScreen() {
                   {child.sex === sex && <View style={styles.check} />}
                 </View>
               </GlowButton>
-            ))}</View>}
+            ))}</ScrollView>}
             </View>
           </>}
           {step === 2 && <>
-            <Text style={styles.contactHint}>The first contact is your primary emergency contact. You can add up to three contacts.</Text>
-            {contacts.map((contact, index) => <View key={index}
+            <Text style={styles.contactHint}>Up to 3 contacts.</Text>
+            {contacts.map((contact, index) => <View key={index} style={index > 0 && styles.followingContact}
               onLayout={(event) => {
                 if (pendingContactScroll.current !== index) return;
                 pendingContactScroll.current = null;
@@ -223,7 +230,7 @@ export default function SetUpScreen() {
                   <Text style={styles.removeText}>Remove</Text>
                 </Pressable>}
               </View>
-              {contactFields(contact, (key, value) => updateContact(index, key, value), true)}
+              {contactFields(contact, changes => updateContact(index, changes), true)}
             </View>)}
             {contacts.length < MAX_CONTACTS ? <Pressable accessibilityRole="button" onPress={() => {
               Keyboard.dismiss();
@@ -238,10 +245,11 @@ export default function SetUpScreen() {
               <Text style={styles.addText}>Add Contact</Text>
             </Pressable> : <Text style={styles.limitNote}>3 of 3 contacts added</Text>}
           </>}
-          {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
+          <FormError>{error}</FormError>
           <GlowButton accessibilityRole="button" hitSlop={6} onPress={next} style={[styles.next, step === 2 && styles.finish]}>
             <Text style={[styles.nextText, step === 2 && styles.finishText]}>{step === 2 ? 'Connect a Camera' : 'Next'}</Text>
           </GlowButton>
+          </View>
         </Animated.View>
       </EdgeScrollView>
       <FixedPageHeader onBack={() => step === 0 ? router.back() : changeStep(step - 1)} profile={false} />
@@ -254,13 +262,12 @@ const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: BrandColors.blue },
   page: { width: '100%', maxWidth: 480, alignSelf: 'center', backgroundColor: BrandColors.blue, overflow: 'hidden' },
   form: { width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 24 },
-  heading: { fontFamily: BrandFonts.extraBold, fontSize: PageTypography.title, lineHeight: 32, color: BrandColors.white, textAlign: 'center' },
-  subtitle: { fontFamily: BrandFonts.regular, fontSize: PageTypography.body, lineHeight: 22, color: BrandColors.white, textAlign: 'center', marginTop: 8, marginBottom: 24 },
-  brand: { fontFamily: BrandFonts.bold, color: BrandColors.lightBlue },
+  formSurface: { marginTop: 16 },
+  heading: { fontFamily: BrandFonts.extraBold, fontSize: PageTypography.title, lineHeight: 32, color: BrandColors.white, textAlign: 'center', marginBottom: 20 },
   section: { borderRadius: 24, backgroundColor: BrandColors.white, alignSelf: 'center', paddingHorizontal: 18, paddingVertical: 12, boxShadow: '0 6px 16px rgba(50,80,123,0.2)' },
   sectionText: { fontFamily: BrandFonts.extraBold, fontSize: PageTypography.label, color: BrandColors.blue, textAlign: 'center' },
-  progress: { fontFamily: BrandFonts.regular, fontSize: PageTypography.caption, color: BrandColors.white, textAlign: 'center', marginTop: 10, marginBottom: 20 },
-  input: { minHeight: 56, borderRadius: 30, borderWidth: 1.5, borderColor: 'rgba(148,176,213,0.8)', backgroundColor: 'rgba(148,176,213,0.4)', paddingHorizontal: 22, paddingVertical: 14, color: BrandColors.white, fontFamily: BrandFonts.regular, fontSize: 14, marginBottom: 16 },
+  progress: { fontFamily: BrandFonts.regular, fontSize: PageTypography.caption, color: BrandColors.white, textAlign: 'center', alignSelf: 'center', marginTop: 10, marginBottom: 20 },
+  input: { minHeight: 56, borderRadius: 30, borderWidth: 1.5, borderColor: 'rgba(148,176,213,0.8)', backgroundColor: 'rgba(42,81,127,0.86)', paddingHorizontal: 22, paddingVertical: 14, color: BrandColors.white, fontFamily: BrandFonts.regular, fontSize: 14, marginBottom: 16 },
   inputText: { fontFamily: BrandFonts.regular, fontSize: 14, color: BrandColors.white },
   menuDismiss: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: 10 },
   selectAnchor: { position: 'relative', marginBottom: 16 },
@@ -269,8 +276,8 @@ const baseStyles = StyleSheet.create({
   selectOpen: { borderColor: BrandColors.white },
   chevron: { width: 8, height: 8, borderRightWidth: 1.5, borderBottomWidth: 1.5, borderColor: BrandColors.white, transform: [{ rotate: '45deg' }] },
   chevronOpen: { transform: [{ rotate: '225deg' }] },
-  options: { position: 'absolute', top: 64, left: 0, right: 0, zIndex: 40, borderRadius: 20, backgroundColor: BrandColors.white, padding: 8, borderColor: 'rgba(148,176,213,0.35)', borderWidth: 1, boxShadow: '0 10px 28px rgba(50,80,123,0.3)' },
-  menuLabel: { fontFamily: BrandFonts.semiBold, fontSize: PageTypography.caption, letterSpacing: 1.2, color: BrandColors.blue, opacity: 0.65, marginHorizontal: 12, marginTop: 6, marginBottom: 8 },
+  options: { position: 'absolute', left: 0, right: 0, zIndex: 40, borderRadius: 20, backgroundColor: BrandColors.white, borderColor: 'rgba(148,176,213,0.35)', borderWidth: 1, boxShadow: '0 10px 28px rgba(50,80,123,0.3)' },
+  optionsContent: { padding: 8 },
   option: { minHeight: 46, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, borderRadius: 12, marginBottom: 2 },
   optionText: { fontFamily: BrandFonts.semiBold, fontSize: 14, color: BrandColors.blue },
   optionSelected: { backgroundColor: 'rgba(148,176,213,0.2)' },
@@ -279,13 +286,13 @@ const baseStyles = StyleSheet.create({
   selectionActive: { backgroundColor: BrandColors.blue, borderColor: BrandColors.blue },
   check: { width: 8, height: 5, borderLeftWidth: 1.5, borderBottomWidth: 1.5, borderColor: BrandColors.white, transform: [{ rotate: '-45deg' }], marginTop: -2 },
   textPressed: { opacity: 0.55 },
-  contactHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  contactHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 44, marginBottom: 12 },
   contactTitle: { flexShrink: 1, fontFamily: BrandFonts.semiBold, fontSize: PageTypography.label, color: BrandColors.white },
-  contactHint: { fontFamily: BrandFonts.regular, fontSize: 12, lineHeight: 18, color: BrandColors.white, marginBottom: 18 },
+  contactHint: { fontFamily: BrandFonts.regular, fontSize: 12, lineHeight: 18, color: BrandColors.white, marginBottom: 18, alignSelf: 'flex-start' },
   primaryBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, backgroundColor: BrandColors.lightBlue },
   primaryText: { fontFamily: BrandFonts.semiBold, fontSize: PageTypography.caption, color: BrandColors.blue },
-  limitNote: { fontFamily: BrandFonts.semiBold, fontSize: 12, color: BrandColors.white, textAlign: 'center', marginBottom: 16 },
-  addContact: { flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', minHeight: 48, borderRadius: 24, backgroundColor: 'rgba(148,176,213,0.18)', borderWidth: 1, borderColor: 'rgba(148,176,213,0.5)', marginBottom: 16 },
+  limitNote: { fontFamily: BrandFonts.semiBold, fontSize: 12, color: BrandColors.white, textAlign: 'center', marginTop: 24, marginBottom: 16, alignSelf: 'center', backgroundColor: 'rgba(42,81,127,0.86)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  addContact: { flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', minHeight: 48, borderRadius: 24, backgroundColor: 'rgba(42,81,127,0.86)', borderWidth: 1, borderColor: 'rgba(148,176,213,0.5)', marginTop: 24, marginBottom: 16 },
   addText: { fontFamily: BrandFonts.semiBold, fontSize: 14, color: BrandColors.white },
   addIcon: { width: 26, height: 26, borderRadius: 13, backgroundColor: BrandColors.white, alignItems: 'center', justifyContent: 'center' },
   plusHorizontal: { position: 'absolute', width: 10, height: 2, borderRadius: 1, backgroundColor: BrandColors.blue },
@@ -296,8 +303,8 @@ const baseStyles = StyleSheet.create({
   trashHandle: { position: 'absolute', top: 0, left: 4, width: 6, height: 3, borderTopWidth: 1.5, borderLeftWidth: 1.5, borderRightWidth: 1.5, borderColor: BrandColors.white, borderTopLeftRadius: 2, borderTopRightRadius: 2 },
   trashLid: { position: 'absolute', top: 3, width: 14, height: 1.5, borderRadius: 1, backgroundColor: BrandColors.white },
   trashBody: { position: 'absolute', top: 5, left: 2, width: 10, height: 10, borderWidth: 1.5, borderTopWidth: 0, borderColor: BrandColors.white, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 },
-  error: { fontFamily: BrandFonts.semiBold, fontSize: 12, lineHeight: 18, color: '#FF5C5C', marginBottom: 12 },
-  next: { width: '60%', alignSelf: 'center', minHeight: 48, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 24, backgroundColor: BrandColors.white, alignItems: 'center', justifyContent: 'center', marginTop: 6, boxShadow: '0 8px 20px rgba(50,80,123,0.3), 0 2px 6px rgba(50,80,123,0.15)' },
+  followingContact: { marginTop: 24 },
+  next: { width: '100%', alignSelf: 'center', minHeight: 50, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16, backgroundColor: '#EAF2FC', borderWidth: 1, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', marginTop: 16 },
   nextText: { fontFamily: BrandFonts.extraBold, fontSize: PageTypography.label, color: BrandColors.blue },
   finish: { width: '100%', paddingHorizontal: 16 },
   finishText: { fontSize: PageTypography.label, textAlign: 'center' },

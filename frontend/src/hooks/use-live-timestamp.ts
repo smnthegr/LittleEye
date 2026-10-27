@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { formatLiveTimestamp } from '@/utils/live-timestamp';
@@ -6,7 +7,7 @@ import { formatLiveTimestamp } from '@/utils/live-timestamp';
 export function useLiveTimestamp(enabled = true) {
   const [now, setNow] = useState(() => new Date());
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!enabled) return;
     let timer: ReturnType<typeof setInterval> | undefined;
     const refresh = () => setNow(new Date());
@@ -31,7 +32,7 @@ export function useLiveTimestamp(enabled = true) {
       stop();
       subscription.remove();
     };
-  }, [enabled]);
+  }, [enabled]));
 
   return formatLiveTimestamp(now);
 }

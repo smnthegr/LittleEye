@@ -3,8 +3,12 @@ import { FixedPageHeader } from '@/components/fixed-page-header';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { useMascotImages } from '@/components/mascot-images';
 import { GlowButton } from '@/components/glow-button';
+import { FormError } from '@/components/form-error';
+import { PasswordInput } from '@/components/password-input';
 import { TextButton } from '@/components/text-button';
 import { useAppSession } from '@/components/app-session';
+import { getMockSignInProfile } from '@/utils/preview-profile';
+import { isValidEmail, isValidPhoneNumber } from '@/utils/contact-validation';
 import { Image } from 'expo-image';
 import { BrandColors, BrandFonts, PageTypography } from '@/constants/brand';
 import { router } from 'expo-router';
@@ -27,8 +31,8 @@ export default function SignInScreen() {
   const [error, setError] = useState('');
 
   function signIn() {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && !/^\+?\d{10,15}$/.test(email.replace(/[\s()-]/g, ''))) {
-      setError('Please enter a valid email or phone number.');
+    if (!isValidEmail(email) && !isValidPhoneNumber(email)) {
+      setError(email.includes('@') ? 'Enter a valid email address.' : 'Enter a valid email or phone number.');
       return;
     }
     if (!password) {
@@ -36,7 +40,9 @@ export default function SignInScreen() {
       return;
     }
     setError('');
-    enterPreview();
+    // Frontend-only sign-in. Backend integration replaces this with authentication
+    // and the actual account profile; missing server data must never use samples.
+    enterPreview(getMockSignInProfile(__DEV__));
   }
 
   return (
@@ -74,7 +80,7 @@ export default function SignInScreen() {
 
           <View style={styles.inputShadow}>
             <TextInput
-              accessibilityLabel="Email"
+              accessibilityLabel="Email or phone number"
               placeholder="Email or Phone Number"
               placeholderTextColor={BrandColors.blue}
               value={email}
@@ -88,13 +94,12 @@ export default function SignInScreen() {
             />
           </View>
           <View style={styles.inputShadow}>
-            <TextInput
+            <PasswordInput
               accessibilityLabel="Password"
               placeholder="Password"
               placeholderTextColor={BrandColors.blue}
               value={password}
               onChangeText={(value) => { setPassword(value); setError(''); }}
-              secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="current-password"
@@ -107,7 +112,7 @@ export default function SignInScreen() {
           <TextButton hitSlop={8} style={styles.forgot} textStyle={styles.forgotText} onPress={() => router.push('/forgot-password')}>
             Forgot password?
           </TextButton>
-          {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
+          <FormError>{error}</FormError>
           <GlowButton accessibilityRole="button" onPress={signIn} style={styles.signIn}>
             <Text style={styles.signInText}>Sign In</Text>
           </GlowButton>
@@ -153,7 +158,6 @@ const baseStyles = StyleSheet.create({
   input: { minHeight: 56, paddingHorizontal: 22, paddingVertical: 14, borderRadius: 30, borderWidth: 1, borderColor: '#CEDAE9', fontFamily: BrandFonts.regular, fontSize: PageTypography.body, color: BrandColors.blue },
   forgot: { alignSelf: 'flex-end', marginTop: -8, minHeight: 44, justifyContent: 'center' },
   forgotText: { fontSize: PageTypography.caption, fontFamily: BrandFonts.regular, color: BrandColors.blue },
-  error: { color: '#B42318', fontSize: 12, lineHeight: 18, fontFamily: BrandFonts.regular, marginBottom: 8 },
   signIn: { alignSelf: 'center', width: '68%', minHeight: 48, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 30, backgroundColor: BrandColors.lightBlue, alignItems: 'center', justifyContent: 'center', shadowColor: '#000000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.18, shadowRadius: 14, elevation: 4, marginTop: 4 },
   signInText: { fontSize: PageTypography.label, fontFamily: BrandFonts.extraBold, color: BrandColors.white },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 20, marginTop: 34 },

@@ -18,15 +18,19 @@ resolutionHook.deregister();
 
 const phoneWidths = [320, 360, 375, 390, 412, 430, 480];
 
-test('the fixed SOS page fits compact phones with safe areas and enlarged text', () => {
-  for (const width of phoneWidths) {
-    for (const height of [568, 640, 740, 844, 932]) {
+test('SOS fits its viewport or reserves a scrollable page without shrinking usable actions', () => {
+  for (const width of [...phoneWidths, 568, 844, 1024]) {
+    for (const height of [320, 390, 480, 568, 640, 740, 844, 932, 1366]) {
       for (const fontScale of [1, 1.25, 2]) {
         for (const topInset of [0, 24, 59]) {
           for (const bottomInset of [0, 34]) {
             const layout = getEmergencyHotlineLayout(width, height, topInset, bottomInset, fontScale);
             const used = layout.headingHeight + layout.addressHeight + layout.actionHeight * 2 + layout.gap * 4 + layout.sosDiameter;
-            assert.ok(used <= layout.contentHeight + 0.05, `${width}x${height}: content must fit without scrolling`);
+            const available = layout.minPageHeight - layout.contentTop - layout.bottomPadding;
+            assert.ok(used <= available + 0.05, `${width}x${height}: all content must remain reachable`);
+            assert.equal(layout.scrollRequired, used > layout.contentHeight + 0.05);
+            assert.ok(layout.minPageHeight >= height, 'scrollable content cannot be shorter than its viewport');
+            if (!layout.scrollRequired) assert.equal(layout.minPageHeight, height, 'fitting pages retain their existing geometry');
             assert.ok(layout.sosDiameter * 148 / 204 >= 44, 'SOS keeps a usable touch target');
             assert.ok(layout.actionHeight >= 44, 'navigation actions keep usable touch targets');
             assert.ok(layout.contentTop >= getPageHeaderLayout(width, topInset).contentTop);
@@ -35,6 +39,18 @@ test('the fixed SOS page fits compact phones with safe areas and enlarged text',
       }
     }
   }
+});
+
+test('SOS scroll fallback covers the audited failures while preserving the reference phone', () => {
+  for (const dimensions of [[480, 568, 59, 34, 1.25], [568, 320, 0, 0, 1], [844, 390, 0, 21, 1]]) {
+    const layout = getEmergencyHotlineLayout(...dimensions);
+    assert.equal(layout.scrollRequired, true);
+    assert.ok(layout.minPageHeight > dimensions[1]);
+  }
+  const reference = getEmergencyHotlineLayout(390, 844, 59, 34);
+  assert.equal(reference.scrollRequired, false);
+  assert.equal(reference.minPageHeight, 844);
+  assert.equal(reference.sosDiameter, 280);
 });
 
 test('pinned page controls clear notches, preserve touch targets, and reserve content space', () => {

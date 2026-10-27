@@ -95,7 +95,7 @@ export function getPageHeaderLayout(width: number, topInset: number) {
   };
 }
 
-/** Reserve the fixed SOS page's text and actions before sizing its central artwork. */
+/** Reserve SOS text/actions first; use scrolling when their minimum sizes cannot fit. */
 export function getEmergencyHotlineLayout(width: number, height: number, topInset: number, bottomInset: number, fontScale = 1) {
   const { scale, scaleSize, textScale } = getResponsiveMetrics(width);
   const { contentTop } = getPageHeaderLayout(width, topInset);
@@ -106,11 +106,14 @@ export function getEmergencyHotlineLayout(width: number, height: number, topInse
   const textMultiplier = contentTextScale * Math.max(1, Math.min(fontScale, 1.25));
   const gap = round((contentHeight < scaleSize(560) ? 10 : 16) * spacingScale);
   const headingHeight = round(72 * textMultiplier + 8 * spacingScale);
-  const addressHeight = round(Math.max(76 * spacingScale, 60 * textMultiplier + 20 * spacingScale));
+  const addressHeight = round(Math.max(88 * spacingScale, 60 * textMultiplier + 32 * spacingScale));
   const actionHeight = round(Math.max(52, 64 * spacingScale, 40 * textMultiplier + 16 * spacingScale));
   const fixedHeight = headingHeight + addressHeight + actionHeight * 2 + gap * 4;
   const sosDiameter = round(Math.max(64, Math.min(scaleSize(280), contentHeight - fixedHeight)));
-  return { contentTop, bottomPadding, contentHeight, gap, headingHeight, addressHeight, actionHeight, sosDiameter, spacingScale, textScale: contentTextScale };
+  const requiredContentHeight = round(fixedHeight + sosDiameter);
+  const scrollRequired = requiredContentHeight > contentHeight + 0.05;
+  const minPageHeight = scrollRequired ? contentTop + requiredContentHeight + bottomPadding : height;
+  return { contentTop, bottomPadding, contentHeight, gap, headingHeight, addressHeight, actionHeight, sosDiameter, spacingScale, textScale: contentTextScale, scrollRequired, minPageHeight };
 }
 
 /** Scale design dimensions, leaving percentages, width caps, borders and colors intact. */

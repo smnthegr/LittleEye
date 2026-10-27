@@ -24,7 +24,7 @@ export function SettingsDevicePage() {
     ['Resolution', 'Not available'], ['Frame Rate', 'Not available'],
     ['Field of View', 'Not available'], ['Last Connected', 'Not recorded'],
   ];
-  return <SettingsPage title="Device Information">
+  return <SettingsPage title="Device Information" keyboardAware>
     <View style={s.cameraCard}>
       <View style={s.cameraRow}>
         <View pointerEvents="none" style={s.cameraFrame}><View style={s.glow} /><View style={s.art}>

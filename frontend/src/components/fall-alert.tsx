@@ -31,10 +31,11 @@ export function FallAlertProvider({ children }: { children: ReactNode }) {
       alertSound.play();
     } else {
       alertSound.pause();
-      void alertSound.seekTo(0);
+      void alertSound.seekTo(0).catch(error => console.warn('Could not reset fall alert audio:', error));
     }
 
-    return () => alertSound.pause();
+    // useAudioPlayer stops/releases this sound on unmount. A later pause cleanup
+    // would call an already-released native object on iOS.
   }, [visible, alertSound]);
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export function FallAlertProvider({ children }: { children: ReactNode }) {
 
   return <FallAlertContext.Provider value={{ showFallAlert: () => setVisible(true) }}>
     {children}
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
+    <Modal visible={visible} supportedOrientations={['portrait', 'landscape']} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
       <View style={[s.overlay, {
         paddingTop: insets.top + scaleSize(16), paddingBottom: insets.bottom + scaleSize(16),
         paddingLeft: insets.left + scaleSize(16), paddingRight: insets.right + scaleSize(16),

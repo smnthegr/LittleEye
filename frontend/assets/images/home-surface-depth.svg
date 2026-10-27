@@ -1,0 +1,35 @@
+<svg width="390" height="844" viewBox="0 0 390 844" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="surface" x1="195" y1="0" x2="195" y2="844" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset=".48" stop-color="#E5EEF9"/>
+      <stop offset=".78" stop-color="#D6E4F5"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <radialGradient id="coolEdge" cx="0" cy="0" r="1" gradientTransform="translate(408 590) rotate(90) scale(280 260)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#88B0DB" stop-opacity=".8"/>
+      <stop offset="1" stop-color="#BCD5F0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="pearl" cx="0" cy="0" r="1" gradientTransform="translate(136 565) rotate(90) scale(220 235)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset=".45" stop-color="#FFFFFF" stop-opacity=".65"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="reflection" cx="0" cy="0" r="1" gradientTransform="translate(110 735) scale(270 155)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity=".65"/>
+      <stop offset=".6" stop-color="#FFFFFF" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bottomFade" x1="195" y1="650" x2="195" y2="824" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset=".35" stop-color="#FFFFFF" stop-opacity=".18"/>
+      <stop offset=".7" stop-color="#FFFFFF" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#surface)" d="M0 0H390V844H0z"/>
+  <path fill="url(#coolEdge)" d="M0 0H390V844H0z"/>
+  <path fill="url(#pearl)" d="M0 0H390V844H0z"/>
+  <path fill="url(#reflection)" d="M0 0H390V844H0z"/>
+  <path fill="url(#bottomFade)" d="M0 650H390V844H0z"/>
+</svg>

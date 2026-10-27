@@ -13,6 +13,7 @@ import { validCameraAddress } from '@/constants/camera';
 import { useAppSession } from '@/components/app-session';
 import { CameraIcon } from '@/components/camera-icon';
 import { GlowButton } from '@/components/glow-button';
+import { FormError } from '@/components/form-error';
 import { PageTransition } from '@/components/page-transition';
 import { SettingsIcon } from '@/components/settings-icon';
 
@@ -37,7 +38,7 @@ export default function ConnectCameraScreen() {
   function changeStep(value: typeof step) { Keyboard.dismiss(); setError(''); setStep(value); }
   function saveDetails() {
     if (!name.trim()) { setError('Give your camera a name.'); return; }
-    if (!validCameraAddress(address)) { setError('Enter an HTTP, HTTPS or RTSP address without a username or password.'); return; }
+    if (!validCameraAddress(address)) { setError('Enter a valid camera stream address.'); return; }
     Keyboard.dismiss();
     // Frontend handoff only. The connection service must confirm success before
     // saving status: 'connected' and continuing here in the production app.
@@ -78,7 +79,7 @@ export default function ConnectCameraScreen() {
               <TextInput accessibilityLabel="Camera name" placeholder="Camera name" placeholderTextColor={C.blue} value={name} onChangeText={(value) => { setName(value); setError(''); }} maxLength={48} style={[s.input, !!name && s.filled]} />
               <TextInput accessibilityLabel="Camera stream address" placeholder="rtsp://192.168.1.10:554/stream" placeholderTextColor={C.blue} value={address} onChangeText={(value) => { setAddress(value); setError(''); }} autoCapitalize="none" autoCorrect={false} keyboardType="url" onSubmitEditing={saveDetails} style={[s.input, !!address && s.filled]} />
               <Text style={s.small}>HTTP, HTTPS or RTSP. Camera passwords aren’t needed for this setup preview.</Text>
-              {!!error && <Text accessibilityRole="alert" style={s.error}>{error}</Text>}
+              <FormError>{error}</FormError>
               <GlowButton accessibilityRole="button" style={s.primary} onPress={saveDetails}><Text style={s.primaryText}>Save & continue</Text></GlowButton>
               <Text style={s.preview}>This saves setup details and opens Home. A live connection isn’t made in this build.</Text>
             </>}
@@ -108,7 +109,7 @@ const baseStyles = StyleSheet.create({
   orbit: { width: 116, height: 116, borderRadius: 70, borderWidth: 1, borderColor: 'rgba(148,176,213,.35)', justifyContent: 'center', alignItems: 'center', marginVertical: 14 }, orbitInner: { width: 84, height: 84, borderRadius: 50, backgroundColor: 'rgba(148,176,213,.22)', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 24px rgba(148,176,213,.3)' }, orbitDot: { position: 'absolute', width: 12, height: 12, borderRadius: 8, backgroundColor: C.lightBlue, right: 4, top: 17, borderWidth: 3, borderColor: C.white },
   cardTitle: { fontFamily: F.bold, fontSize: PageTypography.section, lineHeight: 26, color: C.blue, textAlign: 'center', marginBottom: 8 }, cardBody: { fontFamily: F.regular, color: C.blue, fontSize: PageTypography.body, lineHeight: 22, textAlign: 'center', marginBottom: 16 },
   primary: { alignSelf: 'stretch', minHeight: 48, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: C.blue, borderRadius: 27, alignItems: 'center', justifyContent: 'center', marginTop: 16, boxShadow: '0 8px 20px rgba(50,80,123,.24)' }, primaryText: { fontFamily: F.bold, fontSize: PageTypography.label, color: C.white, textAlign: 'center' }, secondary: { alignSelf: 'stretch', minHeight: 48, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 26, alignItems: 'center', justifyContent: 'center', backgroundColor: C.white, borderColor: C.lightBlue, borderWidth: 1, marginTop: 14, marginBottom: 8, boxShadow: '0 6px 18px rgba(50,80,123,.12)' }, secondaryText: { fontFamily: F.semiBold, fontSize: PageTypography.label, color: C.blue, textAlign: 'center' },
-  input: { alignSelf: 'stretch', minHeight: 56, backgroundColor: 'rgba(148,176,213,.22)', borderRadius: 28, paddingHorizontal: 22, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(148,176,213,.5)', fontFamily: F.regular, color: C.blue, fontSize: PageTypography.body, marginBottom: 16 }, filled: { fontFamily: F.semiBold }, small: { fontFamily: F.regular, fontSize: PageTypography.caption, lineHeight: 18, color: C.blue, opacity: .75 }, error: { alignSelf: 'stretch', color: C.blue, fontFamily: F.semiBold, fontSize: PageTypography.caption, lineHeight: 18, marginTop: 12 },
+  input: { alignSelf: 'stretch', minHeight: 56, backgroundColor: 'rgba(148,176,213,.22)', borderRadius: 28, paddingHorizontal: 22, paddingVertical: 14, borderWidth: 1, borderColor: 'rgba(148,176,213,.5)', fontFamily: F.regular, color: C.blue, fontSize: PageTypography.body, marginBottom: 16 }, filled: { fontFamily: F.semiBold }, small: { fontFamily: F.regular, fontSize: PageTypography.caption, lineHeight: 18, color: C.blue, opacity: .75 },
   searchNotice: { alignSelf: 'stretch', padding: 16, borderRadius: 20, backgroundColor: 'rgba(148,176,213,.14)' }, noticeTitle: { color: C.blue, fontFamily: F.semiBold, fontSize: PageTypography.label, marginBottom: 8 }, preview: { fontFamily: F.regular, fontSize: PageTypography.caption, lineHeight: 18, color: C.blue, opacity: .7, textAlign: 'center', marginTop: 14 },
   tip: { flexDirection: 'row', gap: 12, padding: 18, borderRadius: 22, marginTop: 24, backgroundColor: 'rgba(148,176,213,.14)' }, tipDot: { width: 8, height: 8, backgroundColor: C.lightBlue, borderRadius: 5, marginTop: 5 }, tipTitle: { fontFamily: F.semiBold, fontSize: PageTypography.label, color: C.blue, marginBottom: 5 },
 });

@@ -83,7 +83,7 @@ function OpenMenuSheet({ onClose, sheetStyle, artwork, children }: Props) {
     onPanResponderTerminationRequest: () => false,
   }), [offset, release, settle]);
 
-  return <Modal visible transparent animationType="none" onShow={settle} onRequestClose={close}>
+  return <Modal visible supportedOrientations={['portrait', 'landscape']} transparent animationType="none" onShow={settle} onRequestClose={close}>
     <View {...pan.panHandlers} style={styles.overlay}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.backdrop, {
         opacity: offset.interpolate({ inputRange: [0, height], outputRange: [1, 0], extrapolate: 'clamp' }),

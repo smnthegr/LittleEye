@@ -8,6 +8,7 @@
     "scheme": "frontend",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "supportsTablet": true,
       "icon": "./assets/expo.icon"
     },
     "android": {
@@ -34,6 +35,18 @@
       ],
       "expo-router",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "LittleEye uses your current location only when you tap the location button to confirm your saved address.",
+          "locationAlwaysPermission": false,
+          "locationAlwaysAndWhenInUsePermission": false,
+          "motionUsagePermission": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#208AEF",
@@ -49,7 +62,17 @@
           "enableBackgroundPlayback": false,
           "enableBackgroundRecording": false
         }
-      ]
+      ],
+      "expo-video",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "LittleEye lets you choose profile photos.",
+          "savePhotosPermission": "LittleEye saves your video recordings to Photos.",
+          "granularPermissions": ["video"]
+        }
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,

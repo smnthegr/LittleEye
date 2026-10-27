@@ -1,27 +1,31 @@
 import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
-import { useLiveTimestamp } from '@/hooks/use-live-timestamp';
-import { useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import * as ScreenOrientation from 'expo-screen-orientation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FixedPageHeader } from '@/components/fixed-page-header';
+import { useAppSession } from '@/components/app-session';
+import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { GlowButton } from '@/components/glow-button';
+import { PlaybackTimeline } from '@/components/playback-timeline';
+import { VideoBadge, VideoCloseButton, VideoOverlayButton, VideoTimelineButton } from '@/components/video-overlay-controls';
+import { VideoFullscreen } from '@/components/video-fullscreen';
+import { useVideoFullscreen } from '@/hooks/use-video-fullscreen';
+import { FootageVideo } from '@/components/footage-video';
+import { VideoEmptyState } from '@/components/video-empty-state';
+import { useFootageVideo } from '@/hooks/use-footage-video';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
 import { getPageHeaderLayout } from '@/utils/responsive';
+import { clampPlaybackSeconds, formatPlaybackTime } from '@/utils/playback-timeline';
+
+import { getRecordingInitialTime, getRecordingRange, type HistoryEntry } from '@/utils/recorded-footage';
 
 type HistoryTab = 'Playback' | 'Events';
 
-type HistoryEntry = { date: string; detail: string; kind: 'playback' | 'event'; sample?: boolean };
-const PLAYBACK_DURATION_SECONDS = 120;
-
-function formatPlaybackTime(progress: number) {
-  const seconds = Math.floor(progress * PLAYBACK_DURATION_SECONDS);
-  return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
-}
 
 function formatPlaybackDate(date: string | undefined) {
   if (!date) return '';
@@ -33,146 +37,144 @@ function formatPlaybackDate(date: string | undefined) {
   return dateValue.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
-// Demo footage keeps the Playback screen preview usable until real recordings are available.
-const playbackEntries: HistoryEntry[] = [
-  { date: '29/12/2026', detail: 'Sample playback footage', kind: 'playback', sample: true },
-];
-// Keep the fall-event card and footage UI ready for detected events; none exist yet.
-const eventEntries: HistoryEntry[] = [];
+// Filled only by actual recordings.
+const playbackEntries: HistoryEntry[] = [];
 
 export default function HistoryScreen() {
+  const { fallEvents } = useAppSession();
+  const eventEntries = fallEvents;
   const { pageWidth, scaleSize } = useResponsiveLayout();
   const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<HistoryTab>('Playback');
   const [selectedRecording, setSelectedRecording] = useState<HistoryEntry | null>(null);
-  const liveTimestamp = useLiveTimestamp(selectedRecording?.sample === true);
-  const footageTime = selectedRecording?.sample ? liveTimestamp.time : '07:15:32';
-  const footageDate = formatPlaybackDate(selectedRecording?.sample ? liveTimestamp.date : selectedRecording?.date);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLandscape, setIsLandscape] = useState(false);
-  const [playbackProgress, setPlaybackProgress] = useState(0.32);
+  const footageDate = formatPlaybackDate(selectedRecording?.date);
+  const playbackRange = getRecordingRange(selectedRecording);
+  const video = useFootageVideo({ source: selectedRecording?.uri ?? null, range: playbackRange });
+  const isPlaying = video.available && video.isPlaying;
+  const fullscreen = useVideoFullscreen();
+  const { visible: isLandscape, transitioning } = fullscreen;
+  const [landscapeControlsVisible, setLandscapeControlsVisible] = useState(true);
+  const [controlsHidden, setControlsHidden] = useState(false);
+  const [controlsProgress] = useState(() => new Animated.Value(1));
+  const reducedMotion = useReducedMotion();
+  const playbackSeconds = video.seconds;
   const [isSeeking, setIsSeeking] = useState(false);
-  const playbackProgressRef = useRef(0.32);
-  const [timelineWidth, setTimelineWidth] = useState(0);
-  const playbackTime = formatPlaybackTime(playbackProgress);
+  const [timelineVisible, setTimelineVisible] = useState(true);
+  const footageTime = formatPlaybackTime(playbackSeconds);
+  const fallAt = selectedRecording?.kind === 'event' ? getRecordingInitialTime(selectedRecording) : undefined;
+  const controlsMotion = useMemo(() => ({
+    top: controlsProgress.interpolate({ inputRange: [0, 1], outputRange: [-(insets.top + 100), 0] }),
+    bottom: controlsProgress.interpolate({ inputRange: [0, 1], outputRange: [insets.bottom + 180, 0] }),
+  }), [controlsProgress, insets.bottom, insets.top]);
 
   useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      const nextProgress = Math.min(1, playbackProgressRef.current + 1 / PLAYBACK_DURATION_SECONDS);
-      playbackProgressRef.current = nextProgress;
-      setPlaybackProgress(nextProgress);
-      if (nextProgress >= 1) setIsPlaying(false);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isPlaying]);
+    const animation = Animated.timing(controlsProgress, {
+      toValue: landscapeControlsVisible ? 1 : 0,
+      duration: reducedMotion ? 0 : 260,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    });
+    animation.start(({ finished }) => {
+      if (finished && !landscapeControlsVisible) setControlsHidden(true);
+    });
+    return () => animation.stop();
+  }, [controlsProgress, landscapeControlsVisible, reducedMotion]);
 
-  function seekPlayback(locationX: number) {
-    if (!timelineWidth) return;
-    const nextProgress = Math.max(0, Math.min(1, locationX / timelineWidth));
-    playbackProgressRef.current = nextProgress;
-    setPlaybackProgress(nextProgress);
+  function toggleLandscapeControls() {
+    setControlsHidden(false);
+    setLandscapeControlsVisible(value => !value);
+  }
+
+  function seekPlayback(seconds: number) {
+    const nextSeconds = Math.max(playbackRange.start, Math.min(playbackRange.end, clampPlaybackSeconds(seconds)));
+    video.seek(nextSeconds);
+  }
+
+  function togglePlayback() {
+    if (!video.available) return;
+    if (isPlaying) video.pause();
+    else {
+      if (playbackSeconds >= playbackRange.end) video.seek(playbackRange.start);
+      video.play();
+    }
+  }
+
+  function openRecording(entry: HistoryEntry) {
+    setSelectedRecording(entry);
+    video.pause();
+    setIsSeeking(false);
+    setTimelineVisible(true);
+    setControlsHidden(false);
+    setLandscapeControlsVisible(true);
+    const initialTime = getRecordingInitialTime(entry);
+    video.seek(initialTime);
   }
 
   async function toggleLandscape() {
-    if (isLandscape) {
-      try {
-        await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
-      } catch {
-        // Keep the in-app layout responsive if the platform rejects the orientation lock.
-      }
-      setIsLandscape(false);
-      return;
-    }
-
-    setIsLandscape(true);
-    try {
-      await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
-    } catch {
-      setIsLandscape(false);
-    }
+    if (transitioning) return;
+    setIsSeeking(false);
+    setControlsHidden(false);
+    setLandscapeControlsVisible(true);
+    await fullscreen.toggle();
   }
 
   function goBack() {
     if (selectedRecording) {
-      if (isLandscape) void ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
       setSelectedRecording(null);
-      setIsPlaying(false);
-      setIsLandscape(false);
+      video.pause();
       return;
     }
     if (router.canGoBack()) router.back();
     else router.replace('/home');
   }
 
-  const landscapeLayout = isLandscape && width > height;
+  const landscapeLayout = width > height;
   const currentEntries = activeTab === 'Playback' ? playbackEntries : eventEntries;
 
   return <>
-    {landscapeLayout && selectedRecording ? <View style={[s.landscapeScreen, { left: -insets.left, right: -insets.right }]}>
-      <StatusBar style="light" />
-      <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-      <View style={[s.landscapeTopRow, { top: insets.top + scaleSize(20), left: scaleSize(24), right: scaleSize(24) }]}>
-        <View style={s.landscapeLiveBadge}>
-          <View style={s.landscapeLiveDot} />
-          <Text style={s.landscapeLiveText}>Recorded</Text>
+    <VideoFullscreen controller={fullscreen} onClose={() => { void toggleLandscape(); }}
+      footage={isLandscape && video.available ? <FootageVideo player={video.player} /> : <VideoEmptyState title="Recording unavailable" detail="This recording has no available video source." />}>
+      {fullscreenInsets => selectedRecording && <View style={s.landscapeScreen}>
+      <Pressable accessibilityRole="button"
+        accessibilityLabel={landscapeControlsVisible ? 'Hide playback controls' : 'Show playback controls'}
+        accessibilityState={{ expanded: landscapeControlsVisible }}
+        onPress={toggleLandscapeControls} style={StyleSheet.absoluteFill} />
+      {/* Keep the timeline mounted while hidden so its zoom and scroll position are preserved. */}
+      <View pointerEvents={landscapeControlsVisible ? 'box-none' : 'none'}
+        accessibilityElementsHidden={!landscapeControlsVisible}
+        importantForAccessibility={landscapeControlsVisible ? 'auto' : 'no-hide-descendants'}
+        style={[StyleSheet.absoluteFill, controlsHidden && !landscapeControlsVisible && s.hiddenControls]}>
+      <Animated.View pointerEvents="box-none" style={[s.landscapeTopRow, {
+        top: fullscreenInsets.top + scaleSize(20), left: fullscreenInsets.left + scaleSize(8), right: fullscreenInsets.right + scaleSize(8),
+        opacity: controlsProgress, transform: [{ translateY: controlsMotion.top }],
+      }]}>
+        <VideoBadge label="Recorded" color="#E53935" active={isPlaying && landscapeControlsVisible} />
+        <View pointerEvents="box-none" style={s.overlayActions}>
+        <VideoTimelineButton expanded={timelineVisible} onPress={() => setTimelineVisible(value => !value)} />
+        <VideoCloseButton accessibilityLabel="Exit landscape footage" disabled={transitioning}
+          accessibilityState={{ disabled: transitioning }} onPress={() => { void toggleLandscape(); }} />
         </View>
-        <GlowButton
-          accessibilityRole="button"
-          accessibilityLabel="Exit landscape footage"
-          hitSlop={14}
-          onPress={() => { void toggleLandscape(); }}
-          style={s.landscapeExitButton}
-        >
-          <View style={s.landscapeExitLineOne} />
-          <View style={s.landscapeExitLineTwo} />
-        </GlowButton>
-      </View>
-      <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={() => setIsPlaying(value => !value)} style={s.playerToggle}>
+      </Animated.View>
+      {landscapeControlsVisible && <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={togglePlayback} style={s.playerToggle}>
         {isPlaying ? <View style={s.pauseGlyph}><View style={s.pauseBar} /><View style={s.pauseBar} /></View> : <View style={s.playerPlayGlyph} />}
-      </GlowButton>
-      <View style={[s.landscapeTimeRow, { bottom: insets.bottom + scaleSize(62), left: scaleSize(24), right: scaleSize(24) }]} pointerEvents="none">
-        <View style={s.landscapeTimeBadge}><Text style={s.landscapeTime}>{footageTime}</Text></View>
-        <View style={s.landscapeTimeBadge}><Text style={s.landscapeTime}>{footageDate}</Text></View>
+      </GlowButton>}
+      <Animated.View pointerEvents="box-none" style={[s.landscapePlaybackBar, {
+        bottom: Math.max(fullscreenInsets.bottom, 6), left: fullscreenInsets.left + 8, right: fullscreenInsets.right + 8,
+        opacity: controlsProgress, transform: [{ translateY: controlsMotion.bottom }],
+      }, !timelineVisible && s.hiddenControls]}>
+        <PlaybackTimeline seconds={playbackSeconds} onSeek={seekPlayback} onScrubChange={setIsSeeking} recordingDate={footageDate} range={playbackRange} highlightAt={fallAt} compact />
+      </Animated.View>
       </View>
-      <View style={[s.landscapePlaybackBar, { bottom: insets.bottom + scaleSize(16), left: scaleSize(24), right: scaleSize(24) }]}>
-        <Text style={s.playbackTimestamp}>{playbackTime}</Text>
-        <View style={s.landscapeTrackWrap}>
-        {isSeeking && <View pointerEvents="none" style={[s.seekTimeBubble, s.landscapeSeekTimeBubble, { left: `${Math.max(8, Math.min(92, playbackProgress * 100))}%` }]}><Text style={s.seekTimeText}>{playbackTime}</Text></View>}
-        <View
-          accessibilityRole="adjustable"
-          accessible
-          accessibilityLabel="Playback position"
-          accessibilityValue={{ min: 0, max: 100, now: Math.round(playbackProgress * 100) }}
-          accessibilityActions={[{ name: 'increment', label: 'Forward 5 seconds' }, { name: 'decrement', label: 'Back 5 seconds' }]}
-          onAccessibilityAction={event => {
-            setIsPlaying(false);
-            const change = event.nativeEvent.actionName === 'increment' ? 5 : -5;
-            const nextProgress = Math.max(0, Math.min(1, playbackProgress + change / PLAYBACK_DURATION_SECONDS));
-            playbackProgressRef.current = nextProgress;
-            setPlaybackProgress(nextProgress);
-          }}
-          onLayout={event => setTimelineWidth(event.nativeEvent.layout.width)}
-          onStartShouldSetResponder={() => true}
-          onMoveShouldSetResponder={() => true}
-          onResponderGrant={event => { setIsPlaying(false); setIsSeeking(true); seekPlayback(event.nativeEvent.locationX); }}
-          onResponderMove={event => seekPlayback(event.nativeEvent.locationX)}
-          onResponderRelease={() => setIsSeeking(false)}
-          onResponderTerminate={() => setIsSeeking(false)}
-          style={s.landscapeTimelineTrack}
-        >
-          <View pointerEvents="none" style={[s.landscapeTimelineProgress, { width: `${playbackProgress * 100}%` }]} />
-          <View pointerEvents="none" style={[s.landscapeTimelineThumb, { left: `${playbackProgress * 100}%` }]} />
-        </View>
-        </View>
-        <Text style={s.playbackTimestamp}>02:00</Text>
-      </View>
-    </View> : <View style={s.screen}>
-    <StatusBar style="light" />
+      </View>}
+    </VideoFullscreen>
+    <View style={s.screen} pointerEvents={isLandscape || transitioning ? 'none' : 'auto'}
+      accessibilityElementsHidden={isLandscape} importantForAccessibility={isLandscape ? 'no-hide-descendants' : 'auto'}>
+    <StatusBar style="light" hidden={isLandscape} />
     <FixedPageHeader onBack={goBack} />
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + scaleSize(24) }}>
+    <EdgeScrollView topColor={C.blue} bottomColor={C.white} contentInsetAdjustmentBehavior="never" automaticallyAdjustContentInsets={false}
+      showsVerticalScrollIndicator={false} scrollEnabled={!isSeeking} contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + scaleSize(24) }}>
       <View style={[s.page, { width: pageWidth }]}>
         <Image pointerEvents="none" source={require('../../assets/images/history-background.svg')} contentFit="fill" transition={0} accessible={false} style={s.pageBackground} />
         <View style={[s.header, { paddingTop: getPageHeaderLayout(pageWidth, insets.top).contentTop }]}>
@@ -196,19 +198,21 @@ export default function HistoryScreen() {
           </View>}
           {selectedRecording ? <View style={s.playbackView}>
             <View style={[s.playerFrame, landscapeLayout && { height: Math.max(180, Math.min(height - insets.top - insets.bottom - 40, width * 0.5625)) }]}>
-              <Image source={require('../../assets/images/footage-placeholder.png')} contentFit="cover" transition={0} accessible={false} style={StyleSheet.absoluteFill} />
-              <View style={s.playerTopRow}>
-                <View style={s.liveBadge}>
-                  <View style={s.liveDot} />
-                  <Text style={s.playerBadgeText}>Recorded</Text>
-                </View>
-                <GlowButton
-                  accessibilityRole="button"
+              {video.available && !isLandscape ? <FootageVideo player={video.player} /> : <VideoEmptyState title="Recording unavailable" detail="This recording has no available video source." />}
+              <Pressable accessibilityRole="button" accessibilityLabel={landscapeControlsVisible ? 'Hide playback controls' : 'Show playback controls'}
+                accessibilityState={{ expanded: landscapeControlsVisible }} onPress={toggleLandscapeControls} style={StyleSheet.absoluteFill} />
+              <View pointerEvents={landscapeControlsVisible ? 'box-none' : 'none'} accessibilityElementsHidden={!landscapeControlsVisible}
+                importantForAccessibility={landscapeControlsVisible ? 'auto' : 'no-hide-descendants'}
+                style={[StyleSheet.absoluteFill, controlsHidden && !landscapeControlsVisible && s.hiddenControls]}>
+              <Animated.View pointerEvents="box-none" style={[s.playerTopRow, { opacity: controlsProgress, transform: [{ translateY: controlsMotion.top }] }]}>
+
+                <VideoBadge label="Recorded" color="#E53935" active={isPlaying && !isLandscape} />
+                <View pointerEvents="box-none" style={s.overlayActions}>
+                <VideoTimelineButton expanded={timelineVisible} onPress={() => setTimelineVisible(value => !value)} />
+                <VideoOverlayButton
                   accessibilityLabel={isLandscape ? 'Exit landscape footage' : 'View footage in landscape'}
-                  accessibilityState={{ selected: isLandscape }}
-                  hitSlop={14}
+                  accessibilityState={{ selected: isLandscape, disabled: transitioning }} disabled={transitioning}
                   onPress={() => { void toggleLandscape(); }}
-                  style={s.landscapeButton}
                 >
                   <View style={s.fullscreenBadge}>
                     <View style={[s.fullscreenCorner, s.fullscreenTopLeft]} />
@@ -216,68 +220,43 @@ export default function HistoryScreen() {
                     <View style={[s.fullscreenCorner, s.fullscreenBottomLeft]} />
                     <View style={[s.fullscreenCorner, s.fullscreenBottomRight]} />
                   </View>
-                </GlowButton>
-              </View>
-              <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={() => setIsPlaying(value => !value)} style={s.playerToggle}>
+                </VideoOverlayButton>
+                </View>
+              </Animated.View>
+              {landscapeControlsVisible && <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={togglePlayback} style={s.playerToggle}>
                 {isPlaying ? <View style={s.pauseGlyph}><View style={s.pauseBar} /><View style={s.pauseBar} /></View> : <View style={s.playerPlayGlyph} />}
-              </GlowButton>
-              <View style={s.playerTimeRow} pointerEvents="none">
-                <View style={s.playerTimeBadge}><Text style={s.playerTime}>{footageTime}</Text></View>
+              </GlowButton>}
+              <Animated.View style={[s.playerTimeRow, { opacity: controlsProgress, transform: [{ translateY: controlsMotion.bottom }] }]} pointerEvents="none">
+                <View style={s.playerTimeBadge}><Text style={s.playerTime}>{selectedRecording.kind === 'event' && selectedRecording.trimmedClip ? `Clip ${footageTime}` : footageTime}</Text></View>
                 <View style={s.playerTimeBadge}><Text style={s.playerTime}>{footageDate}</Text></View>
+              </Animated.View>
               </View>
             </View>
-            <View style={s.timeline}>
-              <View style={s.timelineTimes}>
-                <Text style={s.timelineTime}>{playbackTime}</Text>
-                <Text style={s.timelineTime}>02:00</Text>
-              </View>
-              <View style={s.timelineTrackWrap}>
-              {isSeeking && <View pointerEvents="none" style={[s.seekTimeBubble, { left: `${Math.max(8, Math.min(92, playbackProgress * 100))}%` }]}><Text style={s.seekTimeText}>{playbackTime}</Text></View>}
-              <View
-                accessibilityRole="adjustable"
-                accessible
-                accessibilityLabel="Playback position"
-                accessibilityValue={{ min: 0, max: 100, now: Math.round(playbackProgress * 100) }}
-                accessibilityActions={[{ name: 'increment', label: 'Forward 5 seconds' }, { name: 'decrement', label: 'Back 5 seconds' }]}
-                onAccessibilityAction={event => {
-                  setIsPlaying(false);
-                  const change = event.nativeEvent.actionName === 'increment' ? 5 : -5;
-                  const nextProgress = Math.max(0, Math.min(1, playbackProgress + change / PLAYBACK_DURATION_SECONDS));
-                  playbackProgressRef.current = nextProgress;
-                  setPlaybackProgress(nextProgress);
-                }}
-                onLayout={event => setTimelineWidth(event.nativeEvent.layout.width)}
-                onStartShouldSetResponder={() => true}
-                onMoveShouldSetResponder={() => true}
-                onResponderGrant={event => { setIsPlaying(false); setIsSeeking(true); seekPlayback(event.nativeEvent.locationX); }}
-                onResponderMove={event => seekPlayback(event.nativeEvent.locationX)}
-                onResponderRelease={() => setIsSeeking(false)}
-                onResponderTerminate={() => setIsSeeking(false)}
-                style={s.timelineTrack}
-              >
-                <View pointerEvents="none" style={[s.timelineProgress, { width: `${playbackProgress * 100}%` }]} />
-                <View pointerEvents="none" style={[s.timelineThumb, { left: `${playbackProgress * 100}%` }]} />
-              </View>
-              </View>
+            <View pointerEvents="box-none" style={!timelineVisible && s.hiddenControls}>
+              <PlaybackTimeline seconds={playbackSeconds} onSeek={seekPlayback} onScrubChange={setIsSeeking} range={playbackRange} highlightAt={fallAt} />
             </View>
             <View style={s.recordingInfo}>
-              {selectedRecording.kind === 'event' && <Text style={s.eventLabel}>Fall Detected</Text>}
+              {selectedRecording.kind === 'event' && <>
+                <Text style={s.eventLabel}>Fall Detected at {formatPlaybackTime(selectedRecording.fallAtSeconds)}</Text>
+                <Text style={s.recordingDetail}>Highlight: {formatPlaybackTime(playbackRange.start)} to {formatPlaybackTime(playbackRange.end)}</Text>
+              </>}
               <Text style={s.recordingDate}>{formatPlaybackDate(selectedRecording.date)}</Text>
               <Text style={s.recordingDetail}>{selectedRecording.detail}</Text>
             </View>
           </View> : currentEntries.length ? <View style={s.entryList}>
-            {currentEntries.map(entry => <View key={`${entry.kind}-${entry.date}`} style={s.entryCard}>
-              <Image source={entry.sample ? require('../../assets/images/footage-placeholder.png') : require('../../assets/images/home-camera-preview.png')} contentFit="cover" transition={0} accessible={false} style={s.thumbnail} />
+            {currentEntries.map((entry, index) => <View key={entry.id ?? `${entry.kind}-${entry.date}-${entry.kind === 'event' ? entry.fallAtSeconds : 'daily'}-${index}`} style={s.entryCard}>
+              <View style={s.thumbnail}>{entry.thumbnailUri && <Image source={{ uri: entry.thumbnailUri }} contentFit="cover" transition={0} accessible={false} style={StyleSheet.absoluteFill} />}</View>
               <View style={s.entryText}>
                 {entry.kind === 'event' ? <>
                   <Text style={s.eventLabel}>Fall Detected</Text>
                   <Text style={s.eventDate}>{formatPlaybackDate(entry.date)}</Text>
+                  <Text style={s.entryDetail}>{formatPlaybackTime(entry.fallAtSeconds)}</Text>
                 </> : <>
                   <Text style={s.entryDate}>{formatPlaybackDate(entry.date)}</Text>
                   <Text style={s.entryDetail}>{entry.detail}</Text>
                 </>}
               </View>
-              <GlowButton accessibilityRole="button" accessibilityLabel={`Play ${entry.kind === 'event' ? 'fall event' : 'recording'} from ${formatPlaybackDate(entry.date)}`} onPress={() => { setSelectedRecording(entry); setIsPlaying(false); playbackProgressRef.current = 0.32; setPlaybackProgress(0.32); }} style={s.playButton}>
+              <GlowButton accessibilityRole="button" accessibilityLabel={`Play ${entry.kind === 'event' ? `fall event at ${formatPlaybackTime(entry.fallAtSeconds)}` : 'recording'} from ${formatPlaybackDate(entry.date)}`} onPress={() => openRecording(entry)} style={s.playButton}>
                 <View style={s.playGlyph} />
               </GlowButton>
             </View>)}
@@ -288,14 +267,15 @@ export default function HistoryScreen() {
           </View>}
         </View>
       </View>
-    </ScrollView>
-    </View>}
+    </EdgeScrollView>
+    </View>
   </>;
 }
 
 const baseStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.white },
-  landscapeScreen: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'transparent', overflow: 'hidden' },
+  videoError: { position: 'absolute', left: 12, right: 12, top: '30%', color: C.white, fontFamily: F.semiBold, fontSize: 12, textAlign: 'center', backgroundColor: 'rgba(0,0,0,.7)', padding: 12, borderRadius: 8 },
+  landscapeScreen: { flex: 1, overflow: 'hidden' },
   page: { flexGrow: 1, alignSelf: 'center', position: 'relative', backgroundColor: C.white },
   pageBackground: { position: 'absolute', top: 0, left: 0, right: 0, width: '100%', height: 340, zIndex: 0 },
   header: { position: 'relative', zIndex: 2, paddingBottom: 24, backgroundColor: 'transparent', overflow: 'visible' },
@@ -305,7 +285,7 @@ const baseStyles = StyleSheet.create({
   subtitle: { marginTop: 8, color: C.white, fontFamily: F.regular, fontSize: T.body, lineHeight: 20, textAlign: 'center' },
   mascot: { position: 'absolute', width: 300, height: 169, top: -103.5, right: -83, zIndex: 0, transform: [{ rotate: '16deg' }] },
   playbackMascot: { position: 'absolute', width: 760, height: 428, left: '50%', marginLeft: -356, bottom: 0, zIndex: 0, transform: [{ rotate: '0deg' }] },
-  content: { position: 'relative', width: '100%', alignSelf: 'center', flex: 1, paddingHorizontal: 24, paddingTop: 1, paddingBottom: 24, marginTop: 0, zIndex: 3, backgroundColor: C.white, borderTopLeftRadius: 56, borderTopRightRadius: 56 },
+  content: { position: 'relative', width: '100%', alignSelf: 'center', flex: 1, paddingHorizontal: 24, paddingTop: 1, paddingBottom: 24, marginTop: 0, zIndex: 1, backgroundColor: C.white, borderTopLeftRadius: 56, borderTopRightRadius: 56 },
   landscapeContent: { maxWidth: '100%', paddingHorizontal: 16, marginTop: 0, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
   segmentedControl: { zIndex: 1, width: '100%', maxWidth: 320, minHeight: 50, alignSelf: 'center', flexDirection: 'row', gap: 5, padding: 2, borderRadius: 26, backgroundColor: '#7297C1', borderWidth: 1, borderColor: 'rgba(211,229,249,.72)', boxShadow: '0 6px 12px rgba(50,80,123,.3)' },
   tab: { flex: 1, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
@@ -313,7 +293,7 @@ const baseStyles = StyleSheet.create({
   inactiveTab: { backgroundColor: 'rgba(50,80,123,.13)', boxShadow: '0 0 10px rgba(148,176,213,.49)' },
   tabLabel: { color: C.white, fontFamily: F.semiBold, fontSize: T.label, lineHeight: 20 },
   activeTabLabel: { color: C.blue },
-  entryList: { gap: 9, marginTop: 16 },
+  entryList: { position: 'relative', zIndex: 1, gap: 9, marginTop: 16 },
   entryCard: { minHeight: 88, flexDirection: 'row', alignItems: 'center', gap: 11, padding: 10, borderRadius: 21, backgroundColor: C.white, borderWidth: 1, borderColor: 'rgba(148,176,213,.2)', boxShadow: '0 0 14px rgba(23,111,216,.46), 0 5px 15px rgba(89,132,189,.13)' },
   thumbnail: { width: 76, height: 68, borderRadius: 15, backgroundColor: '#D9E3F0' },
   entryText: { flex: 1, minWidth: 0, gap: 2 },
@@ -323,56 +303,30 @@ const baseStyles = StyleSheet.create({
   eventDate: { color: C.blue, fontFamily: F.regular, fontSize: T.body, lineHeight: 20 },
   playButton: { minWidth: 44, minHeight: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: C.blue },
   playGlyph: { width: 0, height: 0, marginLeft: 2, borderTopWidth: 7, borderBottomWidth: 7, borderLeftWidth: 10, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: C.white },
-  playbackView: { gap: 14, marginTop: 16 },
+  playbackView: { position: 'relative', zIndex: 1, gap: 14, marginTop: 16 },
   playerFrame: { height: 238, position: 'relative', justifyContent: 'space-between', overflow: 'hidden', borderRadius: 22, borderWidth: 1, borderColor: 'rgba(148,176,213,.48)', backgroundColor: C.blue, boxShadow: '0 0 16px rgba(23,111,216,.32), 0 7px 18px rgba(50,80,123,.18)' },
-  playerTopRow: { position: 'absolute', top: 18, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 2 },
-  liveBadge: { minHeight: 28, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, borderRadius: 7, backgroundColor: 'rgba(0,0,0,.21)', borderWidth: 1, borderColor: 'rgba(255,255,255,.22)' },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#E53935' },
-  playerBadgeText: { color: C.white, fontFamily: F.bold, fontSize: T.caption, lineHeight: 18 },
-  landscapeButton: { width: 50, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 8, backgroundColor: 'rgba(0,0,0,.21)', borderWidth: 1, borderColor: 'rgba(255,255,255,.22)' },
+  playerTopRow: { position: 'absolute', top: 6, left: 6, right: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 2 },
   fullscreenBadge: { width: 21, height: 21, position: 'relative' },
   fullscreenCorner: { position: 'absolute', width: 7, height: 7, borderColor: C.white },
   fullscreenTopLeft: { top: 0, left: 0, borderTopWidth: 2, borderLeftWidth: 2 },
   fullscreenTopRight: { top: 0, right: 0, borderTopWidth: 2, borderRightWidth: 2 },
   fullscreenBottomLeft: { bottom: 0, left: 0, borderBottomWidth: 2, borderLeftWidth: 2 },
   fullscreenBottomRight: { bottom: 0, right: 0, borderBottomWidth: 2, borderRightWidth: 2 },
-  playerToggle: { position: 'absolute', top: '50%', left: '50%', width: 58, height: 58, marginLeft: -29, marginTop: -29, borderRadius: 29, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.9)', borderWidth: 1, borderColor: 'rgba(255,255,255,.9)', boxShadow: '0 4px 14px rgba(15,35,58,.32)' },
-  playerPlayGlyph: { width: 0, height: 0, marginLeft: 4, borderTopWidth: 11, borderBottomWidth: 11, borderLeftWidth: 16, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: C.blue },
+  playerToggle: { position: 'absolute', top: '50%', left: '50%', width: 58, height: 58, marginLeft: -29, marginTop: -29, borderRadius: 29, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,.8)', boxShadow: '0 4px 14px rgba(15,35,58,.32)' },
+  playerPlayGlyph: { width: 0, height: 0, marginLeft: 4, borderTopWidth: 11, borderBottomWidth: 11, borderLeftWidth: 16, borderTopColor: 'transparent', borderBottomColor: 'transparent', borderLeftColor: C.white },
   pauseGlyph: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  pauseBar: { width: 6, height: 21, borderRadius: 2, backgroundColor: C.blue },
-  playerTimeRow: { position: 'absolute', bottom: 14, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 },
-  playerTimeBadge: { minHeight: 22, justifyContent: 'center', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 9, backgroundColor: 'rgba(0,0,0,.21)' },
+  pauseBar: { width: 6, height: 21, borderRadius: 2, backgroundColor: C.white },
+  playerTimeRow: { position: 'absolute', bottom: 5, left: 6, right: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 },
+  playerTimeBadge: { minHeight: 22, justifyContent: 'center', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 9, backgroundColor: 'rgba(0,0,0,.14)' },
   playerTime: { color: C.white, fontFamily: 'VT323_400Regular', fontSize: 13, lineHeight: 16, letterSpacing: 0.8 },
-  landscapeTopRow: { position: 'absolute', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 2 },
-  landscapeLiveBadge: { minWidth: 90, minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, borderRadius: 7, backgroundColor: 'rgba(0,0,0,.21)', borderWidth: 1, borderColor: 'rgba(255,255,255,.25)' },
-  landscapeLiveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E53935' },
-  landscapeLiveText: { color: C.white, fontFamily: F.bold, fontSize: 16 },
-  landscapeExitButton: { width: 40, height: 40, position: 'relative', alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: 'rgba(0,0,0,.3)', borderWidth: 1, borderColor: 'rgba(255,255,255,.35)' },
-  landscapeExitLineOne: { position: 'absolute', width: 21, height: 2.5, borderRadius: 2, backgroundColor: C.white, transform: [{ rotate: '45deg' }] },
-  landscapeExitLineTwo: { position: 'absolute', width: 21, height: 2.5, borderRadius: 2, backgroundColor: C.white, transform: [{ rotate: '-45deg' }] },
-  landscapeTimeRow: { position: 'absolute', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 },
-  landscapeTimeBadge: { minHeight: 28, justifyContent: 'center', paddingHorizontal: 9, paddingVertical: 2, borderRadius: 7, backgroundColor: 'rgba(0,0,0,.21)' },
-  landscapeTime: { color: C.white, fontFamily: 'VT323_400Regular', fontSize: 17, lineHeight: 21, letterSpacing: 1 },
-  playbackTimestamp: { color: C.white, fontFamily: F.semiBold, fontSize: T.caption, lineHeight: 18, fontVariant: ['tabular-nums'] },
-  landscapePlaybackBar: { position: 'absolute', zIndex: 2, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, backgroundColor: 'rgba(0,0,0,.42)' },
-  landscapeTrackWrap: { flex: 1, height: 18, position: 'relative', justifyContent: 'center' },
-  landscapeSeekTimeBubble: { top: -22 },
-  landscapeTimelineTrack: { width: '100%', height: 6, position: 'relative', justifyContent: 'center', borderRadius: 3, backgroundColor: 'rgba(255,255,255,.48)', overflow: 'visible' },
-  landscapeTimelineProgress: { height: 6, borderRadius: 3, backgroundColor: C.white },
-  landscapeTimelineThumb: { position: 'absolute', top: -3, width: 12, height: 12, marginLeft: -6, borderRadius: 6, backgroundColor: C.white, borderWidth: 1.5, borderColor: C.blue },
-  timeline: { gap: 4, paddingHorizontal: 2 },
-  timelineTimes: { flexDirection: 'row', justifyContent: 'space-between' },
-  timelineTime: { color: '#667B98', fontFamily: F.semiBold, fontSize: T.caption, lineHeight: 18, fontVariant: ['tabular-nums'] },
-  timelineTrackWrap: { height: 30, position: 'relative', justifyContent: 'flex-end' },
-  timelineTrack: { height: 8, position: 'relative', justifyContent: 'center', borderRadius: 4, backgroundColor: 'rgba(148,176,213,.42)', overflow: 'visible' },
-  seekTimeBubble: { position: 'absolute', top: 0, minWidth: 42, minHeight: 24, marginLeft: -21, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 10, backgroundColor: C.blue, zIndex: 3 },
-  seekTimeText: { color: C.white, fontFamily: F.semiBold, fontSize: T.caption, lineHeight: 18, fontVariant: ['tabular-nums'] },
-  timelineProgress: { height: 8, borderRadius: 4, backgroundColor: C.blue },
-  timelineThumb: { position: 'absolute', top: -2, width: 12, height: 12, marginLeft: -6, borderRadius: 6, backgroundColor: C.white, borderWidth: 2, borderColor: C.lightBlue },
+  hiddenControls: { display: 'none' },
+  overlayActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  landscapeTopRow: { position: 'absolute', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 2 },
+  landscapePlaybackBar: { position: 'absolute', zIndex: 2 },
   recordingInfo: { gap: 4, padding: 16, borderRadius: 18, backgroundColor: C.white, borderWidth: 1, borderColor: 'rgba(148,176,213,.3)', boxShadow: '0 0 14px rgba(23,111,216,.18)' },
   recordingDate: { color: C.blue, fontFamily: F.bold, fontSize: T.label, lineHeight: 20 },
   recordingDetail: { color: '#667B98', fontFamily: F.regular, fontSize: T.body, lineHeight: 20 },
-  emptyState: { minHeight: 210, marginTop: 16, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24, borderRadius: 24, backgroundColor: C.white, boxShadow: '0 0 14px rgba(23,111,216,.46), 0 5px 15px rgba(89,132,189,.12)' },
+  emptyState: { position: 'relative', zIndex: 1, minHeight: 210, marginTop: 16, alignItems: 'center', justifyContent: 'center', gap: 8, padding: 24, borderRadius: 24, backgroundColor: C.white, boxShadow: '0 0 14px rgba(23,111,216,.46), 0 5px 15px rgba(89,132,189,.12)' },
   emptyIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E9F1FA', marginBottom: 5 },
   emptyDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.lightBlue, marginBottom: 3 },
   emptyLine: { width: 18, height: 13, borderWidth: 2, borderColor: C.lightBlue, borderRadius: 4 },

@@ -1,0 +1,16 @@
+<svg width="390" height="350" viewBox="0 0 390 350" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="contact" cx="0" cy="0" r="1" gradientTransform="translate(195 276) scale(116 25)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#355F91" stop-opacity=".42"/>
+      <stop offset=".4" stop-color="#527EAF" stop-opacity=".24"/>
+      <stop offset="1" stop-color="#7198C4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="light" cx="0" cy="0" r="1" gradientTransform="translate(179 160) rotate(90) scale(112 125)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity=".25"/>
+      <stop offset=".5" stop-color="#FFFFFF" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path fill="url(#light)" d="M0 0H390V350H0z"/>
+  <ellipse cx="195" cy="276" rx="116" ry="25" fill="url(#contact)"/>
+</svg>

@@ -1,7 +1,8 @@
 import { GlowButton } from '@/components/glow-button';
+import { PasswordInput } from '@/components/password-input';
 import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useState } from 'react';
-import { StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Switch, Text, View } from 'react-native';
 import { useAppSession } from './app-session';
 import { BrightnessSlider } from './brightness-slider';
 import { SettingsNetworkPanel } from './settings-network-panel';
@@ -82,7 +83,7 @@ export function SettingsDetails({ section }: { section: string }) {
   if (section === 'Security & Access') return <View>
     <Text style={s.subheading}>Change Password</Text><Note>Password updates will be available when account authentication is connected.</Note>
     {['Current Password', 'New Password', 'Confirm New Password'].map(label => <View key={label}><Text style={s.label}>{label}</Text>
-      <TextInput accessibilityLabel={`${label}, unavailable in preview`} editable={false} secureTextEntry placeholder="Unavailable in preview" style={[s.input, s.disabled]} /></View>)}
+      <PasswordInput accessibilityLabel={`${label}, unavailable in preview`} editable={false} placeholder="Unavailable in preview" style={[s.input, s.disabled]} /></View>)}
     <Action title="Save Changes" disabled />
     {session.camera && <><Text style={s.subheading}>Authorized Device Access</Text><Note>Camera sharing is not implemented. Authorized users and remove-access controls will appear when sharing is supported.</Note></>}
   </View>;

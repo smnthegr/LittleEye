@@ -1,9 +1,11 @@
 import { GlowButton } from '@/components/glow-button';
+import { FormError } from '@/components/form-error';
 import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { FixedPageHeader } from '@/components/fixed-page-header';
 import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { BrandColors, BrandFonts, PageTypography } from '@/constants/brand';
 import { getPageHeaderLayout } from '@/utils/responsive';
+import { isValidEmail } from '@/utils/contact-validation';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
@@ -18,7 +20,7 @@ export default function ForgotPasswordScreen() {
   const [submitted, setSubmitted] = useState(false);
 
   function requestReset() {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    if (!isValidEmail(email)) {
       setError('Please enter a valid email address.');
       return;
     }
@@ -61,7 +63,7 @@ export default function ForgotPasswordScreen() {
                     autoCapitalize="none" autoCorrect={false} autoComplete="email" textContentType="emailAddress"
                     returnKeyType="go" onSubmitEditing={requestReset} style={[styles.input, !!email && styles.filledInput]} />
                 </View>
-                {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
+                <FormError>{error}</FormError>
                 <GlowButton accessibilityRole="button" onPress={requestReset} style={[styles.button]}>
                   <Text style={styles.buttonText}>Request Password Reset</Text>
                 </GlowButton>
@@ -95,7 +97,6 @@ const baseStyles = StyleSheet.create({
   label: { fontFamily: BrandFonts.semiBold, fontSize: PageTypography.label, color: BrandColors.blue, marginBottom: 10, marginLeft: 8 },
   inputShadow: { borderRadius: 32, backgroundColor: '#FFFAFC', shadowColor: '#8298FF', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16, elevation: 2 },
   input: { minHeight: 56, borderRadius: 30, borderWidth: 1, borderColor: '#CEDAE9', paddingHorizontal: 22, paddingVertical: 14, fontFamily: BrandFonts.regular, fontSize: PageTypography.body, color: BrandColors.blue },
-  error: { fontFamily: BrandFonts.regular, fontSize: 12, lineHeight: 18, color: '#B42318', marginTop: 12 },
   button: { minHeight: 52, borderRadius: 30, backgroundColor: BrandColors.blue, marginTop: 24, paddingHorizontal: 16, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
   buttonText: { fontFamily: BrandFonts.bold, fontSize: PageTypography.label, color: BrandColors.white, textAlign: 'center' },
   pressed: { opacity: 0.8 },

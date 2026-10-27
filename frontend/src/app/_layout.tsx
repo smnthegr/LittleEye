@@ -1,12 +1,14 @@
+import '@/global.css';
 import { MascotImagesProvider } from '@/components/mascot-images';
 import { PageTransition } from '@/components/page-transition';
 import { ResponsiveScreen } from '@/components/responsive-screen';
 import { BrandColors } from '@/constants/brand';
 import { useFonts } from 'expo-font';
 import { VT323_400Regular } from '@expo-google-fonts/vt323';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme, View } from 'react-native';
+import { useEffect } from 'react';
+import { BackHandler, Platform, useColorScheme, View } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AppSessionProvider, useAppSession } from '@/components/app-session';
@@ -49,10 +51,20 @@ export default function TabLayout() {
 function AppNavigator() {
   const session = useAppSession();
   const reducedMotion = useReducedMotion();
+  const pathname = usePathname();
   useSessionNavigation();
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    // Android reports edge-back gestures and its Back button as the same event.
+    // Re-register after navigation so this takes priority over the router's handler.
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => subscription.remove();
+  }, [pathname]);
+
   return (
     <View style={{ flex: 1 }}>
-    <Stack screenOptions={{ headerShown: false, animation: reducedMotion ? 'none' : 'fade', animationDuration: NAVIGATION_TRANSITION_MS }}
+    <Stack screenOptions={{ headerShown: false, gestureEnabled: false, fullScreenGestureEnabled: false, animation: reducedMotion ? 'none' : 'fade', animationDuration: NAVIGATION_TRANSITION_MS }}
       screenLayout={({ children, route }) => {
         const backgroundColor =
           ['home', 'sign-in', 'sign-up', 'set-up', 'connect-camera'].includes(route.name)
@@ -80,9 +92,8 @@ function AppNavigator() {
           <Stack.Screen name="home" />
         </Stack.Protected>
       </Stack.Protected>
-      {/* Keep Settings after the entry screens so sign-in falls back to camera setup.
-          Direct development links remain available while Home is being built. */}
-      <Stack.Protected guard={__DEV__ || (session.signedIn && session.accepted)}>
+      {/* Remove account screens and their history on sign-out in every build. */}
+      <Stack.Protected guard={session.signedIn && session.accepted}>
         <Stack.Screen name="settings" />
         <Stack.Screen name="settings-pages" />
         <Stack.Screen name="profile" />

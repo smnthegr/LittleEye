@@ -1,3 +1,9 @@
+/* Keep horizontal drags inside the app instead of triggering browser history. */
+html,
+body {
+  overscroll-behavior-x: none;
+}
+
 :root {
   --font-display:
     Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,

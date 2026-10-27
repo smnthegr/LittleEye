@@ -13,8 +13,38 @@ import { FixedPageHeader } from '@/components/fixed-page-header';
 import { ResponsiveBackground } from '@/components/responsive-background';
 import { BrandColors as C, BrandFonts as F, PageTypography } from '@/constants/brand';
 import { getPageHeaderLayout } from '@/utils/responsive';
+import { useEmergencyHotlines } from '@/hooks/use-emergency-hotlines';
+import { EmergencyHotlineList } from '@/components/emergency-hotline-list';
 
 export default function CallScreen() {
+  const { kind } = useLocalSearchParams<{ kind?: string }>();
+  // Old hotline links must never enter the simulated contact ringing screen.
+  if ((Array.isArray(kind) ? kind[0] : kind) === 'hotline') return <HotlineCallOptions />;
+  return <ContactCallPreview />;
+}
+
+function HotlineCallOptions() {
+  const { phone } = useLocalSearchParams<{ phone?: string }>();
+  const { directory } = useEmergencyHotlines();
+  const { pageWidth, scaleSize, insets } = useResponsiveLayout();
+  const s = useResponsiveStyles(baseStyles);
+  const selected = directory.hotlines.find(entry => entry.number === phone || entry.dialNumber === phone);
+  function back() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/emergency-hotline');
+  }
+  return <View style={s.screen}>
+    <StatusBar style="light" />
+    <ScrollView contentContainerStyle={[s.content, { paddingTop: getPageHeaderLayout(pageWidth, insets.top).contentTop, paddingBottom: insets.bottom + scaleSize(24) }]}>
+      <Text accessibilityRole="header" style={s.title}>Emergency calling options</Text>
+      <Text style={[s.subtitle, { marginBottom: scaleSize(24) }]}>Tap Call for the service you need. LittleEye has not placed a call.</Text>
+      <EmergencyHotlineList hotlines={selected ? [selected] : directory.hotlines} />
+    </ScrollView>
+    <FixedPageHeader onBack={back} />
+  </View>;
+}
+
+function ContactCallPreview() {
   const { pageWidth, scaleSize } = useResponsiveLayout();
   const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();

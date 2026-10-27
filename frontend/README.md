@@ -50,6 +50,8 @@ To learn more about developing your project with Expo, look at the following res
 
 ## Join the community
 
+Address autofill and TomTom search setup: [local configuration guide](docs/philippine-addresses.md).
+
 Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.

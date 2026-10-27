@@ -2,7 +2,7 @@ import { GlowButton } from '@/components/glow-button';
 import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useState } from 'react';
 import { FixedPageHeader } from '@/components/fixed-page-header';
-import { router } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppSession } from '@/components/app-session';
 import { CameraIcon } from '@/components/camera-icon';
 import { SettingsSignOut } from '@/components/settings-sign-out';
+import { EdgeScrollView } from '@/components/edge-scroll-view';
 import { SettingsDetails } from '@/components/settings-details';
 import { type SettingsSection } from '@/constants/settings';
 import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
@@ -58,13 +59,17 @@ export default function SettingsScreen() {
   const { contentTop } = getPageHeaderLayout(pageWidth, insets.top);
   const session = useAppSession();
   const { camera, isPreview } = useSettingsCamera();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const fromProfile = from === 'profile';
   const [showNotifications, setShowNotifications] = useState(false);
   function openPage(section: SettingsSection) {
     if (section === 'notifications') {
       setShowNotifications(true);
       return;
     }
-    router.push({ pathname: '/settings-pages/[section]', params: { section, ...(isPreview && { preview: 'connected' }) } });
+    router.push({ pathname: '/settings-pages/[section]', params: {
+      section, ...(isPreview && { preview: 'connected' }), ...(fromProfile && { from: 'profile' }),
+    } });
   }
   const name = camera?.name || 'No camera connected';
   const status = isPreview ? 'Online (preview)' : camera?.status === 'connected' ? 'Online' : camera ? 'Pending connection' : 'Connect a camera to get started';
@@ -78,9 +83,10 @@ export default function SettingsScreen() {
     if (router.canGoBack()) router.back();
     else router.replace(session.signedIn && session.accepted ? '/connect-camera' : '/');
   }
+  if (!session.signedIn || !session.accepted) return <Redirect href="/" />;
   return <View style={s.screen}>
     <StatusBar style="light" />
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + scaleSize(28) }}>
+    <EdgeScrollView topColor="#2C527F" bottomColor={C.white} contentInsetAdjustmentBehavior="never" automaticallyAdjustContentInsets={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + scaleSize(28) }}>
       <View style={[s.header, { paddingTop: contentTop }]}>
         <View pointerEvents="none" style={s.headerBlob}>
           <Image source={require('../../assets/images/settings-header-wave-blob.svg')}
@@ -118,9 +124,9 @@ export default function SettingsScreen() {
         <SettingsSignOut />
         <SettingsSignOut action="delete-account" />
       </View>
-    </ScrollView>
-    <FixedPageHeader onBack={goBack} />
-    <Modal visible={showNotifications} transparent animationType="fade" onRequestClose={() => setShowNotifications(false)}>
+    </EdgeScrollView>
+    <FixedPageHeader onBack={goBack} profile={!fromProfile} />
+    <Modal visible={showNotifications} supportedOrientations={['portrait', 'landscape']} transparent animationType="fade" onRequestClose={() => setShowNotifications(false)}>
       <View style={[s.modalBackdrop, { paddingTop: insets.top + scaleSize(20), paddingBottom: insets.bottom + scaleSize(20) }]}>
         <View accessibilityViewIsModal style={s.modalCard}>
           <Text accessibilityRole="header" style={s.modalTitle}>Notification Preferences</Text>

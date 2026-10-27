@@ -6,11 +6,12 @@ import { useResponsiveLayout } from '@/hooks/use-responsive-layout';
 import { getPageHeaderLayout } from '@/utils/responsive';
 
 /** Keep route controls outside scrolling content and clear of the phone's notch. */
-export function FixedPageHeader({ onBack, light = false, profile = true, children }: {
+export function FixedPageHeader({ onBack, light = false, profile = true, children, backLabel }: {
   onBack?: () => void;
   light?: boolean;
   profile?: boolean;
   children?: ReactNode;
+  backLabel?: string;
 }) {
   const { pageWidth, insets } = useResponsiveLayout();
   const layout = getPageHeaderLayout(pageWidth, insets.top);
@@ -19,7 +20,7 @@ export function FixedPageHeader({ onBack, light = false, profile = true, childre
       top: layout.top, width: pageWidth, height: layout.buttonSize,
       left: '50%', marginLeft: -pageWidth / 2, paddingHorizontal: layout.horizontalInset,
     }]}>
-      {onBack && <BackButton light={light} onPress={onBack} style={{
+      {onBack && <BackButton light={light} accessibilityLabel={backLabel} onPress={onBack} style={{
         width: layout.buttonSize, height: layout.buttonSize, borderRadius: layout.buttonSize / 2,
       }} />}
       <View pointerEvents="box-none" style={styles.middle}>{children}</View>

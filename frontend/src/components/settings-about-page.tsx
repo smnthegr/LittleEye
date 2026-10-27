@@ -1,6 +1,6 @@
 import { GlowButton } from '@/components/glow-button';
 import { useResponsiveStyles } from '@/hooks/use-responsive-layout';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { SettingsPage } from './settings-page';
 import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
@@ -18,11 +18,14 @@ const links: { title: string; subtitle?: string; icon: string; page: SettingsSec
 export function SettingsAboutPage() {
   const s = useResponsiveStyles(baseStyles);
   const { isPreview } = useSettingsCamera();
+  const { from } = useLocalSearchParams<{ from?: string }>();
   return <SettingsPage white>
     <View style={s.hero}><Text accessibilityRole="header" style={s.logo}>Little<Text style={s.eye}>Eye</Text></Text>
       <Text style={s.tagline}>Smarter eyes. Safer moments.</Text></View>
     <View style={s.links}>{links.map(link => <GlowButton key={link.page} accessibilityRole="button"
-      onPress={() => router.push({ pathname: '/settings-pages/[section]', params: { section: link.page, ...(isPreview && { preview: 'connected' }) } })}
+      onPress={() => router.push({ pathname: '/settings-pages/[section]', params: {
+        section: link.page, ...(isPreview && { preview: 'connected' }), ...(from === 'profile' && { from: 'profile' }),
+      } })}
       style={s.row}>
       <View accessible={false} style={s.icon}>
         {link.icon === 'device' ? <View style={s.phone}><View style={s.phoneDot} /></View> :
