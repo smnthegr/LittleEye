@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
-import { AppState, Platform, StyleSheet, View, type GestureResponderEvent, type StyleProp, type ViewStyle } from 'react-native';
+import { AppState, Platform, StyleSheet, View, type GestureResponderEvent, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 
 import { MinimalRingArtwork } from '@/components/minimal-ring-artwork';
 import { MinimalRingButtons } from '@/components/minimal-ring-buttons';
@@ -88,13 +88,15 @@ export function MinimalRingDPad({ size = 300, onDirectionStart, onDirectionStop,
         tabIndex={disabled ? -1 : 0}
         {...(Platform.OS === 'web' ? {
           onClick: () => activate(control),
-          onKeyDown: (event: { key: string; repeat: boolean; preventDefault: () => void }) => {
-            if (event.key !== ' ' && event.key !== 'Enter') return;
+          onKeyDown: (event: Parameters<NonNullable<ViewProps['onKeyDown']>>[0] | { key: string; repeat?: boolean; preventDefault: () => void }) => {
+            const key = 'key' in event ? event : event.nativeEvent;
+            if (key.key !== ' ' && key.key !== 'Enter') return;
             event.preventDefault();
-            if (!disabled && !event.repeat) interaction.begin(control, -1);
+            if (!disabled && !key.repeat) interaction.begin(control, -1);
           },
-          onKeyUp: (event: { key: string; preventDefault: () => void }) => {
-            if (event.key !== ' ' && event.key !== 'Enter') return;
+          onKeyUp: (event: Parameters<NonNullable<ViewProps['onKeyUp']>>[0] | { key: string; preventDefault: () => void }) => {
+            const key = 'key' in event ? event.key : event.nativeEvent.key;
+            if (key !== ' ' && key !== 'Enter') return;
             event.preventDefault(); interaction.end(-1);
           },
           onBlur: cancel,

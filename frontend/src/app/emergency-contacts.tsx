@@ -30,9 +30,8 @@ export default function EmergencyContactsScreen() {
   const { pageWidth, scaleSize, fontScale } = useResponsiveLayout();
   const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
-  const { profile, profilePhoto, updateProfile } = useAppSession();
-  const [localContacts, setLocalContacts] = useState(profile?.contacts ?? []);
-  const contacts = useMemo(() => (profile?.contacts ?? localContacts).filter(contact => contact.fullName.trim() || contact.phone.trim()), [profile?.contacts, localContacts]);
+  const { profile, profilePhoto, updateContacts } = useAppSession();
+  const contacts = useMemo(() => (profile?.contacts ?? []).filter(contact => contact.fullName.trim() || contact.phone.trim()), [profile?.contacts]);
   const contactLimitReached = contacts.length >= MAX_EMERGENCY_CONTACTS;
   const [showAddContact, setShowAddContact] = useState(false);
   const [editingContactIndex, setEditingContactIndex] = useState<number | null>(null);
@@ -82,8 +81,7 @@ export default function EmergencyContactsScreen() {
       { text: 'Cancel', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: () => {
         const updatedContacts = contacts.filter((_, contactIndex) => contactIndex !== index);
-        setLocalContacts(updatedContacts);
-        if (profile) updateProfile({ ...profile, contacts: updatedContacts });
+        updateContacts(updatedContacts);
         setShowAddContact(false);
         setEditingContactIndex(null);
       } },
@@ -135,8 +133,7 @@ export default function EmergencyContactsScreen() {
     const updatedContacts = editingContactIndex === null
       ? [...contacts, contact]
       : contacts.map((existing, index) => index === editingContactIndex ? contact : existing);
-    setLocalContacts(updatedContacts);
-    if (profile) updateProfile({ ...profile, contacts: updatedContacts });
+    updateContacts(updatedContacts);
     Keyboard.dismiss();
     setShowAddContact(false);
   }

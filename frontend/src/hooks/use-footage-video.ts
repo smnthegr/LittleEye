@@ -68,9 +68,11 @@ export function useFootageVideo({ source, enabled = true, autoPlay = false, init
   const resume = useCallback(() => {
     if (!lifetime.active || !shouldLoad || !focused.current || AppState.currentState === 'background' || AppState.currentState === 'inactive') return;
     // A new web video element is created when transferring to/from the fullscreen modal.
-    player.currentTime = clock.seek(clock.seconds);
+    const restored = Math.max(range.start, Math.min(range.end, clock.seconds));
+    player.currentTime = clock.seek(restored);
+    if (publishTime) setSeconds(previous => previous === restored ? previous : restored);
     if (wantsPlayback.current) player.play();
-  }, [clock, lifetime, player, shouldLoad]);
+  }, [clock, lifetime, player, publishTime, range.start, range.end, shouldLoad]);
 
   useEventListener(player, 'sourceLoad', resume);
   useEventListener(player, 'timeUpdate', ({ currentTime }) => {
@@ -112,7 +114,7 @@ export function useFootageVideo({ source, enabled = true, autoPlay = false, init
 
   function seek(time: number, { pause = true } = {}) {
     if (!lifetime.active) return;
-    const target = Math.max(range.start, Math.min(range.end, time));
+    const target = Number.isFinite(time) ? Math.max(range.start, Math.min(range.end, time)) : range.start;
     if (pause) {
       wantsPlayback.current = false;
       lifetime.pause();

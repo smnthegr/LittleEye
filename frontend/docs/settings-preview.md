@@ -29,9 +29,9 @@ URL above still supports layout review without changing the session.
 For Expo Go, use the server's Expo URL with `/--/settings` appended, for example
 `exp://192.168.1.5:8081/--/settings`.
 
-## Connect Home later
+## Home menu integration
 
-Use Expo Router from the future Home menu:
+Home already uses Expo Router to open Settings:
 
 ```tsx
 import { router } from 'expo-router';

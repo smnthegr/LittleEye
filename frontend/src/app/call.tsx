@@ -3,10 +3,10 @@ import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive
 import { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
-import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useAudioPlayer } from 'expo-audio';
 
 import { FixedPageHeader } from '@/components/fixed-page-header';
@@ -15,11 +15,23 @@ import { BrandColors as C, BrandFonts as F, PageTypography } from '@/constants/b
 import { getPageHeaderLayout } from '@/utils/responsive';
 import { useEmergencyHotlines } from '@/hooks/use-emergency-hotlines';
 import { EmergencyHotlineList } from '@/components/emergency-hotline-list';
+import { useAppSession } from '@/components/app-session';
+import { isValidPhoneNumber } from '@/utils/contact-validation';
+import { getHomeDestination } from '@/utils/session-navigation';
+import { useForeground } from '@/hooks/use-foreground';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 export default function CallScreen() {
-  const { kind } = useLocalSearchParams<{ kind?: string }>();
+  const params = useLocalSearchParams<{ kind?: string; phone?: string }>();
+  const session = useAppSession();
+  const kind = Array.isArray(params.kind) ? params.kind[0] : params.kind;
+  const phone = Array.isArray(params.phone) ? params.phone[0] : params.phone;
   // Old hotline links must never enter the simulated contact ringing screen.
-  if ((Array.isArray(kind) ? kind[0] : kind) === 'hotline') return <HotlineCallOptions />;
+  if (kind === 'hotline') return <HotlineCallOptions />;
+  // A fallback or incomplete link is not an instruction to start ringing.
+  if (kind !== 'contact' || !isValidPhoneNumber(phone ?? '')) {
+    return <Redirect href={getHomeDestination(session)} />;
+  }
   return <ContactCallPreview />;
 }
 
@@ -55,14 +67,14 @@ function ContactCallPreview() {
   const params = useLocalSearchParams<{ recipient?: string; phone?: string; kind?: string }>();
   const ringPlayer = useAudioPlayer(require('../../assets/audio/call-ring.wav'));
   const isFocused = useIsFocused();
+  const foreground = useForeground();
+  const reducedMotion = useReducedMotion();
   const recipient = Array.isArray(params.recipient) ? params.recipient[0] : params.recipient;
   const phone = Array.isArray(params.phone) ? params.phone[0] : params.phone;
-  const kind = Array.isArray(params.kind) ? params.kind[0] : params.kind;
-  const isHotline = kind === 'hotline';
   const displayRecipient = recipient || phone || 'Emergency Contact';
 
   useEffect(() => {
-    if (isFocused) {
+    if (isFocused && foreground) {
       // expo-audio player looping is configured only while the call route is focused.
       // eslint-disable-next-line react-hooks/immutability
       ringPlayer.loop = true;
@@ -72,10 +84,15 @@ function ContactCallPreview() {
     }
 
     ringPlayer.pause();
-    void ringPlayer.seekTo(0);
-  }, [isFocused, ringPlayer]);
+    void ringPlayer.seekTo(0).catch(() => {});
+  }, [isFocused, foreground, ringPlayer]);
 
   useEffect(() => {
+    if (!isFocused || !foreground || reducedMotion) {
+      cancelAnimation(innerPulse); cancelAnimation(middlePulse); cancelAnimation(outerPulse);
+      innerPulse.value = middlePulse.value = outerPulse.value = 0;
+      return;
+    }
     const pulse = (delay: number) => withRepeat(
       withDelay(delay, withSequence(
         withTiming(1, { duration: 320, easing: Easing.out(Easing.ease) }),
@@ -88,7 +105,8 @@ function ContactCallPreview() {
     innerPulse.value = pulse(0);
     middlePulse.value = pulse(180);
     outerPulse.value = pulse(360);
-  }, [innerPulse, middlePulse, outerPulse]);
+    return () => { cancelAnimation(innerPulse); cancelAnimation(middlePulse); cancelAnimation(outerPulse); };
+  }, [isFocused, foreground, reducedMotion, innerPulse, middlePulse, outerPulse]);
 
   const innerGlowStyle = useAnimatedStyle(() => ({ opacity: innerPulse.value, transform: [{ scale: 1 + innerPulse.value * .1 }] }));
   const middleGlowStyle = useAnimatedStyle(() => ({ opacity: middlePulse.value, transform: [{ scale: 1 + middlePulse.value * .08 }] }));
@@ -104,9 +122,9 @@ function ContactCallPreview() {
     <ResponsiveBackground source={require('../../assets/images/call-background.svg')} />
     <ScrollView contentInsetAdjustmentBehavior="never" contentContainerStyle={[s.content, { paddingTop: header.contentTop, paddingBottom: Math.max(insets.bottom, 16) + scaleSize(24) }]} showsVerticalScrollIndicator={false}>
       <View style={s.callDetails}>
-        <Text accessibilityRole="header" style={s.title}>Calling {displayRecipient}...</Text>
-        <Text style={s.subtitle}>{isHotline ? 'Connecting you to the national' : 'Connecting you to your emergency'}</Text>
-        <Text style={s.subtitle}>{isHotline ? 'emergency hotline.' : 'contact.'}</Text>
+        <Text accessibilityRole="header" style={s.title}>Call preview: {displayRecipient}</Text>
+        <Text style={s.subtitle}>This is a preview. No call has been placed.</Text>
+        <Text style={s.subtitle}>Use your phone app to call this contact.</Text>
       </View>
 
       <View style={s.callEffect}>
@@ -124,9 +142,9 @@ function ContactCallPreview() {
         </View>
       </View>
 
-      <GlowButton accessibilityRole="button" accessibilityLabel="End call" onPress={endCall} style={[s.endCallButton]}>
+      <GlowButton accessibilityRole="button" accessibilityLabel="Close call preview" onPress={endCall} style={[s.endCallButton]}>
         <SymbolView name={{ ios: 'phone.down.fill', android: 'call_end', web: 'call_end' }} size={scaleSize(21)} tintColor={C.white} />
-        <Text style={s.endCallText}>End Call</Text>
+        <Text style={s.endCallText}>Close preview</Text>
       </GlowButton>
     </ScrollView>
     <FixedPageHeader onBack={endCall} />

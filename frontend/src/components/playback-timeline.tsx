@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, useWindowDimensions, View, type GestureResponderEvent } from 'react-native';
+import { Platform, StyleSheet, Text, useWindowDimensions, View, type GestureResponderEvent, type ViewProps } from 'react-native';
 
 import { BrandColors as C, BrandFonts as F } from '@/constants/brand';
 import { useTimelineWheel } from '@/hooks/use-timeline-wheel';
@@ -124,14 +124,15 @@ export function PlaybackTimeline({ seconds, onSeek: requestSeek, onScrubChange, 
         if (event.nativeEvent.actionName === 'zoomIn') zoomBy(2);
         if (event.nativeEvent.actionName === 'zoomOut') zoomBy(0.5);
       }}
-      {...(Platform.OS === 'web' ? { tabIndex: 0, onKeyDown: (event: { key: string; preventDefault: () => void }) => {
+      {...(Platform.OS === 'web' ? { tabIndex: 0, onKeyDown: (event: Parameters<NonNullable<ViewProps['onKeyDown']>>[0] | { key: string; preventDefault: () => void }) => {
+        const key = 'key' in event ? event.key : event.nativeEvent.key;
         const step = highlightAt === undefined ? 60 : 1;
-        const offset = { ArrowRight: step, ArrowUp: step, ArrowLeft: -step, ArrowDown: -step }[event.key];
-        if (['+', '=', '-', '_'].includes(event.key)) {
-          event.preventDefault(); zoomBy(event.key === '+' || event.key === '=' ? 2 : 0.5);
-        } else if (offset !== undefined || event.key === 'Home' || event.key === 'End') {
+        const offset = { ArrowRight: step, ArrowUp: step, ArrowLeft: -step, ArrowDown: -step }[key];
+        if (['+', '=', '-', '_'].includes(key)) {
+          event.preventDefault(); zoomBy(key === '+' || key === '=' ? 2 : 0.5);
+        } else if (offset !== undefined || key === 'Home' || key === 'End') {
           event.preventDefault();
-          onSeek(clampPlaybackSeconds(event.key === 'Home' ? bounds.start : event.key === 'End' ? limit : seconds + (offset ?? 0)));
+          onSeek(clampPlaybackSeconds(key === 'Home' ? bounds.start : key === 'End' ? limit : seconds + (offset ?? 0)));
         }
       } } : {})}
       onLayout={event => { const measured = event.nativeEvent.layout.width; setTrackWidth(measured); width.current = Math.max(0, measured - 20); }}

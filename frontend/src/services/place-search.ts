@@ -1,4 +1,7 @@
 import { resolvePlaceLocality, type PhilippineAddress } from '../utils/philippine-address';
+import { placeSearchCache } from '../utils/place-search-cache';
+
+export { clearPlaceSearchCache } from '../utils/place-search-cache';
 
 export type PlaceSuggestion = { id: string; title: string; address: string; selection: PhilippineAddress };
 type TomTomResult = { id?: string; type?: string; poi?: { name?: string }; position?: { lat?: number; lon?: number };
@@ -68,12 +71,13 @@ export function parsePlaceSuggestions(data: { features?: Feature[] }): PlaceSugg
 }
 
 // Shared modest request pacing across all address fields; memory-only short cache.
-const cache = new Map<string, { expires: number; results: PlaceSuggestion[] }>();
+const cache = placeSearchCache.entries;
 let queue = Promise.resolve();
 let nextRequestAt = 0;
 export async function searchPlaces(input: string, signal: AbortSignal): Promise<PlaceSuggestion[]> {
   const query = input.trim();
   if (query.length < 3 || query.length > 250) return [];
+  const generation = placeSearchCache.generation;
   const tomtomKey = process.env.EXPO_PUBLIC_TOMTOM_API_KEY;
   const endpoint = tomtomKey ? `https://api.tomtom.com/search/2/search/${encodeURIComponent(query)}.json`
     : process.env.EXPO_PUBLIC_PHOTON_URL || 'https://photon.komoot.io/api/';
@@ -106,7 +110,7 @@ export async function searchPlaces(input: string, signal: AbortSignal): Promise<
       const response = await fetch(url.toString(), { signal: controller.signal, headers: { Accept: 'application/json' } });
       if (!response.ok) throw new Error('Location search is unavailable.');
       const results = tomtomKey ? parseTomTomSuggestions(await response.json()) : parsePlaceSuggestions(await response.json());
-      if (!tomtomKey) {
+      if (!tomtomKey && generation === placeSearchCache.generation && !signal.aborted) {
         cache.set(cacheKey, { expires: Date.now() + 120_000, results });
         if (cache.size > 30) cache.delete(cache.keys().next().value!);
       }

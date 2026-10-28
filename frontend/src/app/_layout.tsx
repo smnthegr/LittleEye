@@ -16,7 +16,7 @@ import { FallAlertProvider } from '@/components/fall-alert';
 import { BottomNavigationHost, BottomNavigationProvider } from '@/components/bottom-navigation';
 import { NAVIGATION_TRANSITION_MS } from '@/components/navigation-transition';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
-import { useSessionNavigation } from '@/hooks/use-session-navigation';
+import { getHomeDestination } from '@/utils/session-navigation';
 
 
 SplashScreen.preventAutoHideAsync();
@@ -52,7 +52,7 @@ function AppNavigator() {
   const session = useAppSession();
   const reducedMotion = useReducedMotion();
   const pathname = usePathname();
-  useSessionNavigation();
+  const homeDestination = getHomeDestination(session);
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
@@ -76,24 +76,25 @@ function AppNavigator() {
           <PageTransition backgroundColor={backgroundColor} animateOnMount={false}>{children}</PageTransition>
         </ResponsiveScreen>;
       }}>
-      <Stack.Protected guard={!session.signedIn}>
+      {/* Explicit redirects avoid the router's filesystem-order fallback (call). */}
+      <Stack.Protected guard={!session.signedIn} redirectTo={homeDestination}>
         <Stack.Screen name="index" />
         <Stack.Screen name="policies" />
-        <Stack.Protected guard={session.accepted}>
+        <Stack.Protected guard={session.accepted} redirectTo="/">
           <Stack.Screen name="sign-in" />
           <Stack.Screen name="sign-up" />
           <Stack.Screen name="set-up" />
           <Stack.Screen name="forgot-password" />
         </Stack.Protected>
       </Stack.Protected>
-      <Stack.Protected guard={session.signedIn && session.accepted}>
+      <Stack.Protected guard={session.signedIn && session.accepted} redirectTo="/">
         <Stack.Screen name="connect-camera" />
-        <Stack.Protected guard={!!session.camera}>
+        <Stack.Protected guard={!!session.camera} redirectTo={homeDestination}>
           <Stack.Screen name="home" />
         </Stack.Protected>
       </Stack.Protected>
       {/* Remove account screens and their history on sign-out in every build. */}
-      <Stack.Protected guard={session.signedIn && session.accepted}>
+      <Stack.Protected guard={session.signedIn && session.accepted} redirectTo="/">
         <Stack.Screen name="settings" />
         <Stack.Screen name="settings-pages" />
         <Stack.Screen name="profile" />
@@ -106,7 +107,7 @@ function AppNavigator() {
         <Stack.Screen name="call" />
         <Stack.Screen name="first-aid-guidance" />
       </Stack.Protected>
-      <Stack.Protected guard={false}>
+      <Stack.Protected guard={false} redirectTo={homeDestination}>
         <Stack.Screen name="explore" />
       </Stack.Protected>
     </Stack>

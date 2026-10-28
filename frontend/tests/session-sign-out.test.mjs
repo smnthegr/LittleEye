@@ -5,11 +5,10 @@ import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
 import { mergeFallEvents, toFallEventEntry } from '../src/utils/fall-event-recording.ts';
+import { sessionRoutes, sessionStack, UNHANDLED } from './helpers/session-routes.mjs';
+import { createEmptyProfile } from '../src/utils/profile.ts';
 
 const require = createRequire(import.meta.url);
-// Exercise the reducer installed with this Expo Router version, including its
-// real history pruning/fallback behavior. No native modules or server account.
-const { StackRouter } = require('../node_modules/expo-router/build/react-navigation/routers/StackRouter.js');
 const components = new Proxy({}, { get: (_, name) => name });
 const Stack = Object.assign(() => null, { Protected: 'Protected', Screen: 'Screen' });
 
@@ -44,6 +43,8 @@ function load(relative, overrides, dev = true, suffix = '') {
       if (name in overrides) return overrides[name];
       if (name === 'react/jsx-runtime') return require(name);
       if (name === '@/utils/fall-event-recording') return { mergeFallEvents, toFallEventEntry };
+      if (name === '@/utils/profile') return { createEmptyProfile };
+      if (name === '@/utils/place-search-cache') return { clearPlaceSearchCache() {} };
       if (name === 'react-native') return { Platform: { OS: 'web' }, View: 'View', Text: 'Text', Modal: 'Modal', ScrollView: 'ScrollView', StyleSheet: { create: value => value, absoluteFill: {} } };
       if (name === 'expo-router') return { Stack, usePathname: () => '/settings' };
       if (name === '@/constants/brand') return { BrandColors: {}, BrandFonts: {}, PageTypography: {} };
@@ -51,7 +52,6 @@ function load(relative, overrides, dev = true, suffix = '') {
       if (name === 'react-native-safe-area-context') return { useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) };
       if (name === 'expo-splash-screen') return { preventAutoHideAsync() {} };
       if (name === '@/hooks/use-reduced-motion') return { useReducedMotion: () => true };
-      if (name === '@/hooks/use-session-navigation') return { useSessionNavigation() {} };
       if (name === '@/components/navigation-transition') return { NAVIGATION_TRANSITION_MS: 0 };
       if (name === 'expo-font' || name === '@expo-google-fonts/vt323' || name.endsWith('.css')) return {};
       if (name.startsWith('@/components/') || name === './glow-button') return components;
@@ -63,21 +63,53 @@ function load(relative, overrides, dev = true, suffix = '') {
 
 function sessionHarness() {
   const hooks = stateHooks();
-  const { AppSessionProvider } = load('../src/components/app-session.tsx', { react: hooks });
-  return () => { hooks.reset(); return AppSessionProvider({ children: null }).props.value; };
+  let cacheClears = 0;
+  const { AppSessionProvider } = load('../src/components/app-session.tsx', {
+    react: hooks, '@/utils/place-search-cache': { clearPlaceSearchCache() { cacheClears++; } },
+  });
+  const getSession = () => { hooks.reset(); return AppSessionProvider({ children: null }).props.value; };
+  getSession.cacheClears = () => cacheClears;
+  return getSession;
 }
 
-function availableScreens(session, dev) {
-  const { navigator } = load('../src/app/_layout.tsx', {
-    react: stateHooks(), '@/components/app-session': { useAppSession: () => session },
-  }, dev, '\nmodule.exports.navigator = AppNavigator;');
-  function visit(node) {
-    if (Array.isArray(node)) return node.flatMap(visit);
-    if (!node?.props || (node.type === 'Protected' && !node.props.guard)) return [];
-    return node.type === 'Screen' ? [node.props.name] : visit(node.props.children);
-  }
-  return visit(navigator());
-}
+test('session owns contacts before a profile exists and rejects writes from a previous session', () => {
+  const getSession = sessionHarness();
+  getSession().acceptPolicies();
+  getSession().enterPreview();
+  const contact = { fullName: 'QA Contact', phone: '09171234567', email: '', address: 'Test address' };
+  getSession().updateContacts([contact]);
+  assert.equal(getSession().profile.contacts[0], contact);
+  assert.equal(getSession().profile.guardian.fullName, '');
+  const profile = { ...getSession().profile, guardian: { ...getSession().profile.guardian, fullName: 'Guardian' } };
+  getSession().updateProfile(profile);
+  getSession().updateContacts([]);
+  assert.equal(getSession().profile.guardian.fullName, 'Guardian');
+  const oldSession = getSession();
+  oldSession.signOut();
+  oldSession.updateContacts([contact]);
+  assert.equal(getSession().profile, null);
+  getSession().enterPreview();
+  oldSession.updateContacts([contact]);
+  assert.equal(getSession().profile, null);
+});
+
+test('logout clears transient searches and stale profile/photo/camera callbacks cannot affect the next account', () => {
+  const getSession = sessionHarness();
+  getSession().enterPreview();
+  const old = getSession();
+  const profile = createEmptyProfile();
+  old.signOut();
+  assert.equal(old.isCurrentSession(), false);
+  getSession().enterPreview();
+  const current = getSession();
+  assert.notEqual(current.sessionKey, old.sessionKey);
+  old.updateProfile(profile);
+  old.setProfilePhoto('fixture:old-photo'); old.setChildPhoto('fixture:old-child');
+  old.saveCamera({ name: 'Old camera' });
+  const after = getSession();
+  for (const key of ['profile', 'profilePhoto', 'childPhoto', 'camera']) assert.equal(after[key], null);
+  assert.equal(getSession.cacheClears(), 3, 'sign-in, logout, and new sign-in each clear search memory');
+});
 
 function nodes(node) {
   if (Array.isArray(node)) return node.flatMap(nodes);
@@ -114,34 +146,33 @@ for (const dev of [true, false]) {
         getSession().setProfilePhoto('fixture:guardian');
         getSession().setChildPhoto('fixture:child');
         if (connected) getSession().saveCamera({ name: 'Fixture camera', address: 'https://example.com/stream', status: 'pending' });
-        const signedInRoutes = availableScreens(getSession(), dev);
-        const root = StackRouter({ initialRouteName: connected ? 'home' : 'connect-camera' });
-        const options = { routeNames: signedInRoutes, routeParamList: {}, routeGetIdList: {} };
-        let state = root.getInitialState(options);
+        const stack = sessionStack(getSession(), connected ? 'home' : 'connect-camera');
         for (const name of connected ? ['profile-account', 'settings', 'settings-pages'] : ['settings']) {
-          state = root.getStateForAction(state, { type: 'PUSH', payload: { name } }, options);
-          assert.ok(state);
+          assert.notEqual(stack.dispatch({ type: 'PUSH', payload: { name } }), UNHANDLED);
         }
         confirmExit(getSession, deleting, dev);
         const signedOut = getSession();
         assert.equal(signedOut.signedIn, false);
         assert.equal(signedOut.accepted, !deleting);
         for (const key of ['profile', 'camera', 'profilePhoto', 'childPhoto']) assert.equal(signedOut[key], null);
-        const routeNames = availableScreens(signedOut, dev);
-        state = root.getStateForRouteNamesChange(state, { routeNames, routeParamList: {}, routeKeyChanges: [] });
-        assert.equal(state.routes[state.index].name, 'index', 'landing must be visible without pressing Back');
-        assert.deepEqual(state.routes.map(route => route.name), ['index']);
+        stack.settle(signedOut);
+        assert.equal(stack.state.routes[stack.state.index].name, 'index', 'landing must be visible without pressing Back');
+        assert.deepEqual(stack.state.routes.map(route => route.name), ['index']);
+        const { guards } = sessionRoutes(signedOut);
         for (const blocked of ['settings', 'settings-pages', 'profile', 'profile-account', 'connect-camera', 'home', 'history', 'call']) {
-          assert.equal(routeNames.includes(blocked), false, `${blocked} must not survive logout`);
-          assert.equal(root.getStateForAction(state, { type: 'PUSH', payload: { name: blocked, params: { preview: 'connected' } } }, { ...options, routeNames }), null);
+          assert.equal(guards.get(blocked), '/', `${blocked} must redirect after logout`);
+          stack.dispatch({ type: 'PUSH', payload: { name: blocked, params: { preview: 'connected' } } });
+          stack.settle(signedOut);
+          assert.ok(stack.state.routes.every(route => route.name === 'index'));
         }
-        assert.equal(root.getStateForAction(state, { type: 'POP', payload: { count: 1 } }, { ...options, routeNames }), null, 'Back cannot reveal previous account screens');
+        while (stack.dispatch({ type: 'POP', payload: { count: 1 } }) !== UNHANDLED) {
+          assert.equal(stack.state.routes[stack.state.index].name, 'index', 'Back cannot reveal previous account screens');
+        }
         // A new session starts at camera setup rather than reopening old Settings.
         signedOut.acceptPolicies();
         getSession().enterPreview();
-        const nextRoutes = availableScreens(getSession(), dev);
-        state = root.getStateForRouteNamesChange(state, { routeNames: nextRoutes, routeParamList: {}, routeKeyChanges: [] });
-        assert.equal(state.routes[state.index].name, 'connect-camera');
+        stack.settle(getSession());
+        assert.deepEqual(stack.state.routes.map(route => route.name), ['connect-camera']);
       }
     }
   });

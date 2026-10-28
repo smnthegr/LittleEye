@@ -35,7 +35,7 @@ export default function SignInScreen() {
       setError(email.includes('@') ? 'Enter a valid email address.' : 'Enter a valid email or phone number.');
       return;
     }
-    if (!password) {
+    if (!password.trim()) {
       setError('Please enter your password.');
       return;
     }

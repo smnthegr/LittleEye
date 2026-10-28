@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { ScrollView, StyleSheet, View, type ScrollViewProps } from 'react-native';
+import { ScrollView, StyleSheet, View, type ScrollViewInstance, type ScrollViewProps } from 'react-native';
 import { BrandColors } from '@/constants/brand';
 
 type EdgeScrollViewProps = ScrollViewProps & {
@@ -8,7 +8,7 @@ type EdgeScrollViewProps = ScrollViewProps & {
 };
 
 /** Keep edge colors behind the native scroll view, including its bounce/stretch. */
-export const EdgeScrollView = forwardRef<ScrollView, EdgeScrollViewProps>(function EdgeScrollView({
+export const EdgeScrollView = forwardRef<ScrollViewInstance, EdgeScrollViewProps>(function EdgeScrollView({
   topColor = BrandColors.white,
   bottomColor = BrandColors.white,
   style,

@@ -8,6 +8,9 @@ import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, wi
 import { useAudioPlayer } from 'expo-audio';
 
 import { BrandColors as C, BrandFonts as F, PageTypography as T } from '@/constants/brand';
+import { useAppSession } from '@/components/app-session';
+import { useForeground } from '@/hooks/use-foreground';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 type FallAlertContextValue = { showFallAlert: () => void };
 
@@ -15,15 +18,23 @@ const FallAlertContext = createContext<FallAlertContextValue | null>(null);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 export function FallAlertProvider({ children }: { children: ReactNode }) {
+  const session = useAppSession();
+  const active = session.signedIn && session.accepted;
   const { scaleSize, insets } = useResponsiveLayout();
   const s = useResponsiveStyles(baseStyles);
-  const [visible, setVisible] = useState(false);
+  const [alertSession, setAlertSession] = useState<symbol | null>(null);
+  const visible = active && alertSession !== null && alertSession === session.sessionKey;
+  function setVisible(value: boolean) {
+    if (session.isCurrentSession()) setAlertSession(value ? session.sessionKey : null);
+  }
   const alertPulse = useSharedValue(0.32);
   const alertSound = useAudioPlayer(require('../../assets/audio/fall-alert.wav'));
   const alertPulseStyle = useAnimatedStyle(() => ({ opacity: alertPulse.value }));
+  const foreground = useForeground();
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (visible) {
+    if (visible && foreground) {
       // expo-audio player properties are intentionally configured when the alert becomes visible.
       // eslint-disable-next-line react-hooks/immutability
       alertSound.loop = true;
@@ -36,16 +47,17 @@ export function FallAlertProvider({ children }: { children: ReactNode }) {
 
     // useAudioPlayer stops/releases this sound on unmount. A later pause cleanup
     // would call an already-released native object on iOS.
-  }, [visible, alertSound]);
+  }, [visible, foreground, alertSound]);
 
   useEffect(() => {
-    if (!visible) {
+    if (!visible || !foreground || reducedMotion) {
       cancelAnimation(alertPulse);
+      // eslint-disable-next-line react-hooks/immutability
+      alertPulse.value = 1;
       return;
     }
 
-    // Reanimated shared values are intentionally updated here to start the pulse only while the modal is visible.
-    // eslint-disable-next-line react-hooks/immutability
+    // Start the pulse only while the alert is visible and motion is enabled.
     alertPulse.value = withRepeat(
       withSequence(
         withTiming(1, { duration: 430, easing: Easing.inOut(Easing.ease) }),
@@ -54,9 +66,9 @@ export function FallAlertProvider({ children }: { children: ReactNode }) {
       -1,
     );
     return () => cancelAnimation(alertPulse);
-  }, [visible, alertPulse]);
+  }, [visible, foreground, reducedMotion, alertPulse]);
 
-  return <FallAlertContext.Provider value={{ showFallAlert: () => setVisible(true) }}>
+  return <FallAlertContext.Provider value={{ showFallAlert: () => { if (active) setVisible(true); } }}>
     {children}
     <Modal visible={visible} supportedOrientations={['portrait', 'landscape']} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
       <View style={[s.overlay, {
@@ -73,6 +85,7 @@ export function FallAlertProvider({ children }: { children: ReactNode }) {
           <Text style={s.message}>Please check on the child immediately.</Text>
           <View style={s.actions}>
             <GlowButton accessibilityRole="button" onPress={() => {
+              if (!session.isCurrentSession()) return;
               setVisible(false);
               router.push({ pathname: '/call', params: { recipient: '911', phone: '911', kind: 'hotline' } });
             }} style={s.callButton}>

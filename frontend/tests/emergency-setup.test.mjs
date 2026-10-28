@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import * as contactValidation from '../src/utils/contact-validation.ts';
 import { addresses, qcAddress, completeAddress } from './helpers/address-fixtures.mjs';
+import { getHomeDestination } from '../src/utils/session-navigation.ts';
 
 const require = createRequire(import.meta.url);
 function nodes(tree) {
@@ -39,6 +40,10 @@ function load(relative, overrides) {
       if (name in overrides) return overrides[name];
       if (name === 'react/jsx-runtime') return require(name);
       if (name === '@/utils/contact-validation') return contactValidation;
+      if (name === '@/utils/session-navigation') return { getHomeDestination };
+      if (name === '@/hooks/use-foreground') return { useForeground: () => true };
+      if (name === '@/hooks/use-reduced-motion') return { useReducedMotion: () => true };
+      if (name === '@/components/app-session') return { useAppSession: () => ({ signedIn: true, accepted: true, camera: null }) };
       if (name === '@/utils/philippine-address') return addresses;
       if (name === 'react-native') return native;
       if (name === '@/hooks/use-responsive-layout') return responsive;
@@ -47,6 +52,7 @@ function load(relative, overrides) {
       if (name === '@/constants/brand') return { BrandColors: {}, BrandFonts: {}, PageTypography: {} };
       if (name === 'expo-image') return { Image: 'Image' };
       if (name === 'expo-status-bar') return { StatusBar: 'StatusBar' };
+      if (name === 'expo-audio' || name === '@/hooks/use-emergency-hotlines') return {};
       if (name.startsWith('@/components/')) return new Proxy({}, { get: (_, key) => key });
       if (name === '@/hooks/use-mascot-images') return {};
       if (name === 'expo-symbols') return { SymbolView: 'SymbolView' };
@@ -165,4 +171,41 @@ test('legacy hotline call links never start the simulated ringing audio', () => 
   assert.equal(list.props.hotlines[0], hotline);
   assert.equal(audioStarts, 0);
   assert.ok(text(tree).includes('LittleEye has not placed a call'));
+});
+
+test('Call requires explicit, valid contact parameters before mounting ringing audio', () => {
+  for (const camera of [null, { name: 'Camera' }]) {
+    for (const params of [{}, { kind: 'contact' }, { kind: 'contact', phone: 'invalid' }, { phone: '09171234567' }]) {
+      const { default: Call } = load('../src/app/call.tsx', {
+        react: { useEffect() {} },
+        'expo-router': { Redirect: 'Redirect', useLocalSearchParams: () => params },
+        '@/components/app-session': { useAppSession: () => ({ signedIn: true, accepted: true, camera }) },
+        'expo-audio': { useAudioPlayer: () => { throw new Error('Invalid Call must not mount audio'); } },
+      });
+      const branch = Call();
+      assert.equal(branch.type, 'Redirect');
+      assert.equal(branch.props.href, camera ? '/home' : '/connect-camera');
+    }
+  }
+  const { default: Call } = load('../src/app/call.tsx', {
+    react: { useEffect() {} },
+    'expo-router': { Redirect: 'Redirect', useLocalSearchParams: () => ({ kind: 'contact', phone: '09171234567', recipient: 'Guardian' }) },
+  });
+  assert.equal(Call().type.name, 'ContactCallPreview', 'An explicit contact selection still opens the call preview');
+});
+
+test('Emergency Hotline Back without history returns to the available Home destination', () => {
+  for (const camera of [null, { name: 'Camera' }]) {
+    const routes = [];
+    const { default: Hotline } = load('../src/app/emergency-hotline.tsx', {
+      react: { useState: initial => [initial, () => {}], useRef: current => ({ current }) },
+      'expo-router': { router: { canGoBack: () => false, replace: href => routes.push(href) }, useIsFocused: () => true },
+      '@/components/app-session': { useAppSession: () => ({ signedIn: true, accepted: true, camera }) },
+      '@/hooks/use-emergency-hotlines': { useEmergencyHotlines: () => ({ directory: { areaName: 'Philippines' } }) },
+      '@/utils/responsive': { getEmergencyHotlineLayout: () => ({ sosDiameter: 204, textScale: 1, spacingScale: 1 }) },
+      '@/constants/emergency-hotlines': {}, '@/services/emergency-dialer': {},
+    });
+    nodes(Hotline()).find(node => node.type === 'FixedPageHeader').props.onBack();
+    assert.deepEqual(routes, [camera ? '/home' : '/connect-camera']);
+  }
 });

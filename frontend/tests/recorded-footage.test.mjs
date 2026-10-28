@@ -103,3 +103,14 @@ test('repeated backend messages update one event and newest incidents appear fir
   assert.equal(entries[1].thumbnailUri, updated.thumbnailUri);
   assert.equal(first.thumbnailUri, undefined, 'merging must not mutate existing entries');
 });
+
+test('incident calendar validation rejects Date rollover but keeps valid leap dates and offsets', () => {
+  for (const detectedAt of [
+    '2026-02-30T12:00:00Z', '2026-02-29T12:00:00Z', '1900-02-29T12:00:00Z',
+    '2026-04-31T12:00:00+08:00', '2026-00-01T12:00:00Z', '2026-01-00T12:00:00Z',
+    '2026-10-22T24:00:00Z', '2026-10-22T12:60:00Z', '2026-10-22T12:00:60Z',
+  ]) assert.throws(() => toFallEventEntry({ ...readyRecording, detectedAt }), /ISO timestamp/);
+  for (const detectedAt of ['2024-02-29T12:00:00Z', '2000-02-29T12:00:00+08:00', '2026-10-22T23:59:59.125-05:30']) {
+    assert.equal(toFallEventEntry({ ...readyRecording, detectedAt }).detectedAt, new Date(detectedAt).toISOString());
+  }
+});

@@ -9,9 +9,9 @@ import { PasswordInput } from '@/components/password-input';
 import { BrandColors, BrandFonts } from '@/constants/brand';
 import { isValidEmail, isValidPhoneNumber } from '@/utils/contact-validation';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   Alert, KeyboardAvoidingView, Platform,
   StyleSheet, Text, TextInput, View,
@@ -25,8 +25,13 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const submitting = useRef(false);
+  useFocusEffect(useCallback(() => {
+    submitting.current = false;
+  }, []));
 
   function next() {
+    if (submitting.current) return;
     const value = identifier.trim();
     const emailValid = isValidEmail(value);
     const phoneValid = isValidPhoneNumber(value);
@@ -38,7 +43,13 @@ export default function SignUpScreen() {
       setError('Your passwords do not match.');
     } else {
       setError('');
-      router.push({ pathname: '/set-up', params: { identifier: value } });
+      submitting.current = true;
+      try {
+        router.push({ pathname: '/set-up', params: { identifier: value } });
+      } catch {
+        submitting.current = false;
+        setError('Could not open setup. Please try again.');
+      }
     }
   }
 

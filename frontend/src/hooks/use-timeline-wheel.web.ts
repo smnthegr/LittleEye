@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ComponentRef } from 'react';
 import type { View } from 'react-native';
 
 /** Capture wheel/trackpad pinch on the timeline without zooming the browser page. */
 export function useTimelineWheel(onZoom: (scale: number) => void) {
-  const ref = useRef<View | null>(null);
+  const ref = useRef<ComponentRef<typeof View> | null>(null);
   useEffect(() => {
     const element = ref.current as unknown as HTMLElement | null;
     if (!element) return;

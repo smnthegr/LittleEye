@@ -3,6 +3,8 @@ import { type CameraDetails } from '@/constants/camera';
 import type { EmergencyAreaChoice } from '@/utils/emergency-directory';
 import type { PhilippineAddress } from '@/utils/philippine-address';
 import { mergeFallEvents, toFallEventEntry, type FallEventRecording, type ReadyFallEventEntry } from '@/utils/fall-event-recording';
+import { createEmptyProfile } from '@/utils/profile';
+import { clearPlaceSearchCache } from '@/utils/place-search-cache';
 
 export type Contact = { fullName: string; phone: string; email: string; address: string; addressDetails?: PhilippineAddress };
 export type Profile = {
@@ -14,8 +16,12 @@ export type Profile = {
 type Session = {
   accepted: boolean;
   signedIn: boolean;
+  /** In-memory identity for rejecting stale UI callbacks; not an authentication token. */
+  sessionKey: symbol | null;
+  isCurrentSession: () => boolean;
   profile: Profile | null;
   updateProfile: (profile: Profile) => void;
+  updateContacts: (contacts: Contact[]) => void;
   childPhoto: string | null;
   setChildPhoto: (uri: string | null) => void;
   profilePhoto: string | null;
@@ -45,13 +51,24 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
   const [fallEvents, setFallEvents] = useState<ReadyFallEventEntry[]>([]);
   const [eventSessionKey, setEventSessionKey] = useState(() => Symbol('fall-events'));
   const activeEventSession = useRef<symbol | null>(null);
+  function isCurrentSession() {
+    return signedIn && activeEventSession.current === eventSessionKey;
+  }
   function clearSession() {
     activeEventSession.current = null;
+    clearPlaceSearchCache();
     setProfile(null); setCamera(null); setProfilePhoto(null); setChildPhoto(null); setFallEvents([]); setSignedIn(false);
   }
-  return <SessionContext.Provider value={{ accepted, signedIn, profile, camera, profilePhoto,
-    setProfilePhoto, updateProfile: setProfile, childPhoto, setChildPhoto,
-    saveCamera: setCamera,
+  return <SessionContext.Provider value={{ accepted, signedIn, sessionKey: signedIn ? eventSessionKey : null,
+    isCurrentSession, profile, camera, profilePhoto,
+    setProfilePhoto: uri => { if (isCurrentSession()) setProfilePhoto(uri); },
+    updateProfile: value => { if (isCurrentSession()) setProfile(value); },
+    childPhoto, setChildPhoto: uri => { if (isCurrentSession()) setChildPhoto(uri); },
+    updateContacts: contacts => {
+      if (!isCurrentSession()) return;
+      setProfile(previous => ({ ...(previous ?? createEmptyProfile()), contacts }));
+    },
+    saveCamera: value => { if (isCurrentSession()) setCamera(value); },
     fallEvents,
     replaceFallEvents: records => {
       if (signedIn && activeEventSession.current === eventSessionKey) setFallEvents(mergeFallEvents([], records.map(toFallEventEntry)));
@@ -63,6 +80,7 @@ export function AppSessionProvider({ children }: { children: ReactNode }) {
     },
     acceptPolicies: () => setAccepted(true),
     enterPreview: (value) => {
+      clearPlaceSearchCache();
       const key = Symbol('fall-events');
       activeEventSession.current = key;
       setEventSessionKey(key);

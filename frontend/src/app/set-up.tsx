@@ -20,7 +20,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated, BackHandler, Easing, Keyboard, KeyboardAvoidingView, Platform,
   Pressable, ScrollView, StyleSheet, Text, TextInput, View,
-  type TextInputProps,
+  type ScrollViewInstance, type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -68,7 +68,7 @@ export default function SetUpScreen() {
   const scrollOffset = useRef(0);
   const [error, setError] = useState('');
   const [fade] = useState(() => new Animated.Value(1));
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
   const pendingContactScroll = useRef<number | null>(null);
   const mascotScale = (pageWidth * 0.82) / 533;
   useEffect(() => () => fade.stopAnimation(), [fade]);

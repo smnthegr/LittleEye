@@ -7,23 +7,26 @@ import ts from 'typescript';
 import * as validation from '../src/utils/contact-validation.ts';
 import { addresses, qcAddress } from './helpers/address-fixtures.mjs';
 import { validCameraAddress } from '../src/constants/camera.ts';
+import { createEmptyProfile } from '../src/utils/profile.ts';
 
 const require = createRequire(import.meta.url);
 const nodes = tree => Array.isArray(tree) ? tree.flatMap(nodes) : tree?.props ? [tree, ...nodes(tree.props.children)] : [];
 const text = tree => Array.isArray(tree) ? tree.map(text).join('') : typeof tree === 'string' ? tree : tree?.props ? text(tree.props.children) : '';
 
 // Run real submit handlers with input changes and observable navigation/session writes.
-function form(relative, props = {}) {
+function form(relative, props = {}, initialSession) {
   let cursor = 0;
   const slots = [];
   const writes = [];
   const routes = [];
-  const session = {
+  let onFocus;
+  const session = initialSession ?? {
     signedIn: true, accepted: true, camera: { name: 'Camera' },
     profile: { guardian: { fullName: 'Guardian', phone: '09171234567', email: 'guardian@example.com', address: 'Quezon City' },
       child: { fullName: 'Child', birthdate: '01/01/2024', height: '90', sex: 'Female' }, contacts: [] },
     enterPreview(profile) { writes.push(profile); },
     updateProfile(profile) { writes.push(profile); session.profile = profile; },
+    updateContacts(contacts) { session.updateProfile({ ...(session.profile ?? createEmptyProfile()), contacts }); },
   };
   const react = {
     useState(initial) {
@@ -48,7 +51,7 @@ function form(relative, props = {}) {
       if (name === '@/utils/contact-validation') return validation;
       if (name === '@/utils/philippine-address') return addresses;
       if (name === '@/constants/camera') return { validCameraAddress };
-      if (name === 'expo-router') return { Redirect: 'Redirect', useFocusEffect() {}, useLocalSearchParams: () => ({}), router: {
+      if (name === 'expo-router') return { Redirect: 'Redirect', useFocusEffect(callback) { onFocus = callback; }, useLocalSearchParams: () => ({}), router: {
         push: route => routes.push(route), replace: route => routes.push(route), canGoBack: () => false, back() {},
       } };
       if (name.endsWith('app-session')) return { useAppSession: () => session };
@@ -81,7 +84,7 @@ function form(relative, props = {}) {
   const Component = module.exports.default ?? module.exports.ProfileScreen;
   const render = () => { cursor = 0; return Component(props); };
   return {
-    session, writes, routes, render,
+    session, writes, routes, render, focus: () => onFocus?.(),
     fill(label, value, index = 0) {
       if (label === 'Address') {
         const input = nodes(render()).filter(node => node.props.onChange && node.type === 'PhilippineAddressField')[index];
@@ -212,4 +215,53 @@ test('camera setup accepts supported stream addresses and rejects malformed or u
   for (const value of ['', 'not a URL', 'ftp://camera.example.com', 'https://', 'https://user:password@camera.example.com']) {
     assert.equal(validCameraAddress(value), false, value);
   }
+});
+
+test('blank sign-in passwords cannot enter a session', () => {
+  const screen = form('../src/app/sign-in.tsx');
+  screen.fill('Email or phone number', 'qa@example.org');
+  for (const password of ['', '   ', '\t\n']) {
+    screen.fill('Password', password);
+    screen.press('Sign In');
+    assert.equal(screen.writes.length, 0);
+    assert.match(screen.error(), /enter your password/);
+  }
+  screen.fill('Password', ' legitimate spaces ');
+  screen.press('Sign In');
+  assert.equal(screen.writes.length, 1);
+});
+
+test('sign-up shares a synchronous submission guard with keyboard submit and resets on return', () => {
+  const screen = form('../src/app/sign-up.tsx');
+  screen.fill('Email or Phone Number', 'qa@example.org');
+  screen.fill('Create a Password', 'test-only-123');
+  screen.fill('Confirm Password', 'test-only-123');
+  const tree = screen.render();
+  const keyboard = nodes(tree).find(node => node.props.onSubmitEditing);
+  const next = nodes(tree).find(node => node.props.onPress && text(node).trim() === 'Next');
+  keyboard.props.onSubmitEditing();
+  next.props.onPress();
+  next.props.onPress();
+  assert.equal(screen.routes.length, 1);
+  screen.focus();
+  screen.press('Next');
+  assert.equal(screen.routes.length, 2, 'returning to Sign Up allows another attempt');
+});
+
+test('contacts saved from an empty production profile survive remounting and can be edited', () => {
+  const screen = form('../src/app/emergency-contacts.tsx');
+  screen.session.profile = null;
+  screen.press('Add Contact. Maximum of 3 contacts only');
+  screen.fill('Full Name', 'QA Contact');
+  screen.fill('Contact Number', '09171234567');
+  screen.fill('Address', qcAddress);
+  screen.press('Save emergency contact');
+  assert.equal(screen.session.profile.contacts[0].fullName, 'QA Contact');
+  assert.equal(screen.session.profile.guardian.fullName, '', 'no invented profile details');
+  const reopened = form('../src/app/emergency-contacts.tsx', {}, screen.session);
+  assert.ok(text(reopened.render()).includes('QA Contact'));
+  reopened.press('Edit QA Contact');
+  reopened.fill('Full Name', 'Updated Contact');
+  reopened.press('Save contact changes');
+  assert.equal(screen.session.profile.contacts[0].fullName, 'Updated Contact');
 });

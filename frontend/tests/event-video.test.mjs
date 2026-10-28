@@ -103,3 +103,15 @@ test('event seeking stays within available footage and late completion events do
   harness.emit('timeUpdate', { currentTime: 120 });
   assert.equal(harness.seconds, 130);
 });
+
+test('a refreshed shorter clip clamps the restored media position and displayed clock', () => {
+  const range = { start: 0, end: 30 };
+  const harness = playerHarness(range);
+  harness.video.seek(25);
+  range.end = 5;
+  harness.emit('sourceLoad');
+  assert.equal(harness.player.currentTime, 5);
+  assert.equal(harness.seconds, 5);
+  harness.video.seek(NaN);
+  assert.equal(harness.player.currentTime, 0);
+});

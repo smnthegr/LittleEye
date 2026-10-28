@@ -17,6 +17,7 @@ import { useEmergencyHotlines } from '@/hooks/use-emergency-hotlines';
 import { EmergencyAreaCard } from '@/components/emergency-area-card';
 import { SOS_HOTLINE } from '@/constants/emergency-hotlines';
 import { openEmergencyDialer } from '@/services/emergency-dialer';
+import { getHomeDestination } from '@/utils/session-navigation';
 
 const rowIcons = {
   services: { ios: 'phone.fill', android: 'call', web: 'call' },
@@ -27,7 +28,8 @@ export default function EmergencyHotlineScreen() {
   const s = useResponsiveStyles(baseStyles);
   const insets = useSafeAreaInsets();
   const { pageWidth, scaleSize, height, fontScale } = useResponsiveLayout();
-  const { profilePhoto } = useAppSession();
+  const session = useAppSession();
+  const { profilePhoto } = session;
   const { address: currentAddress, addressLocation, localityCode, choice, directory, canEdit, changeArea } = useEmergencyHotlines();
   const layout = getEmergencyHotlineLayout(pageWidth, height, insets.top, insets.bottom, fontScale);
   const sosScale = layout.sosDiameter / scaleSize(204);
@@ -46,7 +48,7 @@ export default function EmergencyHotlineScreen() {
 
   function goBack() {
     if (router.canGoBack()) router.back();
-    else router.replace('/home');
+    else router.replace(getHomeDestination(session));
   }
 
   return <View style={s.screen}>

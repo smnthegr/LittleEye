@@ -16,11 +16,21 @@ export type FallEventRecording = {
 
 export type ReadyFallEventEntry = FallEventEntry & { id: string; detectedAt: string };
 
+function detectionTimestamp(value: string) {
+  const match = typeof value === 'string' && /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/i.exec(value);
+  if (!match) return NaN;
+  const [, year, month, day, hour, minute, second] = match.map(Number);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (month < 1 || month > 12 || day < 1 || day > days[month - 1] || hour > 23 || minute > 59 || second > 59) return NaN;
+  return Date.parse(value);
+}
+
 /** Keep backend payloads and sample fixtures separate from the history UI model. */
 export function toFallEventEntry(record: FallEventRecording): ReadyFallEventEntry {
-  const timestamp = Date.parse(record.detectedAt);
+  const timestamp = detectionTimestamp(record.detectedAt);
   if (!record.id?.trim() || !record.clip?.uri?.trim()) throw new Error('A fall event needs an ID and a ready clip URI.');
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/i.test(record.detectedAt) || !Number.isFinite(timestamp)) {
+  if (!Number.isFinite(timestamp)) {
     throw new Error('Fall detection time must be an ISO timestamp with a timezone.');
   }
   const { durationSeconds, fallOffsetSeconds } = record.clip;

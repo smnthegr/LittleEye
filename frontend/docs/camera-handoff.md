@@ -10,9 +10,9 @@ HTTP/HTTPS/RTSP address, saves `{ name, address, status: 'pending' }` in the
 in-memory session and opens `/home`. This previews navigation without claiming
 that a camera has successfully connected. Home can read `useAppSession().camera`.
 
-Both teammates are currently building frontend. The Home owner can replace
-`src/app/home.tsx` and connect Profile and Settings with the existing routes.
-No backend work is required to connect those menu buttons.
+Both teammates are currently building frontend. Home already connects Profile,
+Settings, History, First Aid and Emergency Hotline through its menu. No backend
+work is required for these menu links.
 
 When backend/camera integration starts, await connection success before saving
 `status: 'connected'`. Keep connection errors on the setup form. Address

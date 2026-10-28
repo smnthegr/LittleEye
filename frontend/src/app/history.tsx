@@ -1,6 +1,6 @@
 import { useResponsiveLayout, useResponsiveStyles } from '@/hooks/use-responsive-layout';
 import { useEffect, useMemo, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -48,11 +48,15 @@ export default function HistoryScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<HistoryTab>('Playback');
-  const [selectedRecording, setSelectedRecording] = useState<HistoryEntry | null>(null);
+  const [selection, setSelectedRecording] = useState<HistoryEntry | null>(null);
+  // Resolve by ID so replaced incident metadata/URLs do not leave a stale viewer.
+  const selectedRecording = selection?.kind === 'event' && selection.id
+    ? eventEntries.find(entry => entry.id === selection.id) ?? null : selection;
   const footageDate = formatPlaybackDate(selectedRecording?.date);
   const playbackRange = getRecordingRange(selectedRecording);
   const video = useFootageVideo({ source: selectedRecording?.uri ?? null, range: playbackRange });
   const isPlaying = video.available && video.isPlaying;
+  const playbackReady = video.available && !video.error && video.status === 'readyToPlay';
   const fullscreen = useVideoFullscreen();
   const { visible: isLandscape, transitioning } = fullscreen;
   const [landscapeControlsVisible, setLandscapeControlsVisible] = useState(true);
@@ -88,14 +92,15 @@ export default function HistoryScreen() {
   }
 
   function seekPlayback(seconds: number) {
+    if (!playbackReady) return;
     const nextSeconds = Math.max(playbackRange.start, Math.min(playbackRange.end, clampPlaybackSeconds(seconds)));
     video.seek(nextSeconds);
   }
 
   function togglePlayback() {
-    if (!video.available) return;
     if (isPlaying) video.pause();
     else {
+      if (!playbackReady) return;
       if (playbackSeconds >= playbackRange.end) video.seek(playbackRange.start);
       video.play();
     }
@@ -133,9 +138,22 @@ export default function HistoryScreen() {
   const landscapeLayout = width > height;
   const currentEntries = activeTab === 'Playback' ? playbackEntries : eventEntries;
 
+  function footage(active: boolean) {
+    if (!active || !video.available) return <VideoEmptyState title="Recording unavailable" detail="This recording has no available video source." />;
+    if (video.error || video.status === 'error') return <View accessibilityRole="alert" style={StyleSheet.absoluteFill}>
+      <VideoEmptyState title="Video could not load" detail="Return to the recording list and reopen this video to retry." />
+    </View>;
+    return <>
+      <FootageVideo player={video.player} />
+      {(video.status === 'loading' || video.status === 'idle') && <View pointerEvents="none" style={s.loading}>
+        <ActivityIndicator color={C.white} accessibilityLabel="Loading recording" />
+      </View>}
+    </>;
+  }
+
   return <>
     <VideoFullscreen controller={fullscreen} onClose={() => { void toggleLandscape(); }}
-      footage={isLandscape && video.available ? <FootageVideo player={video.player} /> : <VideoEmptyState title="Recording unavailable" detail="This recording has no available video source." />}>
+      footage={footage(isLandscape)}>
       {fullscreenInsets => selectedRecording && <View style={s.landscapeScreen}>
       <Pressable accessibilityRole="button"
         accessibilityLabel={landscapeControlsVisible ? 'Hide playback controls' : 'Show playback controls'}
@@ -157,7 +175,7 @@ export default function HistoryScreen() {
           accessibilityState={{ disabled: transitioning }} onPress={() => { void toggleLandscape(); }} />
         </View>
       </Animated.View>
-      {landscapeControlsVisible && <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={togglePlayback} style={s.playerToggle}>
+      {landscapeControlsVisible && (playbackReady || isPlaying) && <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={togglePlayback} style={s.playerToggle}>
         {isPlaying ? <View style={s.pauseGlyph}><View style={s.pauseBar} /><View style={s.pauseBar} /></View> : <View style={s.playerPlayGlyph} />}
       </GlowButton>}
       <Animated.View pointerEvents="box-none" style={[s.landscapePlaybackBar, {
@@ -198,7 +216,7 @@ export default function HistoryScreen() {
           </View>}
           {selectedRecording ? <View style={s.playbackView}>
             <View style={[s.playerFrame, landscapeLayout && { height: Math.max(180, Math.min(height - insets.top - insets.bottom - 40, width * 0.5625)) }]}>
-              {video.available && !isLandscape ? <FootageVideo player={video.player} /> : <VideoEmptyState title="Recording unavailable" detail="This recording has no available video source." />}
+              {footage(!isLandscape)}
               <Pressable accessibilityRole="button" accessibilityLabel={landscapeControlsVisible ? 'Hide playback controls' : 'Show playback controls'}
                 accessibilityState={{ expanded: landscapeControlsVisible }} onPress={toggleLandscapeControls} style={StyleSheet.absoluteFill} />
               <View pointerEvents={landscapeControlsVisible ? 'box-none' : 'none'} accessibilityElementsHidden={!landscapeControlsVisible}
@@ -223,7 +241,7 @@ export default function HistoryScreen() {
                 </VideoOverlayButton>
                 </View>
               </Animated.View>
-              {landscapeControlsVisible && <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={togglePlayback} style={s.playerToggle}>
+              {landscapeControlsVisible && (playbackReady || isPlaying) && <GlowButton accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pause footage' : 'Play footage'} accessibilityState={{ selected: isPlaying }} onPress={togglePlayback} style={s.playerToggle}>
                 {isPlaying ? <View style={s.pauseGlyph}><View style={s.pauseBar} /><View style={s.pauseBar} /></View> : <View style={s.playerPlayGlyph} />}
               </GlowButton>}
               <Animated.View style={[s.playerTimeRow, { opacity: controlsProgress, transform: [{ translateY: controlsMotion.bottom }] }]} pointerEvents="none">
@@ -273,6 +291,7 @@ export default function HistoryScreen() {
 }
 
 const baseStyles = StyleSheet.create({
+  loading: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   screen: { flex: 1, backgroundColor: C.white },
   videoError: { position: 'absolute', left: 12, right: 12, top: '30%', color: C.white, fontFamily: F.semiBold, fontSize: 12, textAlign: 'center', backgroundColor: 'rgba(0,0,0,.7)', padding: 12, borderRadius: 8 },
   landscapeScreen: { flex: 1, overflow: 'hidden' },

@@ -1,71 +1,52 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import vm from 'node:vm';
-import ts from 'typescript';
 import { getHomeDestination } from '../src/utils/session-navigation.ts';
+import { sessionRoutes, sessionStack, UNHANDLED } from './helpers/session-routes.mjs';
 
-function navigationHarness(initialSession) {
-  let session = initialSession;
-  let navigationState = { key: 'root-stack' };
-  let previous;
-  let effect;
-  const destinations = [];
-  const module = { exports: {} };
-  const source = readFileSync(new URL('../src/hooks/use-session-navigation.ts', import.meta.url), 'utf8');
-  const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
-  vm.runInNewContext(code, {
-    module, exports: module.exports,
-    require(name) {
-      if (name === 'react') return {
-        useRef(initial) { previous ??= { current: initial }; return previous; },
-        useEffect(callback) { effect = callback; },
-      };
-      if (name === 'expo-router') return {
-        router: { replace(destination) { destinations.push(destination); } },
-        useRootNavigationState: () => navigationState,
-      };
-      if (name === '@/components/app-session') return { useAppSession: () => session };
-      if (name === '@/utils/session-navigation') return { getHomeDestination };
-      throw new Error(`Unexpected dependency: ${name}`);
-    },
-  });
-  return {
-    destinations,
-    commit(nextSession = session, ready = true) {
-      session = nextSession;
-      navigationState = ready ? { key: 'root-stack' } : undefined;
-      module.exports.useSessionNavigation();
-      effect();
-    },
-  };
+const signedOut = { signedIn: false, accepted: true, camera: null };
+const cameraSetup = { ...signedOut, signedIn: true };
+const connected = { ...cameraSetup, camera: { name: 'Camera' } };
+
+for (const entry of ['sign-in', 'set-up']) {
+  for (const session of [cameraSetup, connected]) {
+    const target = session.camera ? 'home' : 'connect-camera';
+    test(`${entry} opens ${target} without calling or retaining account setup history`, () => {
+      const stack = sessionStack(signedOut, 'index');
+      stack.dispatch({ type: 'PUSH', payload: { name: entry } });
+      stack.settle(session);
+      assert.deepEqual(stack.state.routes.map(route => route.name), [target]);
+      assert.equal(stack.dispatch({ type: 'POP', payload: { count: 1 } }), UNHANDLED);
+    });
+  }
 }
 
-test('signing out and back in routes to camera setup instead of the previous First Aid screen', () => {
-  const signedIn = { signedIn: true, accepted: true, camera: { name: 'Camera' } };
-  const signedOut = { ...signedIn, signedIn: false, camera: null };
-  const harness = navigationHarness(signedIn);
-  harness.commit();
-  assert.deepEqual(harness.destinations, []);
-  harness.commit(signedOut);
-  harness.commit({ ...signedOut, signedIn: true });
-  assert.deepEqual(harness.destinations, ['/', '/connect-camera']);
-  assert.equal(getHomeDestination({ ...signedOut, signedIn: true }), '/connect-camera');
-  assert.equal(getHomeDestination(signedIn), '/home');
-  // Saving camera details must not redirect unrelated pages; camera setup owns its handoff.
-  harness.commit(signedIn);
-  assert.deepEqual(harness.destinations, ['/', '/connect-camera']);
+test('opening Home before camera setup redirects to camera setup and cannot loop back to Call', () => {
+  const stack = sessionStack(cameraSetup, 'emergency-hotline');
+  stack.dispatch({ type: 'REPLACE', payload: { name: 'home' } });
+  stack.settle(cameraSetup);
+  assert.deepEqual(stack.state.routes.map(route => route.name), ['connect-camera']);
+  assert.equal(stack.dispatch({ type: 'POP', payload: { count: 1 } }), UNHANDLED);
 });
 
-test('session redirects wait for the navigator and run once per sign-in change', () => {
-  const signedOut = { signedIn: false, accepted: true, camera: null };
-  const harness = navigationHarness(signedOut);
-  harness.commit(signedOut, false);
-  harness.commit({ ...signedOut, signedIn: true }, false);
-  assert.deepEqual(harness.destinations, []);
-  harness.commit({ ...signedOut, signedIn: true });
-  harness.commit({ ...signedOut, signedIn: true });
-  assert.deepEqual(harness.destinations, ['/connect-camera']);
+test('saving a camera makes Home available without redirecting unrelated screens', () => {
+  const stack = sessionStack(cameraSetup, 'connect-camera');
+  stack.settle(connected);
+  assert.equal(stack.state.routes[stack.state.index].name, 'connect-camera');
+  stack.dispatch({ type: 'REPLACE', payload: { name: 'home' } });
+  stack.dispatch({ type: 'PUSH', payload: { name: 'history' } });
+  stack.settle(connected);
+  assert.equal(stack.state.routes[stack.state.index].name, 'history');
+});
+
+test('each guarded route has an explicit available destination, regardless of filesystem order', () => {
+  for (const session of [signedOut, { ...signedOut, accepted: false }, cameraSetup, connected]) {
+    const { guards } = sessionRoutes(session);
+    for (const [name, href] of guards) {
+      assert.ok(href, `${name} needs an explicit destination`);
+      assert.equal(guards.has(href === '/' ? 'index' : href.slice(1)), false, name);
+      assert.notEqual(href, '/call');
+    }
+  }
 });
 
 test('Home follows the same session and camera requirements as the protected route', () => {

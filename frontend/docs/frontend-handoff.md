@@ -1,9 +1,9 @@
 # Frontend menu handoff
 
 Both teammates are working on frontend only. Backend integration is a later
-task. Home is currently a placeholder in `src/app/home.tsx`; replace its contents
-with the Home screen and menu. Keep the root `AppSessionProvider` and existing
-route guards in `src/app/_layout.tsx`.
+task. Home and its menu are implemented in `src/app/home.tsx`; the video area
+currently shows the documented offline state. Keep the root
+`AppSessionProvider` and route guards in `src/app/_layout.tsx`.
 
 ## Connect the existing menu items
 
@@ -23,11 +23,10 @@ subpages and opens Notification Preferences as a popup. Their Back buttons retur
 to the previous page, including Home when opened from its menu. Settings supports
 both no-camera and camera-added layouts automatically. The preview button is gone.
 
-Emergency Hotline, First-aid Guidance and History are not implemented yet. Create
-those screens in `src/app/`, register their names inside the signed-in/accepted
-`Stack.Protected` group in `_layout.tsx`, and connect their menu buttons with
-`router.push()` using the actual filenames. They do not need placeholder links
-or changes to the completed Profile and Settings screens.
+Emergency Hotline, First-aid Guidance and History are implemented and connected
+to the menu. Their empty states, written guidance, contact management and player
+interfaces work at the frontend level. Live camera sources, instructional clips,
+daily recordings, detection and notification delivery remain integration work.
 
 ## Share the existing frontend state
 
@@ -49,6 +48,10 @@ copying it into another provider. `updateProfile(nextProfile)` replaces the
 profile, so preserve the guardian, child and contacts that are not being edited.
 Profile edits update this shared state immediately. Guardian and child photos
 are separate, and sign-out clears both along with profile and camera details.
+Use `session.updateContacts(contacts)` to save contact changes even when sign-in
+has not supplied a profile yet. It creates blank profile fields without sample
+identity data and preserves the contacts for the current session. Session writes
+and alert callbacks captured by a previous account are ignored.
 
 State currently lasts only for the running session and resets when the app
 restarts. No accounts are authenticated and no photos are uploaded.
@@ -81,5 +84,8 @@ until incidents are supplied; no incident feed exists yet.
 
 ## Verification
 
-Run typecheck and lint from `frontend`. Currently typecheck passes; lint has an
-existing `react-hooks/set-state-in-effect` error in `use-color-scheme.web.ts`.
+Run `npm test`, `npm run typecheck`, and `npm run lint` from `frontend`.
+The compiler includes application sources and generated route declarations;
+the preserved `node_modules_before_sdk58` directory is not application input.
+See [frontend QA fixes](frontend-qa-fixes.md) for the audit corrections and
+remaining device verification.

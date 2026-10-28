@@ -18,7 +18,7 @@ export function StatusDot({ color, size = 6, active = true }: { color: string; s
     const animation = Animated.loop(Animated.timing(pulse, {
       toValue: 1, duration: 1600, easing: Easing.linear, useNativeDriver: true, isInteraction: false,
     }));
-    function update(state: string | null) {
+    function update(state: string | null | undefined) {
       animation.stop(); animation.reset(); pulse.setValue(0);
       if (state === 'active' || state === null) animation.start();
     }

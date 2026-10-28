@@ -4,6 +4,7 @@ import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
 import { addresses } from './helpers/address-fixtures.mjs';
+import { createPlaceSearchCache } from '../src/utils/place-search-cache.ts';
 
 // Synthetic response fixtures exercise parsing; the app never ships sample suggestions.
 const feature = (properties = {}, coordinates = [121.08, 14.7]) => ({
@@ -13,11 +14,16 @@ const feature = (properties = {}, coordinates = [121.08, 14.7]) => ({
   },
 });
 function loadService(fetch, env = {}) {
+  const placeSearchCache = createPlaceSearchCache();
   const module = { exports: {} };
   vm.runInNewContext(ts.transpileModule(readFileSync(new URL('../src/services/place-search.ts', import.meta.url), 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS },
   }).outputText, { module, exports: module.exports, fetch, URL, AbortController, setTimeout, clearTimeout, process: { env },
-    require(name) { if (name === '../utils/philippine-address') return addresses; throw new Error(name); },
+    require(name) {
+      if (name === '../utils/philippine-address') return addresses;
+      if (name === '../utils/place-search-cache') return { placeSearchCache, clearPlaceSearchCache: () => placeSearchCache.clear() };
+      throw new Error(name);
+    },
   });
   return module.exports;
 }
@@ -123,6 +129,31 @@ function hookHarness() {
   };
 }
 const settle = async () => { await Promise.resolve(); await Promise.resolve(); };
+
+test('clearing address searches drops cached entries and prevents old requests from repopulating them', async () => {
+  let finish, entered;
+  const started = new Promise(resolve => { entered = resolve; });
+  const response = new Promise(resolve => { finish = resolve; });
+  let calls = 0;
+  const service = loadService(async () => {
+    calls++;
+    if (calls === 1) { entered(); return response; }
+    return { ok: true, json: async () => ({ features: [feature()] }) };
+  });
+  const signal = new AbortController().signal;
+  const oldRequest = service.searchPlaces('QA cafe, Quezon City', signal);
+  await started;
+  service.clearPlaceSearchCache();
+  finish({ ok: true, json: async () => ({ features: [feature()] }) });
+  await oldRequest;
+  await service.searchPlaces('QA cafe, Quezon City', signal);
+  assert.equal(calls, 2, 'late results from the old session cannot refill the cache');
+  await service.searchPlaces('QA cafe, Quezon City', signal);
+  assert.equal(calls, 2, 'current-session repeats still use the cache');
+  service.clearPlaceSearchCache();
+  await service.searchPlaces('QA cafe, Quezon City', signal);
+  assert.equal(calls, 3, 'logout also removes completed searches');
+});
 
 test('rapid typing cancels queued searches and late responses cannot replace newer suggestions', async () => {
   const h = hookHarness();
